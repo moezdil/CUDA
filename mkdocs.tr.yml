@@ -1,0 +1,36 @@
+INHERIT: mkdocs.yml
+site_description: CUDA'yı temelden gerçek GPU sistemlerine kadar doğru şekilde öğren.
+site_url: https://moezdil.github.io/CUDA/tr/
+docs_dir: docs-tr
+site_dir: public/tr
+extra:
+  lang: tr
+
+nav:
+  - "Ana sayfa": index.md
+  - "GPU Temelleri":
+      - "00 CUDA'ya Başlarken": GPU/Lesson-00/notes.md
+      - "01 GPU'lar Nereden Geldi": GPU/Lesson-01/notes.md
+      - "02 Mimari ve Nesil": GPU/Lesson-02/notes.md
+      - "03 Bir GPU'yu Tanımak": GPU/Lesson-03/notes.md
+      - "04 GPU ve GPU Çipi": GPU/Lesson-04/notes.md
+      - "05 Mimari ve Çipler": GPU/Lesson-05/notes.md
+      - "06 Nvidia GPU Mimarileri": GPU/Lesson-06/notes.md
+      - "07 Bellek Bant Genişliği": GPU/Lesson-07/notes.md
+      - "08 Pratikte GPU Tanımak": GPU/Lesson-08/notes.md
+      - "09 Compute Capability": GPU/Lesson-09/notes.md
+      - "10 White Paper'lar": GPU/Lesson-10/notes.md
+      - "11 Bir White Paper Okumak": GPU/Lesson-11/notes.md
+      - "12 CUDA Toolkit": GPU/Lesson-12/notes.md
+      - "13 JetBrains ile Geliştirme Ortamı": GPU/Lesson-13/notes.md
+      - "14 Windows'ta Linux (WSL)": GPU/Lesson-14/notes.md
+      - "15 Linux'a CUDA Kurmak": GPU/Lesson-15/notes.md
+  - "CUDA Pratiği":
+      - "00 Bir Block, Bir Thread": cuda/Lesson-00/notes.md
+      - "01 Bir Block, Dört Thread": cuda/Lesson-01/notes.md
+      - "02 İki Block, 1024 Thread": cuda/Lesson-02/notes.md
+      - "03 Compute Capability": cuda/Lesson-03/notes.md
+      - "04 Yerleşik Değişkenler": cuda/Lesson-04/notes.md
+      - "05 CUDA Platform Katmanları": cuda/Lesson-05/notes.md
+      - "06 Linux'ta CUDA Derlemek": cuda/Lesson-06/notes.md
+      - "07 Warp ID'leri": cuda/Lesson-07/notes.md

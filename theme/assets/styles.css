@@ -710,3 +710,13 @@ footer a.sponsor:hover{background:rgba(219,97,162,.2);transform:translateY(-1px)
 footer{padding:13px 0 16px}
 .sup a{display:inline-flex;border-radius:7px;transition:transform .15s ease,box-shadow .15s ease}
 .sup a:hover{transform:translateY(-1px);box-shadow:0 6px 16px -8px var(--accent)}
+
+/* language menu */
+.lang{position:relative}
+.lang summary{list-style:none;cursor:pointer;font:600 .7rem/1 var(--mono);letter-spacing:.02em}
+.lang summary::-webkit-details-marker{display:none}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:20;display:grid;min-width:140px;padding:6px;
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--frame-shadow)}
+.lang-menu a{padding:8px 10px;border-radius:6px;color:var(--dim);text-decoration:none;font-size:.9rem}
+.lang-menu a:hover{background:var(--accent-soft);color:var(--text)}
+.lang-menu a[aria-current]{color:var(--accent)}

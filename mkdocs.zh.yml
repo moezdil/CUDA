@@ -1,0 +1,36 @@
+INHERIT: mkdocs.yml
+site_description: 从基础到真实的 GPU 系统，扎实地学习 CUDA。
+site_url: https://moezdil.github.io/CUDA/zh/
+docs_dir: docs-zh
+site_dir: public/zh
+extra:
+  lang: zh
+
+nav:
+  - "首页": index.md
+  - "GPU 基础":
+      - "00 开始学 CUDA": GPU/Lesson-00/notes.md
+      - "01 GPU 从哪里来": GPU/Lesson-01/notes.md
+      - "02 架构与代": GPU/Lesson-02/notes.md
+      - "03 认识一块 GPU": GPU/Lesson-03/notes.md
+      - "04 GPU 与 GPU 芯片": GPU/Lesson-04/notes.md
+      - "05 架构与芯片": GPU/Lesson-05/notes.md
+      - "06 NVIDIA GPU 架构": GPU/Lesson-06/notes.md
+      - "07 显存带宽": GPU/Lesson-07/notes.md
+      - "08 实际识别 GPU": GPU/Lesson-08/notes.md
+      - "09 计算能力": GPU/Lesson-09/notes.md
+      - "10 白皮书": GPU/Lesson-10/notes.md
+      - "11 阅读白皮书": GPU/Lesson-11/notes.md
+      - "12 CUDA Toolkit": GPU/Lesson-12/notes.md
+      - "13 用 JetBrains 搭建开发环境": GPU/Lesson-13/notes.md
+      - "14 Windows 上的 Linux (WSL)": GPU/Lesson-14/notes.md
+      - "15 在 Linux 上安装 CUDA": GPU/Lesson-15/notes.md
+  - "CUDA 实践":
+      - "00 一个线程块，一个线程": cuda/Lesson-00/notes.md
+      - "01 一个线程块，四个线程": cuda/Lesson-01/notes.md
+      - "02 两个线程块，1024 个线程": cuda/Lesson-02/notes.md
+      - "03 计算能力": cuda/Lesson-03/notes.md
+      - "04 内置变量": cuda/Lesson-04/notes.md
+      - "05 CUDA 平台层次": cuda/Lesson-05/notes.md
+      - "06 在 Linux 上编译 CUDA": cuda/Lesson-06/notes.md
+      - "07 线程束 ID": cuda/Lesson-07/notes.md

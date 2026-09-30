@@ -1,5 +1,13 @@
 <!doctype html>
-<html lang="en">
+{%- set lang = config.extra.lang or "en" %}
+{%- set up = "" if lang == "en" else "../" %}
+{%- set S = {
+  "en": {"skip": "Skip to content", "h1": 'Learn <span class="accent">CUDA</span> step by step', "lede": "Learn how a GPU works, then write CUDA code with short plain-English lessons and pictures you can play with.", "start": "Start learning →", "try": "try it · move the sliders", "lessons": "Lessons", "prev": "← previous", "next": "next →", "foot": "CUDA, step by step · by", "sup": "Supported by", "sponsor": "Sponsor", "src": "Source on GitHub", "mode": "Switch color mode", "lang": "Language"},
+  "tr": {"skip": "İçeriğe geç", "h1": '<span class="accent">CUDA</span> adım adım öğren', "lede": "Önce bir GPU'nun nasıl çalıştığını öğren, sonra CUDA kodu yaz. Kısa ve sade dersler, üzerinde oynayabileceğin resimlerle.", "start": "Öğrenmeye başla →", "try": "dene · kaydırıcıları oynat", "lessons": "Dersler", "prev": "← önceki", "next": "sonraki →", "foot": "CUDA, adım adım · hazırlayan", "sup": "Destekleyenler", "sponsor": "Sponsor ol", "src": "GitHub'da kaynak kod", "mode": "Renk modunu değiştir", "lang": "Dil"},
+  "zh": {"skip": "跳到正文", "h1": '一步一步学 <span class="accent">CUDA</span>', "lede": "先弄懂 GPU 是怎么工作的，再动手写 CUDA 代码。课程简短易懂，还有可以动手玩的交互图。", "start": "开始学习 →", "try": "试一试 · 拖动滑块", "lessons": "课程", "prev": "← 上一课", "next": "下一课 →", "foot": "CUDA，一步一步学 · 作者", "sup": "支持方", "sponsor": "赞助", "src": "GitHub 源码", "mode": "切换颜色模式", "lang": "语言"},
+  "de": {"skip": "Zum Inhalt springen", "h1": 'Lerne <span class="accent">CUDA</span> Schritt für Schritt', "lede": "Verstehe zuerst, wie eine GPU funktioniert. Dann schreibst du CUDA-Code, mit kurzen, einfachen Lektionen und Grafiken zum Ausprobieren.", "start": "Jetzt lernen →", "try": "probier es aus · bewege die Regler", "lessons": "Lektionen", "prev": "← zurück", "next": "weiter →", "foot": "CUDA, Schritt für Schritt · von", "sup": "Unterstützt von", "sponsor": "Sponsern", "src": "Quellcode auf GitHub", "mode": "Farbmodus wechseln", "lang": "Sprache"}
+}[lang] %}
+<html lang="{{ "zh-CN" if lang == "zh" else lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -13,7 +21,7 @@
 <script>try{if((localStorage.getItem("cuda-mode")||(matchMedia("(prefers-color-scheme: light)").matches?"light":""))==="light")document.documentElement.setAttribute("data-mode","light")}catch(e){}</script>
 </head>
 <body>
-<a class="skip-link" href="#top">Skip to content</a>
+<a class="skip-link" href="#top">{{ S.skip }}</a>
 <div class="gpu-bg" aria-hidden="true"><div class="grid-lines"></div></div>
 
 <nav>
@@ -25,8 +33,17 @@
       {% endfor %}
     </div>
     <div class="nav-right">
-      <a class="icon-btn gh" href="{{ config.repo_url }}" aria-label="Source on GitHub"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
-      <button class="icon-btn" id="mode-toggle" type="button" aria-label="Switch color mode"></button>
+      <details class="lang">
+        <summary class="icon-btn" aria-label="{{ S.lang }}" title="{{ S.lang }}">{{ lang|upper }}</summary>
+        <div class="lang-menu">
+          {%- set root = ("."|url).rstrip("/") ~ "/" %}
+          {%- for c, n in [("en", "English"), ("tr", "Türkçe"), ("zh", "中文"), ("de", "Deutsch")] %}
+          <a href="{{ root ~ up ~ ("" if c == "en" else c ~ "/") ~ page.url }}" hreflang="{{ c }}" lang="{{ c }}"{% if c == lang %} aria-current="true"{% endif %}>{{ n }}</a>
+          {%- endfor %}
+        </div>
+      </details>
+      <a class="icon-btn gh" href="{{ config.repo_url }}" aria-label="{{ S.src }}"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <button class="icon-btn" id="mode-toggle" type="button" aria-label="{{ S.mode }}"></button>
     </div>
   </div>
 </nav>
@@ -36,13 +53,13 @@
 <section class="hero">
   <div class="cores" aria-hidden="true">{% for i in range(64) %}<i></i>{% endfor %}</div>
   <div class="wrap">
-    <h1>Learn <span class="accent">CUDA</span> step by step</h1>
-    <p class="lede">Learn how a GPU works, then write CUDA code with short plain-English lessons and pictures you can play with.</p>
+    <h1>{{ S.h1 }}</h1>
+    <p class="lede">{{ S.lede }}</p>
     <div class="cta">
-      <a class="btn primary" href="{{ nav.items[1].children[0].url|url }}">Start learning →</a>
+      <a class="btn primary" href="{{ nav.items[1].children[0].url|url }}">{{ S.start }}</a>
     </div>
     <div class="frame term">
-      <div class="termbar"><i></i><i></i><i></i><span class="mono">try it · move the sliders</span></div>
+      <div class="termbar"><i></i><i></i><i></i><span class="mono">{{ S.try }}</span></div>
       <div class="termbody"><cuda-launch blocks="2" threads="96" fn="printIDs"></cuda-launch></div>
     </div>
   </div>
@@ -52,7 +69,7 @@
 <div class="wrap doc">
   <aside class="side">
     <details open>
-      <summary>{{ page.parent.title if page.parent else "Lessons" }}</summary>
+      <summary>{{ page.parent.title if page.parent else S.lessons }}</summary>
       <ol>
         {% for p in (page.parent.children if page.parent else []) %}
         <li><a href="{{ p.url|url }}"{% if p.active %} class="on" aria-current="page"{% endif %}><span>{{ p.title[:2] }}</span>{{ p.title[3:] }}</a></li>
@@ -63,8 +80,8 @@
   <main>
     <article class="prose">{{ page.content }}</article>
     <div class="pager">
-      {% if page.previous_page %}<a class="card" href="{{ page.previous_page.url|url }}"><span class="tab">← previous</span><b>{{ page.previous_page.title }}</b></a>{% else %}<span></span>{% endif %}
-      {% if page.next_page %}<a class="card next" href="{{ page.next_page.url|url }}"><span class="tab">next →</span><b>{{ page.next_page.title }}</b></a>{% endif %}
+      {% if page.previous_page %}<a class="card" href="{{ page.previous_page.url|url }}"><span class="tab">{{ S.prev }}</span><b>{{ page.previous_page.title }}</b></a>{% else %}<span></span>{% endif %}
+      {% if page.next_page %}<a class="card next" href="{{ page.next_page.url|url }}"><span class="tab">{{ S.next }}</span><b>{{ page.next_page.title }}</b></a>{% endif %}
     </div>
   </main>
 </div>
@@ -72,16 +89,17 @@
 
 <footer>
   <div class="wrap row">
-    <span>CUDA, step by step · by <a href="https://github.com/moezdil">Mesut Oezdil</a></span>
-    {% if page.is_homepage %}<div class="sup"><span>Supported by</span>
+    <span>{{ S.foot }} <a href="https://github.com/moezdil">Mesut Oezdil</a></span>
+    {% if page.is_homepage %}<div class="sup"><span>{{ S.sup }}</span>
       <a href="https://www.jetbrains.com/" rel="noopener"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains"></a>
       <a href="https://www.manning.com/" rel="noopener"><img src="{{ 'manning.png'|url }}" alt="Manning Publications"></a>
     </div>{% endif %}
-    <a class="sponsor" href="https://github.com/sponsors/moezdil"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.6 20.6 0 0 0 8 13.393a20.6 20.6 0 0 0 3.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.749.749 0 0 1-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5Z"/></svg>Sponsor</a>
-    <a href="{{ config.repo_url }}">Source on GitHub ↗</a>
+    <a class="sponsor" href="https://github.com/sponsors/moezdil"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.6 20.6 0 0 0 8 13.393a20.6 20.6 0 0 0 3.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.749.749 0 0 1-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5Z"/></svg>{{ S.sponsor }}</a>
+    <a href="{{ config.repo_url }}">{{ S.src }} ↗</a>
   </div>
 </footer>
-<script src="{{ 'assets/site.js'|url }}?v={{ build_date_utc.strftime('%s') }}"></script>
+{% if lang != "en" %}<script src="{{ ('assets/i18n/' ~ lang ~ '.js')|url }}?v={{ build_date_utc.strftime('%s') }}"></script>
+{% endif %}<script src="{{ 'assets/site.js'|url }}?v={{ build_date_utc.strftime('%s') }}"></script>
 <script src="{{ 'assets/gpu.js'|url }}?v={{ build_date_utc.strftime('%s') }}"></script>
 </body>
 </html>

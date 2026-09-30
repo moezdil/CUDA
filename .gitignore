@@ -9,3 +9,4 @@ infra/**/terraform.tfstate.backup
 # Site build
 docs/
 public/
+docs-*/

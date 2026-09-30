@@ -28,6 +28,13 @@ jobs:
       - run: pip install -q "mkdocs<2" pymdown-extensions pygments
       - run: mkdir docs && cp -r GPU cuda manning.png manning.jpeg docs/ && cp README.md docs/index.md
       - run: mkdocs build --strict
+      - name: Build translations
+        run: |
+          for l in tr zh de; do
+            mkdir docs-$l && cp -r GPU cuda manning.png manning.jpeg docs-$l/ && cp README.md docs-$l/index.md
+            find docs-$l -name "notes.$l.md" -exec sh -c 'mv "$1" "${1%.*.md}.md"' _ {} \;
+            mkdocs build --strict -f mkdocs.$l.yml
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
