@@ -61,6 +61,20 @@ int main()
 
 Bu, Ders 00'ın kodu, tek bir değişiklikle. Başlatma satırı artık `printIDs<<<1, 4>>>();`, yani kernel'ı dört thread çalıştırır.
 
+## Kod Gezintisi
+
+Programı yazacağın sırayla adım adım geç. Çoğu [Ders 00](../Lesson-00/notes.md) programıyla aynı, bu yüzden odak başlatmada.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** Ders 00'daki üç `#include` satırının aynısı. Çıkaramayacağın satır `stdio.h`, çünkü kernel `printf`'i çağırır.
+2. `5-8 gpu` **Kernel.** Kernel'ı tam olarak önceki gibi yaz. Daha fazla thread almak için onu değiştirmezsin: her thread aynı kodu çalıştırır ve her biri kendi `threadIdx.x` değerini okur. Kural: kodu tek bir thread için yazarsın, kaç kopyanın çalışacağına başlatma karar verir.
+3. `10-11,14-15 cpu` **main fonksiyonu.** Ders 00'daki gibi `main`'i sonunda `return 0;` ile yaz. Ortadaki iki satır, GPU ile konuşan tek host kodudur.
+4. `12 cpu` **4 thread ile başlatma.** `<<<1, 4>>>` içindeki ikinci sayı block başına thread sayısıdır, yani 4 thread çalışır. Sık yapılan bir hata sayıların yerini değiştirmektir: `<<<4, 1>>>` da 4 thread başlatır, ama 1 thread'li 4 block olarak, bu yüzden her `threadIdx.x` 0 olur.
+5. `13 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();` CPU'yu bekletir ve printf buffer'ı da bu anda ekrana yazılır. 4 satır sabit olmayan bir sırayla çıkar.
+
+</div>
+
 ## Derle ve Çalıştır
 
 İlk komut kodu derleyip bir programa dönüştürür. İkinci komut onu çalıştırır.
@@ -94,6 +108,56 @@ Block ID: 0  ===  Thread ID: 1
 ## Dene
 
 - Başlatmayı `<<<1, 32>>>` yap. 0'dan 31'e kadar thread ID'leriyle 32 satır alırsın, yine sabit olmayan bir sırayla. Bu tam olarak bir dolu warp'tur.
+
+## Kendin Yaz
+
+Her thread'in kendi `threadIdx.x` değerini kullanarak farklı bir sonuç hesapladığı bir kernel yaz.
+
+1. Aşağıdaki iskeletle `square.cu` oluştur.
+2. Kernel'da `threadIdx.x`'i bir `i` değişkenine koy, `i` ve `i * i` değerlerini yazdır.
+3. 5 thread'li 1 block başlat.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void square()
+{
+    // TODO: read this thread's ID into an int i
+    // TODO: print "thread i: i * i = result"
+}
+
+int main()
+{
+    // TODO: launch square with 1 block of 5 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "İpucu"
+    `int i = threadIdx.x;` her thread'e kendi `i` değerini verir. Block başına thread sayısı ikinci sayıdır: `<<<1, 5>>>`.
+
+??? note "Çözüm"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void square()
+    {
+        int i = threadIdx.x;
+        printf("thread %d: %d * %d = %d\n", i, i, i, i * i);
+    }
+
+    int main()
+    {
+        square<<<1, 5>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    `nvcc -o square square.cu` ve `./square` ile derle ve çalıştır. 0'dan 4'e kadar her thread için bir tane olmak üzere 5 satır görmelisin, örneğin `thread 3: 3 * 3 = 9`. Satırların sırası çalıştırmadan çalıştırmaya değişebilir.
 
 ## Sözlük
 

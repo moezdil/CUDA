@@ -41,6 +41,23 @@ int main()
 - `test01 <<<2, 64>>> ();` 用 2 个各有 64 个线程的线程块启动核函数。
 - `cudaDeviceSynchronize();` 让 CPU 等待 GPU。下面讲同步的那一节会说明这一行为什么重要。
 
+## 代码逐步讲解
+
+按照你写代码的顺序，一步一步看这个程序。新的部分是线程束编号，核函数用 `threadIdx.x` 把它算出来。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** CUDA 运行时、内置变量，以及 `printf` 需要的 `stdio.h`。这些课里的每个程序都以这三行开头。
+2. `5-6,13 gpu` **空的核函数。** 先写出 `__global__ void test01()` 和它的花括号，然后一行一行地填函数体。
+3. `7-8 gpu` **用注释写下计划。** 在写代码之前，先写下核函数要做什么，以及它依赖的数字：每个线程束 32 个线程，所以 64 个线程就是每个线程块 2 个线程束。注释在运行时没有任何开销，还能让下一行很容易检查。
+4. `9-10 gpu` **线程束编号。** 先声明 `warp_ID_Value`，再把它设为 `threadIdx.x / 32`。两边都是整数，所以除法会丢掉余数：线程 45 得到 1。每一行都以 `;` 结尾。下面的“编译错误”一节展示了漏掉一个分号会怎样。
+5. `11-12 gpu` **打印。** 一个带三个 `%d` 的 `printf`，依次由线程块编号、线程编号和线程束编号来填。一个很长的调用可以分成两行写，因为编译器会把直到 `;` 为止的内容读成一条语句。
+6. `15-16,20-21 cpu` **main 函数。** 写好 `main`，最后是 `return 0;`。它里面的所有代码都在 CPU 上运行。
+7. `17-18 cpu` **启动核函数。** 注释重复了 `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>` 这个模式，下一行用 2 个线程块、每块 64 个线程把它填好。`<<<2, 64>>>` 两边的空格是允许的，编译器会忽略它们。
+8. `19 cpu` **等待 GPU。** `cudaDeviceSynchronize();` 就是这节课故意删掉的那一行。在这台机器上，没有它时程序什么都没打印。
+
+</div>
+
 ## 编译和运行
 
 ### 第 1 步：检查 nvcc
@@ -373,6 +390,59 @@ project001.cu(9): error: expected a ";"
 | 运行 | `./project001` |
 
 如果 CPU 需要在程序结束前拿到 GPU 的输出或结果，就在启动核函数之后加上 `cudaDeviceSynchronize()`。没有它，这台机器上什么都不会打印。
+
+## 自己动手写
+
+用这节课的完整流程，自己写、编译并运行一个程序。
+
+1. 用下面的框架创建 `warps.cu`。
+2. 在核函数里，只让每个线程块的线程 0 打印它的线程块有多少个线程束，用 `blockDim.x / 32` 来算。
+3. 启动 3 个线程块，每块 96 个线程。
+4. 用 `-arch=sm_89`（或者你自己 GPU 对应的值）编译，然后运行。
+5. 删掉 `cudaDeviceSynchronize();`，重新编译，再运行几次，看看有什么变化。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void countWarps()
+{
+    // TODO: only thread 0 of each block prints
+    // TODO: print "block b has w warps", with w = threads per block / 32
+}
+
+int main()
+{
+    // TODO: launch countWarps with 3 blocks of 96 threads
+    // TODO: wait for the GPU
+    return 0;
+}
+```
+
+??? tip "提示"
+    `if (threadIdx.x == 0)` 在每个线程块里选出一个线程，因为每个线程块都有自己的线程 0。用 `nvcc -arch=sm_89 -o warps warps.cu` 编译。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void countWarps()
+    {
+        if (threadIdx.x == 0) {
+            printf("block %d has %d warps\n", blockIdx.x, blockDim.x / 32);
+        }
+    }
+
+    int main()
+    {
+        countWarps<<<3, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    用 `nvcc -arch=sm_89 -o warps warps.cu` 和 `./warps` 编译并运行。你应该会看到 3 行：`block 0 has 3 warps`、`block 1 has 3 warps` 和 `block 2 has 3 warps`，顺序任意，因为 96 / 32 = 3。
 
 ## 术语表
 

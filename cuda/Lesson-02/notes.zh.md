@@ -91,6 +91,21 @@ int main()
 - `printIDs<<<2, 1024>>>();` 启动 2 个线程块，每块 1024 个线程。这没有超出上限，同样运行了 2048 个线程。
 - 其余部分和[第 00 课](../Lesson-00/notes.md)、[第 01 课](../Lesson-01/notes.md)一样。
 
+## 代码逐步讲解
+
+按照你写代码的顺序，一步一步看这个程序。新的部分是用两个线程块启动。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** 和之前一样的三行 `#include`：CUDA 运行时、内置变量和 `printf`。增加线程块不需要新的头文件。
+2. `5-8 gpu` **核函数。** 增加线程块时，核函数不用改。每个线程打印 `blockIdx.x` 和 `threadIdx.x`，现在 `blockIdx.x` 是 0 或 1。记住，`threadIdx.x` 在每个线程块里都从 0 重新开始，所以只看它并不唯一。
+3. `10-11,15-16 cpu` **main 函数。** 写好 `main`，最后是 `return 0;`。启动相关的几行写在中间。
+4. `13 cpu` **用 2 个线程块启动。** 要得到 2048 个线程，就写 `<<<2, 1024>>>`：2 个线程块乘以 1024 个线程。规则是：第二个数字保持在 1024 或以下，需要更多线程时就增大第一个数字。
+5. `14 cpu` **等待 GPU。** `cudaDeviceSynchronize();` 会等两个线程块都完成。没有它，你可能一行都看不到。
+6. `12 cpu` **写成注释的无效启动。** 最后加上这一行，提醒自己不要这样写。`<<<1, 2048>>>` 能通过编译，但运行时会把它丢弃。如果你去掉 `//`，这次启动既不打印任何内容，也没有错误信息，所以这个错误很容易被忽略。
+
+</div>
+
 ## 编译和运行
 
 第一条命令把代码编译成程序。第二条命令运行它。
@@ -121,6 +136,56 @@ Block ID: 1  ===  Thread ID: 1
 - `Block ID` 是 0 或 1，因为有两个线程块。
 - 从 0 到 1023 的每个 `Thread ID` 都出现两次，每个线程块各一次。线程编号在每个线程块里都从 0 重新开始。
 - 线程块 0 和线程块 1 的输出行混在一起，而且每次运行顺序都不同。正如“线程块调度”一节所说，两个线程块可以同时在不同的 SM 上运行。
+
+## 自己动手写
+
+自己算出全局线程 ID，让网格里的每个线程都得到一个唯一的编号。
+
+1. 用下面的框架创建 `global_id.cu`。
+2. 在核函数里，用这节课的公式算出 `id`，并把它和线程块编号、线程编号一起打印出来。
+3. 启动 3 个线程块，每块 4 个线程。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void printGlobalIDs()
+{
+    // TODO: compute the global ID: block index times block size plus thread index
+    // TODO: print "block b, thread t -> global ID id"
+}
+
+int main()
+{
+    // TODO: launch printGlobalIDs with 3 blocks of 4 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "提示"
+    公式是 `blockIdx.x * blockDim.x + threadIdx.x`。在启动配置里线程块在前：`<<<3, 4>>>`。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void printGlobalIDs()
+    {
+        int id = blockIdx.x * blockDim.x + threadIdx.x;
+        printf("block %d, thread %d -> global ID %d\n", blockIdx.x, threadIdx.x, id);
+    }
+
+    int main()
+    {
+        printGlobalIDs<<<3, 4>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    用 `nvcc -o global_id global_id.cu` 和 `./global_id` 编译并运行。你应该会看到 12 行，0 到 11 的每个全局 ID 恰好出现一次，顺序不固定。线程块 2 里的线程 3 打印全局 ID 11，因为 2 * 4 + 3 = 11。
 
 ## 术语表
 

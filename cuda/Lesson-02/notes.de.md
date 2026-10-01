@@ -91,6 +91,21 @@ int main()
 - `printIDs<<<2, 1024>>>();` startet 2 Blöcke mit je 1024 Threads. Das bleibt innerhalb der Grenze und führt trotzdem 2048 Threads aus.
 - Der Rest ist derselbe wie in [Lektion 00](../Lesson-00/notes.md) und [Lektion 01](../Lesson-01/notes.md).
 
+## Code Schritt für Schritt
+
+Geh das Programm in der Reihenfolge durch, in der du es schreiben würdest. Neu ist der Start mit zwei Blöcken.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header.** Dieselben drei `#include`-Zeilen wie vorher: die CUDA-Runtime, die eingebauten Variablen und `printf`. Für mehr Blöcke brauchst du keinen neuen Header.
+2. `5-8 gpu` **Der Kernel.** Der Kernel ändert sich nicht, wenn du Blöcke hinzufügst. Jeder Thread gibt `blockIdx.x` und `threadIdx.x` aus, und jetzt ist `blockIdx.x` gleich 0 oder 1. Denk daran, dass `threadIdx.x` in jedem Block wieder bei 0 beginnt, also ist es allein nicht eindeutig.
+3. `10-11,15-16 cpu` **Die main-Funktion.** Schreib `main` mit `return 0;` am Ende. Die Startzeilen kommen dazwischen.
+4. `13 cpu` **Der Start mit 2 Blöcken.** Für 2048 Threads schreibst du `<<<2, 1024>>>`: 2 Blöcke mal 1024 Threads. Die Regel: Halte die zweite Zahl bei 1024 oder darunter, und erhöhe die erste Zahl, wenn du mehr Threads brauchst.
+5. `14 cpu` **Auf die GPU warten.** `cudaDeviceSynchronize();` wartet auf beide Blöcke. Ohne diese Zeile siehst du vielleicht gar keine Ausgabe.
+6. `12 cpu` **Der ungültige Start, als Kommentar.** Füge diese Zeile zuletzt ein, als Erinnerung daran, was du nicht schreiben solltest. `<<<1, 2048>>>` kompiliert, aber die Runtime verwirft den Start. Wenn du das `//` entfernst, gibt dieser Start keine Zeilen und keine Fehlermeldung aus, deshalb übersieht man den Fehler leicht.
+
+</div>
+
 ## Kompilieren und ausführen
 
 Der erste Befehl kompiliert den Code zu einem Programm. Der zweite Befehl führt es aus.
@@ -121,6 +136,56 @@ Block ID: 1  ===  Thread ID: 1
 - `Block ID` ist 0 oder 1, weil es zwei Blöcke gibt.
 - Jede `Thread ID` von 0 bis 1023 kommt zweimal vor, einmal in jedem Block. Die Thread-IDs beginnen in jedem Block wieder bei 0.
 - Die Zeilen von Block 0 und Block 1 mischen sich, und die Reihenfolge ändert sich von Lauf zu Lauf. Die beiden Blöcke können gleichzeitig auf verschiedenen SMs laufen, wie unter Block-Scheduling erklärt.
+
+## Selbst schreiben
+
+Berechne die globale Thread-ID selbst, damit jeder Thread im Grid eine eindeutige Nummer bekommt.
+
+1. Leg `global_id.cu` mit dem Gerüst unten an.
+2. Berechne im Kernel `id` mit der Formel aus dieser Lektion und gib sie zusammen mit der Block-ID und der Thread-ID aus.
+3. Starte 3 Blöcke mit je 4 Threads.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void printGlobalIDs()
+{
+    // TODO: compute the global ID: block index times block size plus thread index
+    // TODO: print "block b, thread t -> global ID id"
+}
+
+int main()
+{
+    // TODO: launch printGlobalIDs with 3 blocks of 4 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "Hinweis"
+    Die Formel ist `blockIdx.x * blockDim.x + threadIdx.x`. Beim Start kommen die Blöcke zuerst: `<<<3, 4>>>`.
+
+??? note "Lösung"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void printGlobalIDs()
+    {
+        int id = blockIdx.x * blockDim.x + threadIdx.x;
+        printf("block %d, thread %d -> global ID %d\n", blockIdx.x, threadIdx.x, id);
+    }
+
+    int main()
+    {
+        printGlobalIDs<<<3, 4>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Kompiliere und starte es mit `nvcc -o global_id global_id.cu` und `./global_id`. Du solltest 12 Zeilen sehen, in denen jede globale ID von 0 bis 11 genau einmal vorkommt, in keiner festen Reihenfolge. Thread 3 in Block 2 gibt die globale ID 11 aus, weil 2 * 4 + 3 = 11.
 
 ## Glossar
 

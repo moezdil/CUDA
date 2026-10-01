@@ -95,6 +95,22 @@ int main()
 
 <cuda-launch blocks="2" threads="4" fn="printBuiltins"></cuda-launch>
 
+## Kod Gezintisi
+
+Programı yazacağın sırayla adım adım geç. İş uzun `printf`'te: bir format metni, sonra her `%d` için bir değer.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** Önceki derslerdeki üç `#include` satırının aynısı. `nvcc` ile yerleşik değişkenler hiçbir header gerektirmez, ama `device_launch_parameters.h` onları bazı editörlere de tanıtır.
+2. `5-6,13 gpu` **Boş kernel.** `__global__ void printBuiltins()` ve süslü parantezlerini yaz. Kernel hiç argüman almaz, çünkü yazdırdığı her şey GPU'nun her thread için doldurduğu yerleşik bir değişkendir.
+3. `7 gpu` **Format metni.** Metni 13 `%d` yer tutucusuyla yaz: dört değişkenin her biri için `.x`, `.y` ve `.z` ile 3 tane, `warpSize` için de 1 tane. Her thread'in çıktısı kendi satırına gelsin diye `\n` ile başla. Satırı virgülle bitir, çünkü değerler arkadan gelir.
+4. `8-12 gpu` **Değerler.** 13 değeri yer tutucularla aynı sırayla listele, sırayı kontrol etmek kolay olsun diye her satıra bir değişken yaz. Kural: her `%d` için bir değer, sırayla. Eksik bir değerle kod yine derlenebilir ve o zaman `printf` yanlış sayılar yazdırır, bu yüzden iki tarafı da say.
+5. `15-16,19-20 cpu` **main fonksiyonu.** `main`'i sonunda `return 0;` ile yaz. Önceki derslerdekiyle aynı çerçeve.
+6. `17 cpu` **Başlatma.** `<<<2, 4>>>`, `gridDim.x`'i 2'ye ve `blockDim.x`'i 4'e ayarlar. Düz sayılar `.y` ve `.z` boyutlarını 1'de bırakır.
+7. `18 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();` 8 satırın hepsi yazdırılana kadar programı açık tutar. Bu satır olmadan `main`, GPU çıktısı görünmeden bitebilir.
+
+</div>
+
 ## Derle ve Çalıştır
 
 İlk komut kodu derleyip bir programa dönüştürür. İkinci komut onu çalıştırır.
@@ -129,6 +145,62 @@ gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(0,0,0)  threadIdx=(3,0,0)  warpSize
 - `.y` ve `.z` boyutları 1, `.y` ve `.z` indeksleri ise 0'dır, çünkü `<<<2, 4>>>` düz sayılarla yazıldı.
 - `warpSize` her zaman 32'dir.
 - Burada block 1, block 0'dan önce yazdırdı. GPU block'ları birbirinden bağımsız ve sabit olmayan bir sırayla çalıştırır. Bu yüzden block'ların ve her block'un içindeki thread'lerin sırası çalıştırmadan çalıştırmaya değişebilir.
+
+## Kendin Yaz
+
+Bir başlatmanın boyutunu bulmak için yerleşik değişkenleri oku ve boyutları `dim3` değerleri olarak ver.
+
+1. Aşağıdaki iskeletle `launch_size.cu` oluştur.
+2. Satır bir kez görünsün diye yalnızca block 0'daki thread 0 yazdırsın.
+3. Block sayısını, block başına thread sayısını, toplam thread sayısını ve warp boyutunu yazdır.
+4. `dim3 grid(3)` ve `dim3 block(64)` ile başlat.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void launchSize()
+{
+    // TODO: only the first thread of the first block prints
+    // TODO: print blocks, threads per block, total threads and warp size
+}
+
+int main()
+{
+    // TODO: make a dim3 grid of 3 blocks and a dim3 block of 64 threads
+    // TODO: launch launchSize with them
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "İpucu"
+    `blockIdx.x == 0 && threadIdx.x == 0` koşulunu kontrol et. Toplam thread sayısı `gridDim.x * blockDim.x`. Bir `dim3`, başlatmaya bir sayı gibi yazılır: `<<<grid, block>>>`.
+
+??? note "Çözüm"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void launchSize()
+    {
+        if (blockIdx.x == 0 && threadIdx.x == 0) {
+            printf("blocks: %d, threads per block: %d, total threads: %d, warp size: %d\n",
+                   gridDim.x, blockDim.x, gridDim.x * blockDim.x, warpSize);
+        }
+    }
+
+    int main()
+    {
+        dim3 grid(3);
+        dim3 block(64);
+        launchSize<<<grid, block>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    `nvcc -o launch_size launch_size.cu` ve `./launch_size` ile derle ve çalıştır. Tek bir satır görmelisin: `blocks: 3, threads per block: 64, total threads: 192, warp size: 32`.
 
 ## Sözlük
 

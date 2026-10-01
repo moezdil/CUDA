@@ -131,6 +131,22 @@ int main()
 - `test01<<<1, 128>>>();`：用 1 个有 128 个线程的线程块启动核函数。
 - `cudaDeviceSynchronize();`：让 CPU 等待，直到所有 GPU 线程都执行完毕、输出也都写出来。
 
+#### 代码逐步讲解
+
+按照你写代码的顺序，一步一步看 `warp_ids.cu`。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** CUDA 运行时、内置变量，以及 `printf` 需要的 `stdio.h`。计算线程束编号不需要额外的头文件。
+2. `5-6,10 gpu` **空的核函数。** 写出 `__global__ void test01()` 和它的花括号。这个核函数不需要参数，因为它所有的值都从 `threadIdx.x` 算出来。
+3. `7 gpu` **线程束编号。** 没有内置的线程束编号，所以要自己算：`int warp_id = threadIdx.x / 32;`。整数除法把线程按 32 个一组分开。一个常见的错误是把 `/` 写成 `%`：`threadIdx.x % 32` 得到的是通道编号，而不是线程束编号。
+4. `8-9 gpu` **打印。** 打印线程块编号、线程编号和线程束编号。线程束编号一定要和线程块编号一起打印，因为线程束编号在每个线程块里都会重新开始。
+5. `12-13,17-18 cpu` **main 函数。** 写好 `main`，最后是 `return 0;`。启动和等待写在中间。
+6. `14-15 cpu` **启动核函数。** 先用注释写下计划：128 个线程 / 32 = 4 个线程束。然后写启动 `<<<1, 128>>>`。线程块大小是 32 的倍数时，每个线程束都是满的。
+7. `16 cpu` **等待 GPU。** 在启动之后加上 `cudaDeviceSynchronize();`。它让程序一直运行到全部 128 行都打印出来。
+
+</div>
+
 ### `warp_ids_2blocks.cu`
 
 这个文件用的核函数和 `warp_ids.cu` 一样。只有启动配置不同，是 `<<<2, 64>>>`。也就是 2 个线程块，每个 64 个线程，所以每个线程块有 64 / 32 = 2 个线程束。这个文件说明线程束编号在每个线程块里都会重新开始。
@@ -158,6 +174,19 @@ int main()
 
 - `test01<<<2, 64>>>();`：用 2 个各有 64 个线程的线程块启动核函数。一共 128 个线程、4 个线程束，分布在 2 个线程块里。
 - 其他各行都和 `warp_ids.cu` 一样。
+
+#### 代码逐步讲解
+
+`warp_ids_2blocks.cu` 的写法也一样，只有启动是新的。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** 和 `warp_ids.cu` 里一样的三行。把第一个文件复制一份，作为第二个文件的开头。
+2. `5-10 gpu` **同一个核函数。** 一个字符都不用改。线程束编号不需要任何额外的代码就会在每个线程块里重置，因为 `threadIdx.x` 在每个线程块里都会重置。
+3. `12-13,16-18 cpu` **同一个 main 函数。** `main`、等待和 `return 0;` 都保持原样。有两个线程块时，等待同样重要。
+4. `14-15 cpu` **新的启动。** `<<<2, 64>>>` 仍然启动 128 个线程，但分成 2 个线程块，每块 2 个线程束。注释写明了预期的结果，这样你可以拿输出和它对照。
+
+</div>
 
 ## 编译和运行
 
@@ -237,6 +266,60 @@ Block ID: 1 --- Thread ID: 63 --- Warp ID: 1
 
 - 启动 `test01<<<1, 100>>>()`。100 不是 32 的倍数，所以最后一个线程束只填满了一部分：线程束 0、1 和 2 各有 32 个线程，线程束 3 只有线程 96 到 99。GPU 仍然会为它调度一个完整的 32 线程的线程束，其中 28 个通道处于空闲状态。
 - 在核函数里加上 `int lane_id = threadIdx.x % 32;` 并把它打印出来。线程 70 应该打印出通道编号 6。
+
+## 自己动手写
+
+同时算出线程束编号和通道编号，并用通道编号在每个线程束里选出一个线程。
+
+1. 用下面的框架创建 `warp_starts.cu`。
+2. 在核函数里，用 `/` 算出 `warp_id`，用 `%` 算出 `lane_id`。
+3. 只让每个线程束的通道 0 打印它的线程块、线程束编号和线程编号。
+4. 启动 2 个线程块，每块 96 个线程。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void warpStarts()
+{
+    // TODO: compute warp_id and lane_id from threadIdx.x
+    // TODO: if this is lane 0, print "block b, warp w starts at thread t"
+}
+
+int main()
+{
+    // TODO: launch warpStarts with 2 blocks of 96 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "提示"
+    `threadIdx.x / 32` 是线程束编号，`threadIdx.x % 32` 是通道编号。一个线程束的第一个线程的通道编号是 0。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void warpStarts()
+    {
+        int warp_id = threadIdx.x / 32;
+        int lane_id = threadIdx.x % 32;
+        if (lane_id == 0) {
+            printf("block %d, warp %d starts at thread %d\n", blockIdx.x, warp_id, threadIdx.x);
+        }
+    }
+
+    int main()
+    {
+        warpStarts<<<2, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    用 `nvcc -arch=sm_89 -o warp_starts warp_starts.cu` 和 `./warp_starts` 编译并运行。你应该会看到 6 行，顺序任意：在 2 个线程块的每一个里，线程束 0 从线程 0 开始，线程束 1 从线程 32 开始，线程束 2 从线程 64 开始。
 
 ## 术语表
 

@@ -41,6 +41,23 @@ Der Start nutzt 2 Blöcke mit je 64 Threads, also insgesamt 2 × 64 = 128 Thread
 - `test01 <<<2, 64>>> ();` startet den Kernel mit 2 Blöcken aus je 64 Threads.
 - `cudaDeviceSynchronize();` lässt die CPU auf die GPU warten. Der Abschnitt zur Synchronisierung weiter unten zeigt, warum diese Zeile wichtig ist.
 
+## Code Schritt für Schritt
+
+Geh das Programm in der Reihenfolge durch, in der du es schreiben würdest. Neu ist die Warp-ID, die der Kernel aus `threadIdx.x` berechnet.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header.** Die CUDA-Runtime, die eingebauten Variablen und `stdio.h` für `printf`. Mit diesen drei Zeilen beginnt jedes Programm in diesen Lektionen.
+2. `5-6,13 gpu` **Der leere Kernel.** Schreib zuerst `__global__ void test01()` und seine Klammern. Dann füll den Rumpf Zeile für Zeile.
+3. `7-8 gpu` **Ein Plan in Kommentaren.** Schreib vor dem Code auf, was der Kernel tut und auf welchen Zahlen er beruht: 32 Threads pro Warp, also ergeben 64 Threads 2 Warps pro Block. Kommentare kosten zur Laufzeit nichts und machen die nächste Zeile leicht prüfbar.
+4. `9-10 gpu` **Die Warp-ID.** Deklariere `warp_ID_Value` und setz es dann auf `threadIdx.x / 32`. Beide Seiten sind ganze Zahlen, also fällt bei der Division der Rest weg: Thread 45 bekommt 1. Beende jede Zeile mit `;`. Der Abschnitt Kompilierfehler weiter unten zeigt, was ein fehlendes Semikolon bewirkt.
+5. `11-12 gpu` **Die Ausgabe.** Ein `printf` mit drei `%d`, gefüllt mit der Block-ID, der Thread-ID und der Warp-ID, in dieser Reihenfolge. Ein langer Aufruf darf über zwei Zeilen gehen, weil der Compiler alles bis zum `;` als eine Anweisung liest.
+6. `15-16,20-21 cpu` **Die main-Funktion.** Schreib `main` mit `return 0;` am Ende. Alles darin läuft auf der CPU.
+7. `17-18 cpu` **Der Start.** Der Kommentar wiederholt das Muster `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>`, und die nächste Zeile füllt es mit 2 Blöcken aus je 64 Threads. Die Leerzeichen um `<<<2, 64>>>` sind erlaubt. Der Compiler ignoriert sie.
+8. `19 cpu` **Auf die GPU warten.** `cudaDeviceSynchronize();` ist die Zeile, die diese Lektion absichtlich entfernt. Auf diesem Rechner hat das Programm ohne sie nichts ausgegeben.
+
+</div>
+
 ## Kompilieren und ausführen
 
 ### Schritt 1: nvcc prüfen
@@ -373,6 +390,59 @@ Die Befehle in dieser Lektion funktionieren auf anderen Linux-Rechnern genauso. 
 | Ausführen | `./project001` |
 
 Füg nach einem Kernel-Start `cudaDeviceSynchronize()` ein, wenn die CPU die Ausgabe oder die Ergebnisse der GPU braucht, bevor das Programm endet. Ohne diese Zeile gibt dieser Rechner überhaupt nichts aus.
+
+## Selbst schreiben
+
+Schreib, kompiliere und starte ein eigenes Programm mit dem ganzen Ablauf aus dieser Lektion.
+
+1. Leg `warps.cu` mit dem Gerüst unten an.
+2. Lass im Kernel nur Thread 0 jedes Blocks ausgeben, wie viele Warps sein Block hat, mit `blockDim.x / 32`.
+3. Starte 3 Blöcke mit je 96 Threads.
+4. Kompiliere mit `-arch=sm_89` (oder dem Wert deiner eigenen GPU) und führ das Programm dann aus.
+5. Entferne `cudaDeviceSynchronize();`, kompiliere erneut und führ das Programm ein paar Mal aus, um zu sehen, was sich ändert.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void countWarps()
+{
+    // TODO: only thread 0 of each block prints
+    // TODO: print "block b has w warps", with w = threads per block / 32
+}
+
+int main()
+{
+    // TODO: launch countWarps with 3 blocks of 96 threads
+    // TODO: wait for the GPU
+    return 0;
+}
+```
+
+??? tip "Hinweis"
+    `if (threadIdx.x == 0)` wählt einen Thread pro Block aus, weil jeder Block seinen eigenen Thread 0 hat. Kompiliere mit `nvcc -arch=sm_89 -o warps warps.cu`.
+
+??? note "Lösung"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void countWarps()
+    {
+        if (threadIdx.x == 0) {
+            printf("block %d has %d warps\n", blockIdx.x, blockDim.x / 32);
+        }
+    }
+
+    int main()
+    {
+        countWarps<<<3, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Kompiliere und starte es mit `nvcc -arch=sm_89 -o warps warps.cu` und `./warps`. Du solltest 3 Zeilen sehen, `block 0 has 3 warps`, `block 1 has 3 warps` und `block 2 has 3 warps`, in beliebiger Reihenfolge, weil 96 / 32 = 3.
 
 ## Glossar
 

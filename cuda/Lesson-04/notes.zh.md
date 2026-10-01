@@ -95,6 +95,22 @@ int main()
 
 <cuda-launch blocks="2" threads="4" fn="printBuiltins"></cuda-launch>
 
+## 代码逐步讲解
+
+按照你写代码的顺序，一步一步看这个程序。主要的工作在那个很长的 `printf` 里：一个格式字符串，然后每个 `%d` 对应一个值。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** 和前几课一样的三行 `#include`。用 `nvcc` 时，内置变量不需要任何头文件，但 `device_launch_parameters.h` 能让某些编辑器也认识它们。
+2. `5-6,13 gpu` **空的核函数。** 写出 `__global__ void printBuiltins()` 和它的花括号。这个核函数不接收参数，因为它打印的全是 GPU 为每个线程填好的内置变量。
+3. `7 gpu` **格式字符串。** 写出带 13 个 `%d` 占位符的文本：四个变量各有 `.x`、`.y` 和 `.z`，每个变量 3 个，再加上 `warpSize` 的 1 个。以 `\n` 开头，让每个线程的输出各占一行。这一行以逗号结尾，因为后面跟着各个值。
+4. `8-12 gpu` **各个值。** 按照占位符的顺序列出 13 个值，每行一个变量，这样顺序很容易检查。规则是：每个 `%d` 对应一个值，顺序一致。少一个值时程序仍可能通过编译，然后 `printf` 会打印出错误的数字，所以两边都要数一数。
+5. `15-16,19-20 cpu` **main 函数。** 写好 `main`，最后是 `return 0;`。框架和前几课一样。
+6. `17 cpu` **启动核函数。** `<<<2, 4>>>` 把 `gridDim.x` 设为 2，把 `blockDim.x` 设为 4。普通数字会让 `.y` 和 `.z` 方向的大小保持为 1。
+7. `18 cpu` **等待 GPU。** `cudaDeviceSynchronize();` 让程序一直运行到全部 8 行都打印出来。没有它，`main` 可能在 GPU 的输出出现之前就结束了。
+
+</div>
+
 ## 编译和运行
 
 第一条命令把代码编译成程序。第二条命令运行它。
@@ -129,6 +145,62 @@ gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(0,0,0)  threadIdx=(3,0,0)  warpSize
 - `.y` 和 `.z` 方向的大小是 1，`.y` 和 `.z` 方向的编号是 0，因为 `<<<2, 4>>>` 用的是普通数字。
 - `warpSize` 始终是 32。
 - 这里线程块 1 比线程块 0 先打印。GPU 独立地运行各个线程块，顺序不固定，所以线程块之间的顺序，以及每个线程块内部线程的顺序，每次运行都可能不同。
+
+## 自己动手写
+
+读取内置变量来算出一次启动的规模，并用 `dim3` 值传入各个大小。
+
+1. 用下面的框架创建 `launch_size.cu`。
+2. 只让线程块 0 的线程 0 打印，这样这一行只出现一次。
+3. 打印线程块数量、每个线程块的线程数、线程总数和线程束大小。
+4. 用 `dim3 grid(3)` 和 `dim3 block(64)` 启动。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void launchSize()
+{
+    // TODO: only the first thread of the first block prints
+    // TODO: print blocks, threads per block, total threads and warp size
+}
+
+int main()
+{
+    // TODO: make a dim3 grid of 3 blocks and a dim3 block of 64 threads
+    // TODO: launch launchSize with them
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "提示"
+    检查 `blockIdx.x == 0 && threadIdx.x == 0`。线程总数是 `gridDim.x * blockDim.x`。`dim3` 在启动配置里的用法和数字一样：`<<<grid, block>>>`。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void launchSize()
+    {
+        if (blockIdx.x == 0 && threadIdx.x == 0) {
+            printf("blocks: %d, threads per block: %d, total threads: %d, warp size: %d\n",
+                   gridDim.x, blockDim.x, gridDim.x * blockDim.x, warpSize);
+        }
+    }
+
+    int main()
+    {
+        dim3 grid(3);
+        dim3 block(64);
+        launchSize<<<grid, block>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    用 `nvcc -o launch_size launch_size.cu` 和 `./launch_size` 编译并运行。你应该会看到一行：`blocks: 3, threads per block: 64, total threads: 192, warp size: 32`。
 
 ## 术语表
 

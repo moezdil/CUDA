@@ -41,6 +41,23 @@ The launch uses 2 blocks with 64 threads each, so 2 × 64 = 128 threads in total
 - `test01 <<<2, 64>>> ();` launches the kernel with 2 blocks of 64 threads.
 - `cudaDeviceSynchronize();` makes the CPU wait for the GPU. The section on synchronization below shows why this line matters.
 
+## Code Walkthrough
+
+Step through the program in the order you would write it. The new part is the warp ID, which the kernel computes from `threadIdx.x`.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Headers.** The CUDA runtime, the built-in variables, and `stdio.h` for `printf`. These three lines start every program in these lessons.
+2. `5-6,13 gpu` **The empty kernel.** Write `__global__ void test01()` and its braces first. Then fill the body line by line.
+3. `7-8 gpu` **A plan in comments.** Before the code, write down what the kernel does and the numbers it relies on: 32 threads per warp, so 64 threads make 2 warps per block. Comments cost nothing at run time and make the next line easy to check.
+4. `9-10 gpu` **The warp ID.** Declare `warp_ID_Value`, then set it to `threadIdx.x / 32`. Both sides are integers, so the division drops the remainder: thread 45 gets 1. End each line with `;`. The Compilation Errors section below shows what a missing one does.
+5. `11-12 gpu` **The print.** One `printf` with three `%d`, filled by the block ID, the thread ID and the warp ID, in that order. A long call can go over two lines, because the compiler reads up to the `;` as one statement.
+6. `15-16,20-21 cpu` **The main function.** Write `main` with `return 0;` at the end. Everything in it runs on the CPU.
+7. `17-18 cpu` **The launch.** The comment repeats the pattern `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>`, and the next line fills it in with 2 blocks of 64 threads. The spaces around `<<<2, 64>>>` are allowed. The compiler ignores them.
+8. `19 cpu` **Wait for the GPU.** `cudaDeviceSynchronize();` is the line this lesson removes on purpose. On this machine the program printed nothing without it.
+
+</div>
+
 ## Compile and Run
 
 ### Step 1: verify nvcc
@@ -373,6 +390,59 @@ The commands in this lesson work the same way on other Linux machines. Only the 
 | Run | `./project001` |
 
 Add `cudaDeviceSynchronize()` after a kernel launch when the CPU needs the GPU's output or results before the program ends. Without it, this machine prints nothing at all.
+
+## Write It Yourself
+
+Write, compile and run a program of your own with the full cycle from this lesson.
+
+1. Create `warps.cu` with the skeleton below.
+2. In the kernel, let only thread 0 of each block print how many warps its block has, using `blockDim.x / 32`.
+3. Launch 3 blocks of 96 threads.
+4. Compile with `-arch=sm_89` (or your own GPU's value), then run it.
+5. Remove `cudaDeviceSynchronize();`, compile again, and run it a few times to see what changes.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void countWarps()
+{
+    // TODO: only thread 0 of each block prints
+    // TODO: print "block b has w warps", with w = threads per block / 32
+}
+
+int main()
+{
+    // TODO: launch countWarps with 3 blocks of 96 threads
+    // TODO: wait for the GPU
+    return 0;
+}
+```
+
+??? tip "Hint"
+    `if (threadIdx.x == 0)` picks one thread per block, because every block has its own thread 0. Compile with `nvcc -arch=sm_89 -o warps warps.cu`.
+
+??? note "Solution"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void countWarps()
+    {
+        if (threadIdx.x == 0) {
+            printf("block %d has %d warps\n", blockIdx.x, blockDim.x / 32);
+        }
+    }
+
+    int main()
+    {
+        countWarps<<<3, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Compile and run it with `nvcc -arch=sm_89 -o warps warps.cu` and `./warps`. You should see 3 lines, `block 0 has 3 warps`, `block 1 has 3 warps` and `block 2 has 3 warps`, in any order, because 96 / 32 = 3.
 
 ## Glossary
 

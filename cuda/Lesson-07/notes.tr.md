@@ -131,6 +131,22 @@ int main()
 - `test01<<<1, 128>>>();`: kernel'ı 128 thread'lik 1 block ile başlatır.
 - `cudaDeviceSynchronize();`: tüm GPU thread'leri bitip çıktı yazılana kadar CPU'yu bekletir.
 
+#### Kod Gezintisi
+
+`warp_ids.cu`'yu yazacağın sırayla adım adım geç.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** CUDA runtime, yerleşik değişkenler ve `printf` için `stdio.h`. Warp ID'si hesaplamak ek bir header gerektirmez.
+2. `5-6,10 gpu` **Boş kernel.** `__global__ void test01()` ve süslü parantezlerini yaz. Kernel hiç argüman almaz, çünkü her şeyi `threadIdx.x`'ten hesaplar.
+3. `7 gpu` **Warp ID'si.** Yerleşik bir warp ID'si yok, bu yüzden onu hesapla: `int warp_id = threadIdx.x / 32;`. Tam sayı bölmesi thread'leri 32'şerli gruplar. Sık yapılan bir hata `/` yerine `%` kullanmaktır: `threadIdx.x % 32` warp ID'sini değil, lane ID'sini verir.
+4. `8-9 gpu` **Yazdırma.** Block ID'sini, thread ID'sini ve warp ID'sini yazdır. Warp ID'sini her zaman block ID'siyle birlikte yazdır, çünkü warp ID'si her block'ta yeniden başlar.
+5. `12-13,17-18 cpu` **main fonksiyonu.** `main`'i sonunda `return 0;` ile yaz. Başlatma ve bekleme aralarına gelir.
+6. `14-15 cpu` **Başlatma.** Önce planı yorum olarak yaz: 128 thread / 32 = 4 warp. Sonra başlatma `<<<1, 128>>>`. 32'nin katı olan bir block boyutu her warp'u doldurur.
+7. `16 cpu` **GPU'yu bekle.** Başlatmadan sonra `cudaDeviceSynchronize();` ekle. Bu satır 128 satırın hepsi yazdırılana kadar programı açık tutar.
+
+</div>
+
 ### `warp_ids_2blocks.cu`
 
 Bu dosya `warp_ids.cu` ile aynı kernel'ı kullanır. Yalnızca başlatma ayarı farklı: `<<<2, 64>>>`. Bu, 64 thread'lik 2 block demek, yani her block'ta 64 / 32 = 2 warp var. Dosya, warp ID'sinin her block'ta sıfırlandığını gösteriyor.
@@ -158,6 +174,19 @@ int main()
 
 - `test01<<<2, 64>>>();`: kernel'ı 64 thread'lik 2 block ile başlatır. Bu, 2 block'a bölünmüş toplam 128 thread ve 4 warp eder.
 - Diğer tüm satırlar `warp_ids.cu` ile aynı.
+
+#### Kod Gezintisi
+
+`warp_ids_2blocks.cu` da aynı şekilde yazılır. Yalnızca başlatma yeni.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** `warp_ids.cu`'daki üç satırın aynısı. İkinci dosyaya ilkinin bir kopyası olarak başla.
+2. `5-10 gpu` **Aynı kernel.** Tek bir karakter bile değişmez. Warp ID'si hiç ek kod olmadan her block'ta sıfırlanır, çünkü `threadIdx.x` her block'ta sıfırlanır.
+3. `12-13,16-18 cpu` **Aynı main fonksiyonu.** `main`, bekleme ve `return 0;` olduğu gibi kalır. İki block ile de bekleme aynı derecede önemlidir.
+4. `14-15 cpu` **Yeni başlatma.** `<<<2, 64>>>` yine 128 thread başlatır, ama her biri 2 warp'lık 2 block olarak. Yorum beklenen sonucu yazar, böylece çıktıyı onunla karşılaştırabilirsin.
+
+</div>
 
 ## Derle ve Çalıştır
 
@@ -237,6 +266,60 @@ Thread ID'si yalnızca 63'e kadar çıkar, çünkü her block'ta 64 thread var. 
 
 - `test01<<<1, 100>>>()` başlat. 100, 32'nin katı değil, bu yüzden son warp yalnızca kısmen dolu olur: warp 0, 1 ve 2'de 32'şer thread var, warp 3'te ise yalnızca 96 ile 99 arası thread'ler var. GPU yine de onun için 32'lik tam bir warp zamanlar ve 28 lane boşta kalır.
 - Kernel'a `int lane_id = threadIdx.x % 32;` ekle ve onu yazdır. Thread 70, lane ID olarak 6 yazdırmalı.
+
+## Kendin Yaz
+
+Hem warp ID'sini hem lane ID'sini hesapla ve lane ID'sini kullanarak her warp'tan bir thread seç.
+
+1. Aşağıdaki iskeletle `warp_starts.cu` oluştur.
+2. Kernel'da `warp_id`'yi `/` ile, `lane_id`'yi `%` ile hesapla.
+3. Her warp'un yalnızca lane 0'ı kendi block'unu, warp ID'sini ve thread ID'sini yazdırsın.
+4. 96 thread'li 2 block başlat.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void warpStarts()
+{
+    // TODO: compute warp_id and lane_id from threadIdx.x
+    // TODO: if this is lane 0, print "block b, warp w starts at thread t"
+}
+
+int main()
+{
+    // TODO: launch warpStarts with 2 blocks of 96 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "İpucu"
+    `threadIdx.x / 32` warp ID'si, `threadIdx.x % 32` de lane ID'sidir. Bir warp'un ilk thread'inin lane ID'si 0'dır.
+
+??? note "Çözüm"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void warpStarts()
+    {
+        int warp_id = threadIdx.x / 32;
+        int lane_id = threadIdx.x % 32;
+        if (lane_id == 0) {
+            printf("block %d, warp %d starts at thread %d\n", blockIdx.x, warp_id, threadIdx.x);
+        }
+    }
+
+    int main()
+    {
+        warpStarts<<<2, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    `nvcc -arch=sm_89 -o warp_starts warp_starts.cu` ve `./warp_starts` ile derle ve çalıştır. Herhangi bir sırayla 6 satır görmelisin: 2 block'un her birinde warp 0 thread 0'da, warp 1 thread 32'de ve warp 2 thread 64'te başlar.
 
 ## Sözlük
 

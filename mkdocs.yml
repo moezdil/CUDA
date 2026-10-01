@@ -17,6 +17,8 @@ markdown_extensions:
   - pymdownx.highlight:
       pygments_lang_class: true
   - pymdownx.superfences
+  - md_in_html
+  - pymdownx.details
 
 nav:
   - Home: index.md

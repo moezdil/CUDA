@@ -223,6 +223,30 @@ int main()
 - `cudaFree(d_a)`：归还设备端内存。程序运行期间，GPU 内存不会自动替你释放，所以一个忘了这一步、又长时间运行的程序会不断吃掉 GPU 内存。
 - `free(h_a)`：归还主机端内存，和普通 C 程序一样。这些名字是有意对应的：`cudaFree` 对应 `cudaMalloc`，`free` 对应 `malloc`。
 
+## 代码逐步讲解
+
+按照你写代码的顺序，一步一步看这个程序。先写辅助代码和核函数，然后用六个步骤填好 `main`。分配内存之后马上写好释放内存的代码，这样你就不会忘记。
+
+<div class="code-walk" markdown>
+
+1. `1-4 cpu` **头文件。** 常用的三行，再加上 `stdlib.h`，它声明了 `malloc`、`free` 和 `exit`。没有它，主机端内存相关的调用就无法通过编译。
+2. `6 cpu` **大小。** `#define N 1024` 把向量大小放在一个地方。后面每一行都用 `N`，所以换一个大小只需要改这一处。
+3. `8-17 cpu` **错误检查。** 在任何 CUDA 调用之前先写好 `CHECK` 宏，这样每个调用从一开始就能用它。它执行这个调用，把结果和 `cudaSuccess` 比较，如果不同，就打印错误信息、文件和行号，然后停止程序。每行末尾的 `\` 让宏在下一行继续，所以漏掉一个就会让整个宏出错。
+4. `19-20,25 gpu` **核函数签名。** `__global__ void vectorAdd(...)` 用 `const int *` 接收两个输入，用 `int *` 接收输出，还有长度 `n`。之后传进来的指针必须是设备端指针，因为核函数在 GPU 上运行。
+5. `21-24 gpu` **核函数的函数体。** 每个线程从 `threadIdx.x` 得到自己的下标，拿它和 `n` 做比较，然后把一对元素相加。规则是：一个线程，一个元素，没有循环。边界检查只要一行，等线程数和 `n` 对不上时，它就能保护你。
+6. `27-28,78-79 cpu` **main 函数。** 写好 `main`，最后是 `return 0;`。六个步骤写在它们中间。
+7. `29 cpu` **字节，而不是元素个数。** 每个内存函数都按字节计数，所以先算一次 `N * sizeof(int)`。一个常见的错误是传入 `N`，这样只会分配和复制四分之一的数据。
+8. `31-38 cpu` **第 1 步：分配内存。** 三个 `malloc` 调用分配主机端数组，三个 `cudaMalloc` 调用分配设备端数组。`cudaMalloc` 接收的是 `&d_a`，也就是指针的地址，因为它要把新的设备端地址写进这个指针。
+9. `71-77 cpu` **第 6 步：释放内存。** 现在就在 `main` 的末尾写好释放内存的代码，趁你还能看到分配的部分：每个 `d_` 指针用 `cudaFree`，每个 `h_` 指针用 `free`。把它们搞混，比如写成 `free(d_a)`，就是一个错误。
+10. `40-44 cpu` **第 2 步：填好输入数据。** 一个循环设置 `h_a[i] = i` 和 `h_b[i] = N - i`，所以每个正确的和都是 1024。要选那些你事先就知道结果的输入。`h_c` 保持为空，因为核函数会写它。
+11. `46-48 cpu` **第 3 步：复制到设备端。** `cudaMemcpy` 先接收目标，然后是来源、大小和方向。这里就是用 `cudaMemcpyHostToDevice` 把 `h_a` 复制到 `d_a`。
+12. `50-52 cpu` **第 4 步：启动。** `vectorAdd<<<1, N>>>(d_a, d_b, d_c, N)` 为每个元素启动一个线程，并且只传入 `d_` 指针。启动不会返回错误码，所以下一行的 `CHECK(cudaGetLastError())` 会问一下它有没有被接受。
+13. `54-55 cpu` **第 5 步：把结果复制回来。** 同样是 `cudaMemcpy`，目标是 `h_c`，方向是 `cudaMemcpyDeviceToHost`。这次复制会等核函数执行完毕，所以不需要 `cudaDeviceSynchronize()`。
+14. `57-63 cpu` **检查每个元素。** 在 CPU 上把每个 `h_c[i]` 和 `h_a[i] + h_b[i]` 做比较，并统计不一致的个数。程序自己检查能发现全部 1024 个元素里的错误，而不只是你打印出来的那几个。
+15. `64-69 cpu` **打印一部分结果。** 打印前四个和、一行 `...`、最后一个和，以及错误个数。要看的是错误个数这一行：0 表示每个元素都是对的。
+
+</div>
+
 ## 编译和运行
 
 ```bash
@@ -260,6 +284,142 @@ errors: 0
 
 > [!WARNING]
 > 把 `N` 设为 2048 再运行一次。一个线程块不能超过 1024 个线程，所以这次启动会被拒绝，`CHECK(cudaGetLastError())` 应该会以 `CUDA error: invalid configuration argument` 停止程序。如果没有这个检查，核函数根本不会运行，但程序会继续执行：它会把核函数从没写过的设备端内存复制回来，应该会报告大量错误。解决办法是使用多个线程块，这就是下一课的内容。
+
+## 自己动手写
+
+用一个计算 `c[i] = 2 * a[i] + b[i]` 的新核函数，自己把六个步骤都走一遍。
+
+1. 用下面的框架创建 `scale_add.cu`。头文件、`N`、`CHECK` 和最后的打印部分都已经给出。
+2. 写出核函数的函数体。
+3. 在 `main` 里填好六个步骤，其中 `h_a[i] = i`，`h_b[i] = 1`。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N 256
+
+#define CHECK(call)                                                  \
+    do {                                                             \
+        cudaError_t err = (call);                                    \
+        if (err != cudaSuccess) {                                    \
+            printf("CUDA error: %s (%s:%d)\n",                       \
+                   cudaGetErrorString(err), __FILE__, __LINE__);     \
+            exit(1);                                                 \
+        }                                                            \
+    } while (0)
+
+__global__ void scaleAdd(const int *a, const int *b, int *c, int n)
+{
+    // TODO: one thread per element: c[i] = 2 * a[i] + b[i], with a bounds check
+}
+
+int main()
+{
+    size_t bytes = N * sizeof(int);
+    int *h_a, *h_b, *h_c, *d_a, *d_b, *d_c;
+
+    // TODO 1: allocate h_a, h_b, h_c with malloc and d_a, d_b, d_c with cudaMalloc
+    // TODO 2: fill h_a[i] = i and h_b[i] = 1
+    // TODO 3: copy h_a and h_b to the device
+    // TODO 4: launch scaleAdd with 1 block of N threads, then check the launch
+    // TODO 5: copy d_c back to h_c
+
+    int errors = 0;
+    for (int i = 0; i < N; i++) {
+        if (h_c[i] != 2 * h_a[i] + h_b[i]) {
+            errors++;
+        }
+    }
+    printf("c[0] = %d, c[1] = %d, c[%d] = %d\n", h_c[0], h_c[1], N - 1, h_c[N - 1]);
+    printf("errors: %d\n", errors);
+
+    // TODO 6: free the device and host memory
+    return 0;
+}
+```
+
+??? tip "提示"
+    核函数的函数体就是第 08 课的核函数，只改了一行：`c[i] = 2 * a[i] + b[i];`。`main` 里的每个步骤都是每个数组一行，从上面的程序复制过来，再改一下名字。记住：`cudaMemcpy(destination, source, bytes, direction)`。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+    #include <stdlib.h>
+
+    #define N 256
+
+    #define CHECK(call)                                                  \
+        do {                                                             \
+            cudaError_t err = (call);                                    \
+            if (err != cudaSuccess) {                                    \
+                printf("CUDA error: %s (%s:%d)\n",                       \
+                       cudaGetErrorString(err), __FILE__, __LINE__);     \
+                exit(1);                                                 \
+            }                                                            \
+        } while (0)
+
+    __global__ void scaleAdd(const int *a, const int *b, int *c, int n)
+    {
+        int i = threadIdx.x;
+        if (i < n) {
+            c[i] = 2 * a[i] + b[i];
+        }
+    }
+
+    int main()
+    {
+        size_t bytes = N * sizeof(int);
+        int *h_a, *h_b, *h_c, *d_a, *d_b, *d_c;
+
+        // 1. allocate
+        h_a = (int *)malloc(bytes);
+        h_b = (int *)malloc(bytes);
+        h_c = (int *)malloc(bytes);
+        CHECK(cudaMalloc(&d_a, bytes));
+        CHECK(cudaMalloc(&d_b, bytes));
+        CHECK(cudaMalloc(&d_c, bytes));
+
+        // 2. fill the inputs
+        for (int i = 0; i < N; i++) {
+            h_a[i] = i;
+            h_b[i] = 1;
+        }
+
+        // 3. copy to the device
+        CHECK(cudaMemcpy(d_a, h_a, bytes, cudaMemcpyHostToDevice));
+        CHECK(cudaMemcpy(d_b, h_b, bytes, cudaMemcpyHostToDevice));
+
+        // 4. launch and check
+        scaleAdd<<<1, N>>>(d_a, d_b, d_c, N);
+        CHECK(cudaGetLastError());
+
+        // 5. copy the result back
+        CHECK(cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost));
+
+        int errors = 0;
+        for (int i = 0; i < N; i++) {
+            if (h_c[i] != 2 * h_a[i] + h_b[i]) {
+                errors++;
+            }
+        }
+        printf("c[0] = %d, c[1] = %d, c[%d] = %d\n", h_c[0], h_c[1], N - 1, h_c[N - 1]);
+        printf("errors: %d\n", errors);
+
+        // 6. free
+        CHECK(cudaFree(d_a));
+        CHECK(cudaFree(d_b));
+        CHECK(cudaFree(d_c));
+        free(h_a);
+        free(h_b);
+        free(h_c);
+        return 0;
+    }
+    ```
+
+    用 `nvcc -arch=sm_89 -o scale_add scale_add.cu` 和 `./scale_add` 编译并运行。如果每一步都对，你应该会看到 `c[0] = 1, c[1] = 3, c[255] = 511` 和 `errors: 0`，因为 2 * 255 + 1 = 511。
 
 ## 术语表
 

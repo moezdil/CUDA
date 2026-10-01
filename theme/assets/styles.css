@@ -853,3 +853,64 @@ html[data-mode="light"] .dg{--y:#9a6700;--v:#8250df}
   .hd[data-s="4"] .hd-link span::after{content:" ↑"}
 }
 @media (prefers-reduced-motion: reduce){.hd-link b::after{display:none}}
+
+/* Code walkthrough: a copy of the code above, stepped through in writing order. CPU steps are blue, GPU steps green. */
+.cw{--cw:var(--cool)}
+.cw .cw-hint{margin:-6px 0 12px}
+.prose .cw .cw-code{margin:0 0 12px}
+.prose .cw .cw-code pre{position:relative;max-height:min(62vh,30em);overflow:auto;padding:40px 0 12px;scroll-behavior:smooth;overscroll-behavior:contain}
+.cw-code code{display:inline-block;min-width:100%}
+.cw-l{display:block;padding:0 18px 0 0;border-left:3px solid transparent;cursor:pointer;transition:opacity .2s ease,background .2s ease,border-color .2s ease}
+.cw-l::before{content:attr(data-n);display:inline-block;width:2.6em;padding-right:1.1em;text-align:right;color:var(--dimmer);user-select:none;-webkit-user-select:none}
+.cw-l.blank{cursor:default}
+.cw-l.gpu{--cw:var(--accent)}.cw-l.cpu{--cw:var(--cool)}
+.cw-l:hover:not(.blank){background:var(--accent-wash)}
+.cw-l.on{border-left-color:var(--cw);background:color-mix(in srgb,var(--cw) 10%,transparent)}
+.cw-l.on::before{color:var(--cw);font-weight:700}
+.cw-l.dim{opacity:.38}
+.cw.writing .cw-l.dim{opacity:.72}
+.cw-l.new{animation:cw-in .4s ease-out}
+@keyframes cw-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.cw-step{border-left:2px solid var(--accent);padding:4px 0 4px 14px;min-height:6.5em;font-family:var(--sans);font-size:.95rem;line-height:1.6;color:var(--dim)}
+.cw-step:has(.cw-badge.cpu){border-left-color:var(--cool)}
+.cw-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:6px;font-family:var(--mono);font-size:.74rem;color:var(--dim)}
+.cw-badge{font-weight:700;font-size:.7rem;letter-spacing:.08em;border-radius:999px;padding:2px 9px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent)}
+.cw-badge.cpu{border-color:var(--cool-line);background:rgba(88,166,255,.1);color:var(--cool)}
+.cw-ln{margin-left:auto;color:var(--dimmer)}
+.cw-text strong,.cw-text b{color:var(--text)}
+.cw-text p{margin:0 0 .5em}.cw-text p:last-child{margin:0}
+.cw-nav{margin:0 0 12px}
+.cw-dots{display:flex;flex-wrap:wrap;gap:5px;flex:1;justify-content:center}
+.cw-dots button{width:10px;height:10px;padding:0;border-radius:5px;border:1px solid var(--accent-line);background:none;cursor:pointer;transition:width .2s ease,background .2s ease}
+.cw-dots button.cpu{border-color:var(--cool-line)}
+.cw-dots button.done{background:var(--accent-line)}
+.cw-dots button.cpu.done{background:var(--cool-line)}
+.cw-dots button.on{width:22px;background:var(--accent);border-color:var(--accent)}
+.cw-dots button.cpu.on{background:var(--cool);border-color:var(--cool)}
+@media (max-width:560px){
+  .prose .cw{padding:14px 12px}
+  .cw-nav .dg-ctl{width:100%;justify-content:space-between}
+  .cw-dots{order:3;justify-content:flex-start}
+  .cw-nav .pos{order:4}
+  .prose .cw .cw-code pre{font-size:.78rem}
+  .cw-l::before{width:2.2em;padding-right:.8em}
+}
+@media (prefers-reduced-motion: reduce){.prose .cw .cw-code pre{scroll-behavior:auto}}
+
+/* Collapsible Hint and Solution blocks (??? tip / ??? note), drawn like the callouts. */
+.prose details{border:1px solid var(--border);border-left:3px solid var(--cool);border-radius:10px;background:rgba(88,166,255,.06);margin:1.2em 0;font-size:.95rem}
+.prose details.tip{border-left-color:var(--accent);background:var(--accent-wash)}
+.prose details>summary{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;list-style:none;font-family:var(--mono);font-size:.74rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--cool);border-radius:10px}
+.prose details>summary::-webkit-details-marker{display:none}
+.prose details>summary::before{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(-45deg);margin:0 4px 0 2px;transition:transform .2s ease}
+.prose details[open]>summary::before{transform:rotate(45deg) translate(-2px,-1px)}
+.prose details>summary:hover{background:rgba(88,166,255,.06)}
+.prose details>summary:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+.prose details.tip>summary{color:var(--accent)}
+.prose details.tip>summary:hover{background:var(--accent-wash)}
+.prose details[open]>summary{border-bottom:1px solid var(--divider);border-radius:10px 10px 0 0}
+.prose details{padding:0 16px}
+.prose details>summary{margin:0 -16px}
+.prose details[open]>summary{margin-bottom:12px}
+.prose details[open]{padding-bottom:2px}

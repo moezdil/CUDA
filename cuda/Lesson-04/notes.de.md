@@ -95,6 +95,22 @@ int main()
 
 <cuda-launch blocks="2" threads="4" fn="printBuiltins"></cuda-launch>
 
+## Code Schritt für Schritt
+
+Geh das Programm in der Reihenfolge durch, in der du es schreiben würdest. Die Arbeit steckt im langen `printf`: ein Format-String, dann ein Wert für jedes `%d`.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header.** Dieselben drei `#include`-Zeilen wie in den früheren Lektionen. Mit `nvcc` brauchen die eingebauten Variablen keinen Header, aber durch `device_launch_parameters.h` kennen auch manche Editoren sie.
+2. `5-6,13 gpu` **Der leere Kernel.** Schreib `__global__ void printBuiltins()` und seine Klammern. Der Kernel nimmt keine Argumente, weil alles, was er ausgibt, eine eingebaute Variable ist, die die GPU für jeden Thread füllt.
+3. `7 gpu` **Der Format-String.** Schreib den Text mit 13 `%d`-Platzhaltern: je 3 für die vier Variablen mit `.x`, `.y` und `.z`, und 1 für `warpSize`. Beginne mit `\n`, damit die Ausgabe jedes Threads in einer eigenen Zeile steht. Beende die Zeile mit einem Komma, weil die Werte folgen.
+4. `8-12 gpu` **Die Werte.** Liste die 13 Werte in derselben Reihenfolge wie die Platzhalter auf, eine Variable pro Zeile, damit du die Reihenfolge leicht prüfen kannst. Die Regel: ein Wert pro `%d`, in der richtigen Reihenfolge. Ein fehlender Wert kann trotzdem kompilieren, und dann gibt `printf` falsche Zahlen aus, also zähl auf beiden Seiten.
+5. `15-16,19-20 cpu` **Die main-Funktion.** Schreib `main` mit `return 0;` am Ende. Es ist derselbe Rahmen wie in den früheren Lektionen.
+6. `17 cpu` **Der Start.** `<<<2, 4>>>` setzt `gridDim.x` auf 2 und `blockDim.x` auf 4. Einfache Zahlen lassen die Größen `.y` und `.z` bei 1.
+7. `18 cpu` **Auf die GPU warten.** `cudaDeviceSynchronize();` hält das Programm am Leben, bis alle 8 Zeilen ausgegeben sind. Ohne diese Zeile kann `main` enden, bevor die Ausgabe der GPU erscheint.
+
+</div>
+
 ## Kompilieren und ausführen
 
 Der erste Befehl kompiliert den Code zu einem Programm. Der zweite Befehl führt es aus.
@@ -129,6 +145,62 @@ gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(0,0,0)  threadIdx=(3,0,0)  warpSize
 - Die Größen in `.y` und `.z` sind 1 und die Indizes in `.y` und `.z` sind 0, weil `<<<2, 4>>>` einfache Zahlen nutzt.
 - `warpSize` ist immer 32.
 - Hier hat Block 1 vor Block 0 ausgegeben. Die GPU führt Blöcke unabhängig und in keiner festen Reihenfolge aus. Die Reihenfolge der Blöcke und der Threads in jedem Block kann sich also von Lauf zu Lauf ändern.
+
+## Selbst schreiben
+
+Lies die eingebauten Variablen, um die Größe eines Starts herauszufinden, und übergib die Größen als `dim3`-Werte.
+
+1. Leg `launch_size.cu` mit dem Gerüst unten an.
+2. Lass nur Thread 0 von Block 0 etwas ausgeben, damit die Zeile einmal erscheint.
+3. Gib die Anzahl der Blöcke, die Threads pro Block, die Gesamtzahl der Threads und die Warp-Größe aus.
+4. Starte mit `dim3 grid(3)` und `dim3 block(64)`.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void launchSize()
+{
+    // TODO: only the first thread of the first block prints
+    // TODO: print blocks, threads per block, total threads and warp size
+}
+
+int main()
+{
+    // TODO: make a dim3 grid of 3 blocks and a dim3 block of 64 threads
+    // TODO: launch launchSize with them
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "Hinweis"
+    Prüfe `blockIdx.x == 0 && threadIdx.x == 0`. Die Gesamtzahl der Threads ist `gridDim.x * blockDim.x`. Ein `dim3` kommt in den Start wie eine Zahl: `<<<grid, block>>>`.
+
+??? note "Lösung"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void launchSize()
+    {
+        if (blockIdx.x == 0 && threadIdx.x == 0) {
+            printf("blocks: %d, threads per block: %d, total threads: %d, warp size: %d\n",
+                   gridDim.x, blockDim.x, gridDim.x * blockDim.x, warpSize);
+        }
+    }
+
+    int main()
+    {
+        dim3 grid(3);
+        dim3 block(64);
+        launchSize<<<grid, block>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Kompiliere und starte es mit `nvcc -o launch_size launch_size.cu` und `./launch_size`. Du solltest eine Zeile sehen: `blocks: 3, threads per block: 64, total threads: 192, warp size: 32`.
 
 ## Glossar
 

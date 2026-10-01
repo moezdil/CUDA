@@ -91,6 +91,21 @@ int main()
 - `printIDs<<<2, 1024>>>();`, her biri 1024 thread'li 2 block başlatır. Bu, sınırın içinde kalır ve yine de 2048 thread çalıştırır.
 - Geri kalanı [Ders 00](../Lesson-00/notes.md) ve [Ders 01](../Lesson-01/notes.md) ile aynıdır.
 
+## Kod Gezintisi
+
+Programı yazacağın sırayla adım adım geç. Yeni olan kısım, iki block ile başlatma.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** Öncekiyle aynı üç `#include` satırı: CUDA runtime, yerleşik değişkenler ve `printf`. Block eklemek yeni bir header gerektirmez.
+2. `5-8 gpu` **Kernel.** Block eklediğinde kernel değişmez. Her thread `blockIdx.x` ve `threadIdx.x`'i yazdırır, artık `blockIdx.x` 0 ya da 1 olur. `threadIdx.x`'in her block'ta 0'dan yeniden başladığını unutma, yani tek başına benzersiz değildir.
+3. `10-11,15-16 cpu` **main fonksiyonu.** `main`'i sonunda `return 0;` ile yaz. Başlatma satırları aralarına gelir.
+4. `13 cpu` **2 block ile başlatma.** 2048 thread almak için `<<<2, 1024>>>` yaz: 2 block çarpı 1024 thread. Kural: ikinci sayıyı 1024 ya da daha az tut, daha fazla thread gerektiğinde ilk sayıyı artır.
+5. `14 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();` iki block'u da bekler. Bu satır olmadan hiç satır görmeyebilirsin.
+6. `12 cpu` **Geçersiz başlatma, yorum olarak.** Neyin yazılmaması gerektiğini hatırlatmak için bu satırı en son ekle. `<<<1, 2048>>>` derlenir, ama runtime onu atar. `//`'yi kaldırırsan bu başlatma ne bir satır ne de bir hata mesajı yazdırır, bu yüzden hatayı gözden kaçırmak kolaydır.
+
+</div>
+
 ## Derle ve Çalıştır
 
 İlk komut kodu derleyip bir programa dönüştürür. İkinci komut onu çalıştırır.
@@ -121,6 +136,56 @@ Block ID: 1  ===  Thread ID: 1
 - `Block ID` 0 veya 1'dir, çünkü iki block var.
 - 0'dan 1023'e kadar her `Thread ID` iki kez görünür, her block'ta bir kez. Thread ID'leri her block'ta 0'dan yeniden başlar.
 - Block 0 ile Block 1'in satırları karışır ve sıra çalıştırmadan çalıştırmaya değişir. Block Zamanlaması bölümünde anlatıldığı gibi, iki block aynı anda farklı SM'lerde çalışabilir.
+
+## Kendin Yaz
+
+Global thread ID'sini kendin hesapla, böylece grid'deki her thread benzersiz bir sayı alsın.
+
+1. Aşağıdaki iskeletle `global_id.cu` oluştur.
+2. Kernel'da `id`'yi bu dersteki formülle hesapla ve onu block ID'si ve thread ID'siyle birlikte yazdır.
+3. 4 thread'li 3 block başlat.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void printGlobalIDs()
+{
+    // TODO: compute the global ID: block index times block size plus thread index
+    // TODO: print "block b, thread t -> global ID id"
+}
+
+int main()
+{
+    // TODO: launch printGlobalIDs with 3 blocks of 4 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "İpucu"
+    Formül `blockIdx.x * blockDim.x + threadIdx.x`. Başlatmada önce block sayısı gelir: `<<<3, 4>>>`.
+
+??? note "Çözüm"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void printGlobalIDs()
+    {
+        int id = blockIdx.x * blockDim.x + threadIdx.x;
+        printf("block %d, thread %d -> global ID %d\n", blockIdx.x, threadIdx.x, id);
+    }
+
+    int main()
+    {
+        printGlobalIDs<<<3, 4>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    `nvcc -o global_id global_id.cu` ve `./global_id` ile derle ve çalıştır. 0'dan 11'e kadar her global ID'nin tam bir kez göründüğü 12 satır görmelisin, sabit olmayan bir sırayla. Block 2'deki thread 3, global ID 11'i yazdırır, çünkü 2 * 4 + 3 = 11.
 
 ## Sözlük
 

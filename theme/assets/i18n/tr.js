@@ -428,5 +428,14 @@ window.I18N = {
   "back": "geri",
   "next step": "sonraki adım",
   "step {0} of {1}": "adım {0} / {1}",
-  "steps": "adımlar"
+  "steps": "adımlar",
+  "Code walkthrough": "Adım adım kod",
+  "Read": "Oku",
+  "Write": "Yaz",
+  "runs on the GPU": "GPU'da çalışır",
+  "runs on the CPU": "CPU'da çalışır",
+  "lines {0}": "satır {0}",
+  "line {0}": "satır {0}",
+  "The program grows one step at a time, in the order you would type it.": "Program adım adım büyür, tam senin yazacağın sırayla.",
+  "Every line is shown. Click a line to jump to the step that explains it.": "Her satır görünür. Bir satıra tıkla, onu açıklayan adıma geç."
 };

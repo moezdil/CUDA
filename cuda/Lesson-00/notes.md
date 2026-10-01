@@ -95,6 +95,21 @@ int main()
 - `printIDs<<<1, 1>>>();` starts the kernel with one block of one thread.
 - `cudaDeviceSynchronize();` waits for the GPU, so the print shows up before the program ends.
 
+## Code Walkthrough
+
+Step through the program in the order you would write it from an empty file.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Headers.** Type the three `#include` lines first, because everything below uses names they declare. `cuda_runtime.h` brings in `cudaDeviceSynchronize()` and `stdio.h` brings in `printf`. Without `stdio.h`, the `printf` call in the kernel fails to compile.
+2. `5-6,8 gpu` **The empty kernel.** Write the kernel's outline before its body: `__global__`, the return type `void`, a name and an empty pair of braces. A kernel must return `void`, because it has no caller waiting for a value. If you leave out `__global__`, the compiler builds a normal CPU function and the launch line later fails to compile.
+3. `7 gpu` **The kernel body.** Add one `printf` that prints `blockIdx.x` and `threadIdx.x`. This line runs once in every thread, on the GPU. Each `%d` is filled by the value listed after the string, in the same order.
+4. `10-11,14-15 cpu` **The main function.** Write `main` with its braces and `return 0;` now, then fill the middle. This is normal C code that runs on the CPU.
+5. `12 cpu` **The launch.** Call the kernel by its name, then `<<<1, 1>>>`, then the argument list `()`. The rule: blocks first, threads per block second. The empty `()` is still needed, even though `printIDs` takes no arguments.
+6. `13 cpu` **Wait for the GPU.** The launch returns at once, so add `cudaDeviceSynchronize();` right after it. This is the most common first mistake: without it the program compiles, runs and prints nothing.
+
+</div>
+
 ## Compile and Run
 
 The first command compiles the code into a program. The second command runs it.
@@ -118,6 +133,51 @@ Block ID: 0  ===  Thread ID: 0
 - There is one line because there is one thread, and each thread prints once.
 - Both IDs are 0 because the only block and the only thread each get index 0.
 - The output is the same on every run, because one thread has no other thread to race with.
+
+## Write It Yourself
+
+Write a one-thread kernel from scratch that greets you from the GPU.
+
+1. Create a file `hello.cu` with the skeleton below.
+2. Write the kernel `hello`, which prints `Hello from block 0, thread 0` using `blockIdx.x` and `threadIdx.x`.
+3. Launch it with one block of one thread, and make the CPU wait for it.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+// TODO: write the kernel hello() that prints its block ID and thread ID
+
+int main()
+{
+    // TODO: launch hello with 1 block of 1 thread
+    // TODO: wait for the GPU to finish
+    return 0;
+}
+```
+
+??? tip "Hint"
+    A kernel starts with `__global__ void`. The launch looks like `hello<<<1, 1>>>();`, and the wait is `cudaDeviceSynchronize();`.
+
+??? note "Solution"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void hello()
+    {
+        printf("Hello from block %d, thread %d\n", blockIdx.x, threadIdx.x);
+    }
+
+    int main()
+    {
+        hello<<<1, 1>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Compile and run it with `nvcc -o hello hello.cu` and `./hello`. You should see one line: `Hello from block 0, thread 0`.
 
 ## Glossary
 

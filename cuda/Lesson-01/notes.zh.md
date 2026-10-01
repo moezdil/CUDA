@@ -61,6 +61,20 @@ int main()
 
 这就是第 00 课的代码，只改了一处。启动那一行现在是 `printIDs<<<1, 4>>>();`，所以有四个线程运行这个核函数。
 
+## 代码逐步讲解
+
+按照你写代码的顺序，一步一步看这个程序。大部分内容和[第 00 课](../Lesson-00/notes.md)的程序一样，所以重点放在启动上。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** 和第 00 课一样的三行 `#include`。`stdio.h` 不能删，因为核函数要调用 `printf`。
+2. `5-8 gpu` **核函数。** 核函数和之前写得一模一样。想要更多线程，不需要改它：每个线程都运行这份相同的代码，并各自读取自己的 `threadIdx.x`。规则是：你只为一个线程写代码，由启动配置决定运行多少份副本。
+3. `10-11,14-15 cpu` **main 函数。** 和第 00 课一样，写好 `main`，最后是 `return 0;`。中间那两行是主机端唯一和 GPU 打交道的代码。
+4. `12 cpu` **用 4 个线程启动。** `<<<1, 4>>>` 中的第二个数字是每个线程块的线程数，所以会运行 4 个线程。一个常见的错误是把两个数字写反：`<<<4, 1>>>` 也会启动 4 个线程，但它们是 4 个线程块、每块 1 个线程，所以每个 `threadIdx.x` 都是 0。
+5. `13 cpu` **等待 GPU。** `cudaDeviceSynchronize();` 让 CPU 等待，printf 缓冲区的内容也是在这时才显示到屏幕上。这 4 行输出的顺序不固定。
+
+</div>
+
 ## 编译和运行
 
 第一条命令把代码编译成程序。第二条命令运行它。
@@ -94,6 +108,56 @@ Block ID: 0  ===  Thread ID: 1
 ## 动手试试
 
 - 把启动配置改成 `<<<1, 32>>>`。你会得到 32 行，线程编号从 0 到 31，顺序依然不固定。这正好是一个满的线程束。
+
+## 自己动手写
+
+写一个核函数，让每个线程用自己的 `threadIdx.x` 算出不同的结果。
+
+1. 用下面的框架创建 `square.cu`。
+2. 在核函数里，把 `threadIdx.x` 存进变量 `i`，然后打印 `i` 和 `i * i`。
+3. 启动 1 个线程块，里面有 5 个线程。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void square()
+{
+    // TODO: read this thread's ID into an int i
+    // TODO: print "thread i: i * i = result"
+}
+
+int main()
+{
+    // TODO: launch square with 1 block of 5 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "提示"
+    `int i = threadIdx.x;` 让每个线程都有自己的 `i`。每个线程块的线程数是第二个数字：`<<<1, 5>>>`。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void square()
+    {
+        int i = threadIdx.x;
+        printf("thread %d: %d * %d = %d\n", i, i, i, i * i);
+    }
+
+    int main()
+    {
+        square<<<1, 5>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    用 `nvcc -o square square.cu` 和 `./square` 编译并运行。你应该会看到 5 行，线程 0 到 4 各一行，比如 `thread 3: 3 * 3 = 9`。每次运行，这些行的顺序都可能不同。
 
 ## 术语表
 

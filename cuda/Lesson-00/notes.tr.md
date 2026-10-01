@@ -95,6 +95,21 @@ int main()
 - `printIDs<<<1, 1>>>();`, kernel'ı tek thread'li tek bir block ile başlatır.
 - `cudaDeviceSynchronize();` GPU'yu bekler. Böylece yazdırılanlar program bitmeden ekrana gelir.
 
+## Kod Gezintisi
+
+Programı, boş bir dosyadan başlayarak yazacağın sırayla adım adım geç.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** Önce üç `#include` satırını yaz, çünkü aşağıdaki her şey onların tanımladığı adları kullanır. `cuda_runtime.h`, `cudaDeviceSynchronize()`'ı getirir, `stdio.h` de `printf`'i getirir. `stdio.h` olmadan kernel'daki `printf` çağrısı derlenmez.
+2. `5-6,8 gpu` **Boş kernel.** Kernel'ın gövdesinden önce iskeletini yaz: `__global__`, dönüş tipi `void`, bir ad ve boş bir süslü parantez çifti. Bir kernel `void` döndürmek zorundadır, çünkü bir değer bekleyen bir çağıranı yoktur. `__global__`'ı yazmazsan compiler normal bir CPU fonksiyonu oluşturur ve sonraki başlatma satırı derlenmez.
+3. `7 gpu` **Kernel gövdesi.** `blockIdx.x` ve `threadIdx.x`'i yazdıran tek bir `printf` ekle. Bu satır GPU'da, her thread'de bir kez çalışır. Her `%d`, metinden sonra gelen değerle aynı sırayla doldurulur.
+4. `10-11,14-15 cpu` **main fonksiyonu.** `main`'i süslü parantezleri ve `return 0;` ile şimdi yaz, sonra ortasını doldur. Bu, CPU'da çalışan normal C kodudur.
+5. `12 cpu` **Başlatma.** Kernel'ı adıyla çağır, sonra `<<<1, 1>>>`, sonra argüman listesi `()`. Kural: önce block sayısı, sonra block başına thread sayısı. `printIDs` hiç argüman almasa da boş `()` yine gereklidir.
+6. `13 cpu` **GPU'yu bekle.** Başlatma hemen geri döner, bu yüzden hemen ardından `cudaDeviceSynchronize();` ekle. Bu en sık yapılan ilk hatadır: bu satır olmadan program derlenir, çalışır ve hiçbir şey yazdırmaz.
+
+</div>
+
 ## Derle ve Çalıştır
 
 İlk komut kodu derleyip bir programa dönüştürür. İkinci komut onu çalıştırır.
@@ -118,6 +133,51 @@ Block ID: 0  ===  Thread ID: 0
 - Tek satır var, çünkü tek thread var ve her thread bir kez yazdırır.
 - İki ID de 0, çünkü tek block ve tek thread 0 indeksini alır.
 - Çıktı her çalıştırmada aynıdır, çünkü tek thread'in yarışacağı başka bir thread yok.
+
+## Kendin Yaz
+
+GPU'dan seni selamlayan tek thread'li bir kernel'ı sıfırdan yaz.
+
+1. Aşağıdaki iskeletle bir `hello.cu` dosyası oluştur.
+2. `blockIdx.x` ve `threadIdx.x` kullanarak `Hello from block 0, thread 0` yazdıran `hello` kernel'ını yaz.
+3. Onu tek thread'li tek bir block ile başlat ve CPU'nun onu beklemesini sağla.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+// TODO: write the kernel hello() that prints its block ID and thread ID
+
+int main()
+{
+    // TODO: launch hello with 1 block of 1 thread
+    // TODO: wait for the GPU to finish
+    return 0;
+}
+```
+
+??? tip "İpucu"
+    Bir kernel `__global__ void` ile başlar. Başlatma `hello<<<1, 1>>>();` gibi görünür, bekleme ise `cudaDeviceSynchronize();` satırıdır.
+
+??? note "Çözüm"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void hello()
+    {
+        printf("Hello from block %d, thread %d\n", blockIdx.x, threadIdx.x);
+    }
+
+    int main()
+    {
+        hello<<<1, 1>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    `nvcc -o hello hello.cu` ve `./hello` ile derle ve çalıştır. Tek bir satır görmelisin: `Hello from block 0, thread 0`.
 
 ## Sözlük
 

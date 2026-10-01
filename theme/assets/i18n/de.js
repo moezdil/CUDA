@@ -428,5 +428,14 @@ window.I18N = {
   "back": "zurück",
   "next step": "nächster Schritt",
   "step {0} of {1}": "Schritt {0} von {1}",
-  "steps": "Schritte"
+  "steps": "Schritte",
+  "Code walkthrough": "Code Schritt für Schritt",
+  "Read": "Lesen",
+  "Write": "Schreiben",
+  "runs on the GPU": "läuft auf der GPU",
+  "runs on the CPU": "läuft auf der CPU",
+  "lines {0}": "Zeilen {0}",
+  "line {0}": "Zeile {0}",
+  "The program grows one step at a time, in the order you would type it.": "Das Programm wächst Schritt für Schritt, in der Reihenfolge, in der du es tippen würdest.",
+  "Every line is shown. Click a line to jump to the step that explains it.": "Alle Zeilen sind sichtbar. Klicke auf eine Zeile, um zu dem Schritt zu springen, der sie erklärt."
 };

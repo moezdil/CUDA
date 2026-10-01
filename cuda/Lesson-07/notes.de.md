@@ -131,6 +131,22 @@ int main()
 - `test01<<<1, 128>>>();`: startet den Kernel mit 1 Block aus 128 Threads.
 - `cudaDeviceSynchronize();`: lässt die CPU warten, bis alle GPU-Threads fertig sind und die Ausgabe geschrieben ist.
 
+#### Code Schritt für Schritt
+
+Geh `warp_ids.cu` in der Reihenfolge durch, in der du es schreiben würdest.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header.** Die CUDA-Runtime, die eingebauten Variablen und `stdio.h` für `printf`. Für die Berechnung einer Warp-ID brauchst du keinen zusätzlichen Header.
+2. `5-6,10 gpu` **Der leere Kernel.** Schreib `__global__ void test01()` und seine Klammern. Der Kernel braucht keine Argumente, weil er alles aus `threadIdx.x` berechnet.
+3. `7 gpu` **Die Warp-ID.** Es gibt keine eingebaute Warp-ID, also berechne sie: `int warp_id = threadIdx.x / 32;`. Die ganzzahlige Division teilt die Threads in Gruppen zu 32 ein. Ein häufiger Fehler ist `%` statt `/`: `threadIdx.x % 32` ergibt die Lane-ID, nicht die Warp-ID.
+4. `8-9 gpu` **Die Ausgabe.** Gib die Block-ID, die Thread-ID und die Warp-ID aus. Gib die Block-ID immer zusammen mit der Warp-ID aus, weil die Warp-ID in jedem Block neu beginnt.
+5. `12-13,17-18 cpu` **Die main-Funktion.** Schreib `main` mit `return 0;` am Ende. Der Start und das Warten kommen dazwischen.
+6. `14-15 cpu` **Der Start.** Schreib zuerst den Plan als Kommentar: 128 Threads / 32 = 4 Warps. Dann den Start `<<<1, 128>>>`. Eine Blockgröße, die ein Vielfaches von 32 ist, füllt jeden Warp.
+7. `16 cpu` **Auf die GPU warten.** Füge nach dem Start `cudaDeviceSynchronize();` ein. Es hält das Programm am Leben, bis alle 128 Zeilen ausgegeben sind.
+
+</div>
+
 ### `warp_ids_2blocks.cu`
 
 Diese Datei nutzt denselben Kernel wie `warp_ids.cu`. Nur die Startkonfiguration ist anders, nämlich `<<<2, 64>>>`. Das sind 2 Blöcke aus je 64 Threads, also hat jeder Block 64 / 32 = 2 Warps. Die Datei zeigt, dass die Warp-ID in jedem Block neu beginnt.
@@ -158,6 +174,19 @@ int main()
 
 - `test01<<<2, 64>>>();`: startet den Kernel mit 2 Blöcken aus je 64 Threads. Das sind insgesamt 128 Threads und 4 Warps, verteilt auf 2 Blöcke.
 - Alle anderen Zeilen sind wie in `warp_ids.cu`.
+
+#### Code Schritt für Schritt
+
+`warp_ids_2blocks.cu` schreibst du genauso. Nur der Start ist neu.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header.** Dieselben drei Zeilen wie in `warp_ids.cu`. Beginne die zweite Datei als Kopie der ersten.
+2. `5-10 gpu` **Derselbe Kernel.** Kein einziges Zeichen ändert sich. Die Warp-ID beginnt in jedem Block ohne zusätzlichen Code neu, weil `threadIdx.x` in jedem Block neu beginnt.
+3. `12-13,16-18 cpu` **Dieselbe main-Funktion.** `main`, das Warten und `return 0;` bleiben, wie sie waren. Das Warten ist mit zwei Blöcken genauso wichtig.
+4. `14-15 cpu` **Der neue Start.** `<<<2, 64>>>` startet immer noch 128 Threads, aber als 2 Blöcke mit je 2 Warps. Der Kommentar nennt das erwartete Ergebnis, damit du die Ausgabe damit vergleichen kannst.
+
+</div>
 
 ## Kompilieren und ausführen
 
@@ -237,6 +266,60 @@ Die Thread-ID geht nur bis 63, weil jeder Block 64 Threads hat. Block 1 zeigt wi
 
 - Starte `test01<<<1, 100>>>()`. 100 ist kein Vielfaches von 32, also ist der letzte Warp nur teilweise voll: Die Warps 0, 1 und 2 haben je 32 Threads, und Warp 3 hat nur die Threads 96 bis 99. Die GPU plant dafür trotzdem einen vollen Warp aus 32 ein, und 28 Lanes bleiben untätig.
 - Füg `int lane_id = threadIdx.x % 32;` in den Kernel ein und gib den Wert aus. Thread 70 sollte die Lane-ID 6 ausgeben.
+
+## Selbst schreiben
+
+Berechne sowohl die Warp-ID als auch die Lane-ID, und wähl mit der Lane-ID einen Thread pro Warp aus.
+
+1. Leg `warp_starts.cu` mit dem Gerüst unten an.
+2. Berechne im Kernel `warp_id` mit `/` und `lane_id` mit `%`.
+3. Lass nur Lane 0 jedes Warps ihren Block, ihre Warp-ID und ihre Thread-ID ausgeben.
+4. Starte 2 Blöcke mit je 96 Threads.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void warpStarts()
+{
+    // TODO: compute warp_id and lane_id from threadIdx.x
+    // TODO: if this is lane 0, print "block b, warp w starts at thread t"
+}
+
+int main()
+{
+    // TODO: launch warpStarts with 2 blocks of 96 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "Hinweis"
+    `threadIdx.x / 32` ist die Warp-ID und `threadIdx.x % 32` ist die Lane-ID. Der erste Thread eines Warps hat die Lane-ID 0.
+
+??? note "Lösung"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void warpStarts()
+    {
+        int warp_id = threadIdx.x / 32;
+        int lane_id = threadIdx.x % 32;
+        if (lane_id == 0) {
+            printf("block %d, warp %d starts at thread %d\n", blockIdx.x, warp_id, threadIdx.x);
+        }
+    }
+
+    int main()
+    {
+        warpStarts<<<2, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Kompiliere und starte es mit `nvcc -arch=sm_89 -o warp_starts warp_starts.cu` und `./warp_starts`. Du solltest 6 Zeilen in beliebiger Reihenfolge sehen: In jedem der 2 Blöcke beginnt Warp 0 bei Thread 0, Warp 1 bei Thread 32 und Warp 2 bei Thread 64.
 
 ## Glossar
 

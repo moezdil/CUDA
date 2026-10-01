@@ -223,6 +223,30 @@ Mit dieser Wahl lässt sich das Ergebnis leicht mit bloßem Auge prüfen: Jede S
 - `cudaFree(d_a)`: gibt den Device-Speicher zurück. GPU-Speicher wird während der Laufzeit nicht für dich freigegeben. Ein lange laufendes Programm, das das vergisst, frisst also immer mehr GPU-Speicher.
 - `free(h_a)`: gibt den Host-Speicher zurück, wie in normalem C. Die Namen passen absichtlich zusammen: `cudaFree` zu `cudaMalloc`, `free` zu `malloc`.
 
+## Code Schritt für Schritt
+
+Geh das Programm in der Reihenfolge durch, in der du es schreiben würdest. Schreib zuerst die Hilfsteile und den Kernel, dann füll `main` mit den sechs Schritten. Schreib die Freigaben direkt nach den Reservierungen, damit du sie nicht vergessen kannst.
+
+<div class="code-walk" markdown>
+
+1. `1-4 cpu` **Header.** Die drei üblichen Zeilen plus `stdlib.h`, das `malloc`, `free` und `exit` deklariert. Ohne diesen Header lassen sich die Aufrufe für den Host-Speicher nicht kompilieren.
+2. `6 cpu` **Die Größe.** `#define N 1024` legt die Vektorgröße an einer Stelle fest. Jede spätere Zeile nutzt `N`, also brauchst du für eine neue Größe nur diese eine Änderung.
+3. `8-17 cpu` **Die Fehlerprüfung.** Tippe das Makro `CHECK` vor jedem CUDA-Aufruf, damit jeder Aufruf es von Anfang an nutzen kann. Es führt den Aufruf aus, vergleicht das Ergebnis mit `cudaSuccess` und hält mit Fehlertext, Datei und Zeile an, wenn beide verschieden sind. Das `\` am Ende jeder Zeile setzt das Makro in der nächsten Zeile fort, also macht ein fehlendes `\` das ganze Makro kaputt.
+4. `19-20,25 gpu` **Die Kernel-Signatur.** `__global__ void vectorAdd(...)` nimmt die beiden Eingaben als `const int *`, die Ausgabe als `int *` und die Länge `n`. Die Zeiger, die du später übergibst, müssen Device-Zeiger sein, weil der Kernel auf der GPU läuft.
+5. `21-24 gpu` **Der Rumpf des Kernels.** Jeder Thread nimmt seinen Index aus `threadIdx.x`, prüft ihn gegen `n` und addiert ein Paar von Elementen. Die Regel: ein Thread, ein Element, keine Schleife. Die Bereichsprüfung kostet eine Zeile und schützt dich, sobald die Zahl der Threads nicht mehr zu `n` passt.
+6. `27-28,78-79 cpu` **Die main-Funktion.** Schreib `main` mit `return 0;` am Ende. Die sechs Schritte kommen dazwischen.
+7. `29 cpu` **Bytes, keine Elemente.** Jeder Speicheraufruf zählt Bytes, also berechne `N * sizeof(int)` einmal. Ein häufiger Fehler ist, `N` zu übergeben. Dann wird nur ein Viertel der Daten reserviert und kopiert.
+8. `31-38 cpu` **Schritt 1: reservieren.** Drei `malloc`-Aufrufe für die Host-Arrays und drei `cudaMalloc`-Aufrufe für die Device-Arrays. `cudaMalloc` bekommt `&d_a`, die Adresse des Zeigers, weil es die neue Device-Adresse dort hineinschreibt.
+9. `71-77 cpu` **Schritt 6: freigeben.** Schreib die Freigaben jetzt, am Ende von `main`, solange du die Reservierungen noch siehst: `cudaFree` für jeden `d_`-Zeiger und `free` für jeden `h_`-Zeiger. Sie zu verwechseln, etwa `free(d_a)`, ist ein Fehler.
+10. `40-44 cpu` **Schritt 2: die Eingaben füllen.** Eine Schleife setzt `h_a[i] = i` und `h_b[i] = N - i`, also ist jede richtige Summe 1024. Wähl Eingaben, deren Ergebnis du vorher kennst. `h_c` bleibt leer, weil der Kernel es schreibt.
+11. `46-48 cpu` **Schritt 3: auf das Device kopieren.** `cudaMemcpy` bekommt zuerst das Ziel, dann die Quelle, die Größe und die Richtung. Hier ist das `d_a` aus `h_a`, mit `cudaMemcpyHostToDevice`.
+12. `50-52 cpu` **Schritt 4: starten.** `vectorAdd<<<1, N>>>(d_a, d_b, d_c, N)` startet einen Thread pro Element und übergibt nur `d_`-Zeiger. Ein Start gibt keinen Fehlercode zurück, also fragt `CHECK(cudaGetLastError())` in der nächsten Zeile, ob er angenommen wurde.
+13. `54-55 cpu` **Schritt 5: das Ergebnis zurückkopieren.** Dasselbe `cudaMemcpy`, mit `h_c` als Ziel und `cudaMemcpyDeviceToHost`. Diese Kopie wartet, bis der Kernel fertig ist, also brauchst du kein `cudaDeviceSynchronize()`.
+14. `57-63 cpu` **Jedes Element prüfen.** Vergleiche jedes `h_c[i]` auf der CPU mit `h_a[i] + h_b[i]` und zähl die Abweichungen. Eine Selbstprüfung findet Fehler in allen 1024 Elementen, nicht nur in den wenigen, die du ausgibst.
+15. `64-69 cpu` **Eine Stichprobe ausgeben.** Gib die ersten vier Summen, eine Zeile `...`, die letzte Summe und die Fehlerzahl aus. Die Fehlerzahl ist die Zeile, auf die es ankommt: 0 bedeutet, dass jedes Element stimmt.
+
+</div>
+
 ## Kompilieren und ausführen
 
 ```bash
@@ -260,6 +284,142 @@ So liest du sie:
 
 > [!WARNING]
 > Setz `N` auf 2048 und führ das Programm noch einmal aus. Ein Block kann nicht mehr als 1024 Threads haben, also wird der Start abgelehnt, und `CHECK(cudaGetLastError())` sollte das Programm mit `CUDA error: invalid configuration argument` anhalten. Ohne diese Prüfung läuft der Kernel nie, aber das Programm macht weiter: Es kopiert Device-Speicher zurück, den der Kernel nie geschrieben hat, und sollte viele Fehler melden. Die Lösung ist, mehr als einen Block zu nutzen. Darum geht es in der nächsten Lektion.
+
+## Selbst schreiben
+
+Geh alle sechs Schritte selbst durch, mit einem neuen Kernel, der `c[i] = 2 * a[i] + b[i]` berechnet.
+
+1. Leg `scale_add.cu` mit dem Gerüst unten an. Die Header, `N`, `CHECK` und die Ausgabe am Ende sind vorgegeben.
+2. Schreib den Rumpf des Kernels.
+3. Füll die sechs Schritte in `main` aus, mit `h_a[i] = i` und `h_b[i] = 1`.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N 256
+
+#define CHECK(call)                                                  \
+    do {                                                             \
+        cudaError_t err = (call);                                    \
+        if (err != cudaSuccess) {                                    \
+            printf("CUDA error: %s (%s:%d)\n",                       \
+                   cudaGetErrorString(err), __FILE__, __LINE__);     \
+            exit(1);                                                 \
+        }                                                            \
+    } while (0)
+
+__global__ void scaleAdd(const int *a, const int *b, int *c, int n)
+{
+    // TODO: one thread per element: c[i] = 2 * a[i] + b[i], with a bounds check
+}
+
+int main()
+{
+    size_t bytes = N * sizeof(int);
+    int *h_a, *h_b, *h_c, *d_a, *d_b, *d_c;
+
+    // TODO 1: allocate h_a, h_b, h_c with malloc and d_a, d_b, d_c with cudaMalloc
+    // TODO 2: fill h_a[i] = i and h_b[i] = 1
+    // TODO 3: copy h_a and h_b to the device
+    // TODO 4: launch scaleAdd with 1 block of N threads, then check the launch
+    // TODO 5: copy d_c back to h_c
+
+    int errors = 0;
+    for (int i = 0; i < N; i++) {
+        if (h_c[i] != 2 * h_a[i] + h_b[i]) {
+            errors++;
+        }
+    }
+    printf("c[0] = %d, c[1] = %d, c[%d] = %d\n", h_c[0], h_c[1], N - 1, h_c[N - 1]);
+    printf("errors: %d\n", errors);
+
+    // TODO 6: free the device and host memory
+    return 0;
+}
+```
+
+??? tip "Hinweis"
+    Der Rumpf des Kernels ist der Kernel aus Lektion 08 mit einer geänderten Zeile: `c[i] = 2 * a[i] + b[i];`. Jeder Schritt in `main` ist eine Zeile pro Array, aus dem Programm oben kopiert und mit geänderten Namen. Denk daran: `cudaMemcpy(destination, source, bytes, direction)`.
+
+??? note "Lösung"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+    #include <stdlib.h>
+
+    #define N 256
+
+    #define CHECK(call)                                                  \
+        do {                                                             \
+            cudaError_t err = (call);                                    \
+            if (err != cudaSuccess) {                                    \
+                printf("CUDA error: %s (%s:%d)\n",                       \
+                       cudaGetErrorString(err), __FILE__, __LINE__);     \
+                exit(1);                                                 \
+            }                                                            \
+        } while (0)
+
+    __global__ void scaleAdd(const int *a, const int *b, int *c, int n)
+    {
+        int i = threadIdx.x;
+        if (i < n) {
+            c[i] = 2 * a[i] + b[i];
+        }
+    }
+
+    int main()
+    {
+        size_t bytes = N * sizeof(int);
+        int *h_a, *h_b, *h_c, *d_a, *d_b, *d_c;
+
+        // 1. allocate
+        h_a = (int *)malloc(bytes);
+        h_b = (int *)malloc(bytes);
+        h_c = (int *)malloc(bytes);
+        CHECK(cudaMalloc(&d_a, bytes));
+        CHECK(cudaMalloc(&d_b, bytes));
+        CHECK(cudaMalloc(&d_c, bytes));
+
+        // 2. fill the inputs
+        for (int i = 0; i < N; i++) {
+            h_a[i] = i;
+            h_b[i] = 1;
+        }
+
+        // 3. copy to the device
+        CHECK(cudaMemcpy(d_a, h_a, bytes, cudaMemcpyHostToDevice));
+        CHECK(cudaMemcpy(d_b, h_b, bytes, cudaMemcpyHostToDevice));
+
+        // 4. launch and check
+        scaleAdd<<<1, N>>>(d_a, d_b, d_c, N);
+        CHECK(cudaGetLastError());
+
+        // 5. copy the result back
+        CHECK(cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost));
+
+        int errors = 0;
+        for (int i = 0; i < N; i++) {
+            if (h_c[i] != 2 * h_a[i] + h_b[i]) {
+                errors++;
+            }
+        }
+        printf("c[0] = %d, c[1] = %d, c[%d] = %d\n", h_c[0], h_c[1], N - 1, h_c[N - 1]);
+        printf("errors: %d\n", errors);
+
+        // 6. free
+        CHECK(cudaFree(d_a));
+        CHECK(cudaFree(d_b));
+        CHECK(cudaFree(d_c));
+        free(h_a);
+        free(h_b);
+        free(h_c);
+        return 0;
+    }
+    ```
+
+    Kompiliere und starte es mit `nvcc -arch=sm_89 -o scale_add scale_add.cu` und `./scale_add`. Wenn jeder Schritt stimmt, solltest du `c[0] = 1, c[1] = 3, c[255] = 511` und `errors: 0` sehen, weil 2 * 255 + 1 = 511.
 
 ## Glossar
 

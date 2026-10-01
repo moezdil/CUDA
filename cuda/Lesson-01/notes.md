@@ -61,6 +61,20 @@ int main()
 
 This is the Lesson 00 code with one change. The launch line is now `printIDs<<<1, 4>>>();`, so four threads run the kernel.
 
+## Code Walkthrough
+
+Step through the program in the order you would write it. Most of it is the [Lesson 00](../Lesson-00/notes.md) program, so the focus is on the launch.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Headers.** The same three `#include` lines as in Lesson 00. `stdio.h` is the one you cannot drop, because the kernel calls `printf`.
+2. `5-8 gpu` **The kernel.** Write the kernel exactly as before. You do not change it to get more threads: every thread runs this same code, and each reads its own `threadIdx.x`. The rule: you write the code for one thread, and the launch decides how many copies run.
+3. `10-11,14-15 cpu` **The main function.** Write `main` with `return 0;` at the end, as in Lesson 00. The two lines in the middle are the only host code that talks to the GPU.
+4. `12 cpu` **The launch with 4 threads.** The second number in `<<<1, 4>>>` is the threads per block, so 4 threads run. A common mistake is to swap the numbers: `<<<4, 1>>>` also starts 4 threads, but as 4 blocks of 1 thread, so every `threadIdx.x` is 0.
+5. `13 cpu` **Wait for the GPU.** `cudaDeviceSynchronize();` makes the CPU wait, and this is also when the printf buffer is written to the screen. The 4 lines come out in no fixed order.
+
+</div>
+
 ## Compile and Run
 
 The first command compiles the code into a program. The second command runs it.
@@ -94,6 +108,56 @@ Block ID: 0  ===  Thread ID: 1
 ## Try It
 
 - Change the launch to `<<<1, 32>>>`. You get 32 lines with thread IDs 0 to 31, still in no fixed order. That is exactly one full warp.
+
+## Write It Yourself
+
+Write a kernel where each thread uses its own `threadIdx.x` to compute a different result.
+
+1. Create `square.cu` with the skeleton below.
+2. In the kernel, store `threadIdx.x` in a variable `i` and print `i` and `i * i`.
+3. Launch 1 block of 5 threads.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void square()
+{
+    // TODO: read this thread's ID into an int i
+    // TODO: print "thread i: i * i = result"
+}
+
+int main()
+{
+    // TODO: launch square with 1 block of 5 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "Hint"
+    `int i = threadIdx.x;` gives each thread its own `i`. The threads per block is the second number: `<<<1, 5>>>`.
+
+??? note "Solution"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void square()
+    {
+        int i = threadIdx.x;
+        printf("thread %d: %d * %d = %d\n", i, i, i, i * i);
+    }
+
+    int main()
+    {
+        square<<<1, 5>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Compile and run it with `nvcc -o square square.cu` and `./square`. You should see 5 lines, one for each thread 0 to 4, such as `thread 3: 3 * 3 = 9`. The order of the lines can change between runs.
 
 ## Glossary
 

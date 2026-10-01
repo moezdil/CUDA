@@ -61,6 +61,20 @@ int main()
 
 Das ist der Code aus Lektion 00 mit einer Änderung. Die Startzeile lautet jetzt `printIDs<<<1, 4>>>();`, also führen vier Threads den Kernel aus.
 
+## Code Schritt für Schritt
+
+Geh das Programm in der Reihenfolge durch, in der du es schreiben würdest. Das meiste ist das Programm aus [Lektion 00](../Lesson-00/notes.md), deshalb liegt der Fokus auf dem Start.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header.** Dieselben drei `#include`-Zeilen wie in Lektion 00. Auf `stdio.h` kannst du nicht verzichten, weil der Kernel `printf` aufruft.
+2. `5-8 gpu` **Der Kernel.** Schreib den Kernel genau wie vorher. Für mehr Threads änderst du ihn nicht: Jeder Thread führt denselben Code aus, und jeder liest sein eigenes `threadIdx.x`. Die Regel: Du schreibst den Code für einen Thread, und der Start entscheidet, wie viele Kopien laufen.
+3. `10-11,14-15 cpu` **Die main-Funktion.** Schreib `main` mit `return 0;` am Ende, wie in Lektion 00. Die zwei Zeilen in der Mitte sind der einzige Host-Code, der mit der GPU spricht.
+4. `12 cpu` **Der Start mit 4 Threads.** Die zweite Zahl in `<<<1, 4>>>` ist die Anzahl der Threads pro Block, also laufen 4 Threads. Ein häufiger Fehler ist, die Zahlen zu vertauschen: `<<<4, 1>>>` startet auch 4 Threads, aber als 4 Blöcke mit je 1 Thread, also ist jedes `threadIdx.x` gleich 0.
+5. `13 cpu` **Auf die GPU warten.** `cudaDeviceSynchronize();` lässt die CPU warten, und genau dann wird auch der printf-Puffer auf den Bildschirm geschrieben. Die 4 Zeilen erscheinen in keiner festen Reihenfolge.
+
+</div>
+
 ## Kompilieren und ausführen
 
 Der erste Befehl kompiliert den Code zu einem Programm. Der zweite Befehl führt es aus.
@@ -94,6 +108,56 @@ Block ID: 0  ===  Thread ID: 1
 ## Probier es aus
 
 - Ändere den Start zu `<<<1, 32>>>`. Du bekommst 32 Zeilen mit den Thread-IDs 0 bis 31, wieder in keiner festen Reihenfolge. Das ist genau ein voller Warp.
+
+## Selbst schreiben
+
+Schreib einen Kernel, in dem jeder Thread sein eigenes `threadIdx.x` nutzt, um ein anderes Ergebnis zu berechnen.
+
+1. Leg `square.cu` mit dem Gerüst unten an.
+2. Speichere im Kernel `threadIdx.x` in einer Variablen `i` und gib `i` und `i * i` aus.
+3. Starte 1 Block mit 5 Threads.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void square()
+{
+    // TODO: read this thread's ID into an int i
+    // TODO: print "thread i: i * i = result"
+}
+
+int main()
+{
+    // TODO: launch square with 1 block of 5 threads
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "Hinweis"
+    `int i = threadIdx.x;` gibt jedem Thread sein eigenes `i`. Die Anzahl der Threads pro Block ist die zweite Zahl: `<<<1, 5>>>`.
+
+??? note "Lösung"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void square()
+    {
+        int i = threadIdx.x;
+        printf("thread %d: %d * %d = %d\n", i, i, i, i * i);
+    }
+
+    int main()
+    {
+        square<<<1, 5>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Kompiliere und starte es mit `nvcc -o square square.cu` und `./square`. Du solltest 5 Zeilen sehen, eine für jeden Thread von 0 bis 4, zum Beispiel `thread 3: 3 * 3 = 9`. Die Reihenfolge der Zeilen kann sich von Lauf zu Lauf ändern.
 
 ## Glossar
 

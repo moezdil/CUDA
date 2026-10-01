@@ -41,6 +41,23 @@ Başlatmada her birinde 64 thread olan 2 block kullanılıyor, yani toplam 2 × 
 - `test01 <<<2, 64>>> ();`, kernel'ı 64 thread'lik 2 block ile başlatır.
 - `cudaDeviceSynchronize();`, CPU'nun GPU'yu beklemesini sağlar. Aşağıdaki senkronizasyon bölümü bu satırın neden önemli olduğunu gösteriyor.
 
+## Kod Gezintisi
+
+Programı yazacağın sırayla adım adım geç. Yeni olan kısım, kernel'ın `threadIdx.x`'ten hesapladığı warp ID'si.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Header'lar.** CUDA runtime, yerleşik değişkenler ve `printf` için `stdio.h`. Bu derslerdeki her program bu üç satırla başlar.
+2. `5-6,13 gpu` **Boş kernel.** Önce `__global__ void test01()` ve süslü parantezlerini yaz. Sonra gövdeyi satır satır doldur.
+3. `7-8 gpu` **Yorumlarla bir plan.** Koddan önce kernel'ın ne yaptığını ve dayandığı sayıları yaz: warp başına 32 thread, yani 64 thread block başına 2 warp eder. Yorumlar çalışma anında hiçbir şeye mal olmaz ve sonraki satırı kontrol etmeyi kolaylaştırır.
+4. `9-10 gpu` **Warp ID'si.** `warp_ID_Value`'yu tanımla, sonra ona `threadIdx.x / 32` ata. İki taraf da tam sayı, bu yüzden bölme kalanı atar: thread 45, 1 alır. Her satırı `;` ile bitir. Aşağıdaki Derleme Hataları bölümü, eksik bir `;`'ün ne yaptığını gösteriyor.
+5. `11-12 gpu` **Yazdırma.** Üç `%d` içeren tek bir `printf`, bu sırayla block ID'si, thread ID'si ve warp ID'si ile doldurulur. Uzun bir çağrı iki satıra yayılabilir, çünkü compiler `;`'e kadar olan her şeyi tek bir ifade olarak okur.
+6. `15-16,20-21 cpu` **main fonksiyonu.** `main`'i sonunda `return 0;` ile yaz. İçindeki her şey CPU'da çalışır.
+7. `17-18 cpu` **Başlatma.** Yorum `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>` kalıbını tekrarlar, sonraki satır da onu 64 thread'li 2 block ile doldurur. `<<<2, 64>>>` etrafındaki boşluklara izin verilir. Compiler onları yok sayar.
+8. `19 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();`, bu dersin bilerek kaldırdığı satırdır. Bu makinede program o satır olmadan hiçbir şey yazdırmadı.
+
+</div>
+
 ## Derle ve Çalıştır
 
 ### Adım 1: nvcc'yi kontrol et
@@ -373,6 +390,59 @@ Bu dersteki komutlar diğer Linux makinelerinde de aynı şekilde çalışır. G
 | Çalıştır | `./project001` |
 
 Program bitmeden önce CPU'nun GPU'nun çıktısına ya da sonuçlarına ihtiyacı varsa, kernel başlatmasından sonra `cudaDeviceSynchronize()` ekle. Bu satır olmadan bu makine hiçbir şey yazdırmıyor.
+
+## Kendin Yaz
+
+Bu dersteki tam döngüyle kendi programını yaz, derle ve çalıştır.
+
+1. Aşağıdaki iskeletle `warps.cu` oluştur.
+2. Kernel'da her block'un yalnızca thread 0'ı, `blockDim.x / 32` ile kendi block'unda kaç warp olduğunu yazdırsın.
+3. 96 thread'li 3 block başlat.
+4. `-arch=sm_89` (ya da kendi GPU'nun değeri) ile derle, sonra çalıştır.
+5. `cudaDeviceSynchronize();`'ı kaldır, yeniden derle ve neyin değiştiğini görmek için birkaç kez çalıştır.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void countWarps()
+{
+    // TODO: only thread 0 of each block prints
+    // TODO: print "block b has w warps", with w = threads per block / 32
+}
+
+int main()
+{
+    // TODO: launch countWarps with 3 blocks of 96 threads
+    // TODO: wait for the GPU
+    return 0;
+}
+```
+
+??? tip "İpucu"
+    `if (threadIdx.x == 0)` her block'tan bir thread seçer, çünkü her block'un kendi thread 0'ı vardır. `nvcc -arch=sm_89 -o warps warps.cu` ile derle.
+
+??? note "Çözüm"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void countWarps()
+    {
+        if (threadIdx.x == 0) {
+            printf("block %d has %d warps\n", blockIdx.x, blockDim.x / 32);
+        }
+    }
+
+    int main()
+    {
+        countWarps<<<3, 96>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    `nvcc -arch=sm_89 -o warps warps.cu` ve `./warps` ile derle ve çalıştır. Herhangi bir sırayla 3 satır görmelisin: `block 0 has 3 warps`, `block 1 has 3 warps` ve `block 2 has 3 warps`, çünkü 96 / 32 = 3.
 
 ## Sözlük
 

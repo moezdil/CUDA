@@ -428,5 +428,14 @@ window.I18N = {
   "back": "返回",
   "next step": "下一步",
   "step {0} of {1}": "第 {0} 步，共 {1} 步",
-  "steps": "步骤"
+  "steps": "步骤",
+  "Code walkthrough": "代码逐步讲解",
+  "Read": "阅读",
+  "Write": "编写",
+  "runs on the GPU": "在 GPU 上运行",
+  "runs on the CPU": "在 CPU 上运行",
+  "lines {0}": "第 {0} 行",
+  "line {0}": "第 {0} 行",
+  "The program grows one step at a time, in the order you would type it.": "程序按你输入的顺序一步一步变长。",
+  "Every line is shown. Click a line to jump to the step that explains it.": "所有代码行都会显示。点击某一行，就会跳到讲解它的那一步。"
 };

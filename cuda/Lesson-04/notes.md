@@ -95,6 +95,22 @@ int main()
 
 <cuda-launch blocks="2" threads="4" fn="printBuiltins"></cuda-launch>
 
+## Code Walkthrough
+
+Step through the program in the order you would write it. The work is in the long `printf`: one format string, then one value for each `%d`.
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **Headers.** The same three `#include` lines as in the earlier lessons. The built-in variables need no header with `nvcc`, but `device_launch_parameters.h` lets some editors know them too.
+2. `5-6,13 gpu` **The empty kernel.** Write `__global__ void printBuiltins()` and its braces. The kernel takes no arguments, because everything it prints is a built-in variable that the GPU fills in for each thread.
+3. `7 gpu` **The format string.** Write the text with 13 `%d` placeholders: 3 for each of the four variables with `.x`, `.y` and `.z`, and 1 for `warpSize`. Start with `\n` so each thread's output goes on its own line. End the line with a comma, because the values follow.
+4. `8-12 gpu` **The values.** List the 13 values in the same order as the placeholders, one variable per line so the order is easy to check. The rule: one value per `%d`, in order. A missing value can still compile, and then `printf` prints wrong numbers, so count both sides.
+5. `15-16,19-20 cpu` **The main function.** Write `main` with `return 0;` at the end. It is the same frame as in the earlier lessons.
+6. `17 cpu` **The launch.** `<<<2, 4>>>` sets `gridDim.x` to 2 and `blockDim.x` to 4. Plain numbers leave the `.y` and `.z` sizes at 1.
+7. `18 cpu` **Wait for the GPU.** `cudaDeviceSynchronize();` keeps the program alive until all 8 lines are printed. Without it, `main` can end before the GPU output appears.
+
+</div>
+
 ## Compile and Run
 
 The first command compiles the code into a program. The second command runs it.
@@ -129,6 +145,62 @@ gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(0,0,0)  threadIdx=(3,0,0)  warpSize
 - The `.y` and `.z` sizes are 1 and the `.y` and `.z` indices are 0, because `<<<2, 4>>>` used plain numbers.
 - `warpSize` is always 32.
 - Block 1 printed before block 0 here. The GPU runs blocks independently and in no fixed order, so the order of blocks, and of threads inside each block, can change between runs.
+
+## Write It Yourself
+
+Read the built-in variables to work out the size of a launch, and pass the sizes as `dim3` values.
+
+1. Create `launch_size.cu` with the skeleton below.
+2. Let only thread 0 of block 0 print, so the line appears once.
+3. Print the number of blocks, the threads per block, the total thread count and the warp size.
+4. Launch with `dim3 grid(3)` and `dim3 block(64)`.
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+__global__ void launchSize()
+{
+    // TODO: only the first thread of the first block prints
+    // TODO: print blocks, threads per block, total threads and warp size
+}
+
+int main()
+{
+    // TODO: make a dim3 grid of 3 blocks and a dim3 block of 64 threads
+    // TODO: launch launchSize with them
+    cudaDeviceSynchronize();
+    return 0;
+}
+```
+
+??? tip "Hint"
+    Check `blockIdx.x == 0 && threadIdx.x == 0`. The total thread count is `gridDim.x * blockDim.x`. A `dim3` goes into the launch like a number: `<<<grid, block>>>`.
+
+??? note "Solution"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void launchSize()
+    {
+        if (blockIdx.x == 0 && threadIdx.x == 0) {
+            printf("blocks: %d, threads per block: %d, total threads: %d, warp size: %d\n",
+                   gridDim.x, blockDim.x, gridDim.x * blockDim.x, warpSize);
+        }
+    }
+
+    int main()
+    {
+        dim3 grid(3);
+        dim3 block(64);
+        launchSize<<<grid, block>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    Compile and run it with `nvcc -o launch_size launch_size.cu` and `./launch_size`. You should see one line: `blocks: 3, threads per block: 64, total threads: 192, warp size: 32`.
 
 ## Glossary
 

@@ -701,6 +701,125 @@ cuda("host-device-flow", function(el){
   go(0);
 });
 
+// <div class="code-walk"> holds an ordered list whose items start with `1-3,7 cpu`. It walks
+// through a copy of the code block above it in writing order. The original block is left alone.
+(function(){
+  var codes = [].filter.call(document.querySelectorAll(".prose pre > code"), function(c){ return !c.closest(".dg"); });
+  function after(a, b){ return !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_PRECEDING); }
+  // The nearest code block above the walk. Under a repeated subheading (two programs, two walks), the block under its twin.
+  function source(el){
+    var h = el.previousElementSibling;
+    while (h && !/^H[23]$/.test(h.tagName)) { h = h.previousElementSibling; }
+    var twin = h && h.tagName === "H3" && [].filter.call(document.querySelectorAll(".prose h3"), function(x){ return x !== h && x.textContent.trim() === h.textContent.trim() && after(h, x); })[0];
+    if (twin) {
+      var next = codes.filter(function(c){ return after(c, twin); })[0], stop = twin.nextElementSibling;
+      while (stop && !/^H[1-3]$/.test(stop.tagName)) { stop = stop.nextElementSibling; }
+      if (next && (!stop || after(stop, next))) { return next; }
+    }
+    return codes.filter(function(c){ return after(el, c); }).pop();
+  }
+  // Split highlighted HTML into lines, closing and reopening spans that cross a line break.
+  function lines(html){
+    var out = [], cur = "", open = [];
+    html.split(/(<[^>]+>)/).forEach(function(p){
+      if (p[0] === "<") { if (p[1] === "/") { open.pop(); } else { open.push(p); } cur += p; return; }
+      var parts = p.split("\n");
+      parts.forEach(function(s, i){
+        if (i) { out.push(cur + open.map(function(){ return "</span>"; }).join("")); cur = open.join(""); }
+        cur += s;
+      });
+    });
+    if (cur.replace(/<[^>]+>/g, "")) { out.push(cur); }
+    return out;
+  }
+  document.querySelectorAll(".prose .code-walk").forEach(function(el){
+    var code = source(el), ol = el.querySelector("ol");
+    if (!code || !ol) { return; }
+    var steps = [].map.call(ol.children, function(li){
+      var k = li.querySelector("code"), m = k && k.textContent.match(/^\s*([\d\s,-]+?)\s+(cpu|gpu)\s*$/i), ln = [];
+      if (m) {
+        m[1].split(",").forEach(function(r){
+          var ab = r.split("-").map(Number), a = ab[0], b = ab.length > 1 ? ab[1] : a;
+          for (var n = a; n <= b; n++) { ln.push(n); }
+        });
+        var html = li.innerHTML, at = html.indexOf(k.outerHTML);
+        k = { place: m[2].toLowerCase(), spec: m[1].replace(/\s+/g, ""), lines: ln, html: (html.slice(0, at) + html.slice(at + k.outerHTML.length)).trim() };
+      } else {
+        k = { place: "", spec: "", lines: ln, html: li.innerHTML };
+      }
+      return k;
+    });
+    if (!steps.length) { return; }
+    var L = lines(code.innerHTML), owner = {}, blank = L.map(function(l){ return !l.replace(/<[^>]+>/g, "").trim(); });
+    steps.forEach(function(s, i){ s.lines.forEach(function(n){ if (!(n in owner)) { owner[n] = i; } }); });
+    var box = code.closest(".highlight"), cls = box ? box.className : "highlight", cur = 0, write = 0;
+    el.classList.add("dg", "cw");
+    el.setAttribute("role", "group");
+    el.setAttribute("aria-label", T("Code walkthrough"));
+    ol.hidden = true;
+    var ui = document.createElement("div");
+    ui.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Code walkthrough") + "</span>" + segs([T("Read"), T("Write")], 0, T("mode")) + "</div>" +
+      '<p class="dg-note cw-hint"></p><div class="' + cls + ' cw-code"><pre tabindex="0" aria-label="' + T("Code walkthrough") + '"><code>' +
+      L.map(function(l, i){ return '<span class="cw-l' + (blank[i] ? " blank" : "") + (i + 1 in owner ? " " + steps[owner[i + 1]].place : "") + '" data-n="' + (i + 1) + '">' + l + "</span>"; }).join("") +
+      '</code></pre></div>' +
+      '<div class="dg-head cw-nav"><div class="dg-ctl"><button class="dg-btn alt prev" type="button" aria-label="' + T("previous step") + '">← ' + T("back") + "</button>" +
+      '<button class="dg-btn next" type="button" aria-label="' + T("next step") + '">' + T("next step") + ' →</button></div><div class="cw-dots">' +
+      steps.map(function(s, i){ return '<button type="button" class="' + s.place + '" data-s="' + i + '" aria-label="' + F("step {0} of {1}", i + 1, steps.length) + '"></button>'; }).join("") +
+      '</div><span class="dg-note pos"></span></div><div class="cw-step" aria-live="polite"><div class="cw-meta"></div><div class="cw-text"></div></div>';
+    while (ui.firstChild) { el.appendChild(ui.firstChild); }
+    var pre = el.querySelector(".cw-code pre"), rows = el.querySelectorAll(".cw-l"), tb = el.querySelector(".dg-tabs");
+    // keep the box as tall as the full program, so Write mode does not move the buttons
+    if (pre.offsetHeight) { pre.style.height = pre.offsetHeight + "px"; }
+    function go(i, moved){
+      var prev = cur;
+      cur = Math.max(0, Math.min(steps.length - 1, i));
+      var s = steps[cur], seen = false, lastBlank = true, first = null;
+      el.classList.toggle("writing", !!write);
+      [].forEach.call(rows, function(r, k){
+        var n = k + 1, o = owner[n], on = o === cur;
+        // Write mode: a line shows once its step is reached. Blank lines show between visible lines, never twice in a row.
+        var show = !write || (blank[k] ? seen && !lastBlank && rest(k) : o === undefined || o <= cur);
+        if (show && !blank[k]) { seen = true; }
+        if (show) { lastBlank = blank[k]; }
+        r.hidden = !show;
+        r.classList.toggle("on", on);
+        r.classList.toggle("dim", !on && !blank[k]);
+        r.classList.toggle("new", !!write && on && moved && cur > prev);
+        if (on && !first) { first = r; }
+      });
+      function rest(k){ for (var j = k + 1; j < rows.length; j++) { if (!blank[j]) { var o = owner[j + 1]; if (o === undefined || o <= cur) { return true; } } } return false; }
+      el.querySelector(".cw-meta").innerHTML = (s.place ? '<span class="cw-badge ' + s.place + '">' + s.place.toUpperCase() + "</span><span>" + (s.place === "gpu" ? T("runs on the GPU") : T("runs on the CPU")) + "</span>" : "") +
+        (s.spec ? '<span class="cw-ln">' + (s.lines.length > 1 ? F("lines {0}", s.spec.replace(/,/g, ", ")) : F("line {0}", s.spec)) + "</span>" : "");
+      el.querySelector(".cw-text").innerHTML = s.html;
+      el.querySelector(".prev").disabled = cur === 0;
+      el.querySelector(".next").disabled = cur === steps.length - 1;
+      el.querySelector(".pos").textContent = F("step {0} of {1}", cur + 1, steps.length);
+      el.querySelector(".cw-hint").textContent = write ? T("The program grows one step at a time, in the order you would type it.") : T("Every line is shown. Click a line to jump to the step that explains it.");
+      el.querySelectorAll(".cw-dots button").forEach(function(d, k){ d.classList.toggle("on", k === cur); d.classList.toggle("done", k < cur); d.setAttribute("aria-current", k === cur ? "step" : "false"); });
+      // Scroll the code box only, never the page.
+      if (first) {
+        var top = first.offsetTop, end = top + first.offsetHeight;
+        if (top < pre.scrollTop + 36 || end > pre.scrollTop + pre.clientHeight) { pre.scrollTop = Math.max(0, top - 56); }
+      }
+    }
+    onSegs(tb, function(i){ write = i; go(cur); });
+    el.querySelector(".prev").addEventListener("click", function(){ go(cur - 1, 1); });
+    el.querySelector(".next").addEventListener("click", function(){ go(cur + 1, 1); });
+    el.querySelector(".cw-dots").addEventListener("click", function(e){ var d = e.target.closest("[data-s]"); if (d) { go(+d.dataset.s, 1); } });
+    pre.addEventListener("click", function(e){
+      var r = e.target.closest(".cw-l"), o = r && owner[r.dataset.n];
+      if (o !== undefined && !(window.getSelection && String(getSelection()))) { go(o, 1); }
+    });
+    el.addEventListener("keydown", function(e){
+      if (e.altKey || e.ctrlKey || e.metaKey) { return; }
+      var d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (d) { e.preventDefault(); go(cur + d, 1); }
+      else if (e.key === "Home" || e.key === "End") { e.preventDefault(); go(e.key === "Home" ? 0 : steps.length - 1, 1); }
+    });
+    go(0);
+  });
+})();
+
 (function(){
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !window.IntersectionObserver) { return; }
   var io = new IntersectionObserver(function(entries){

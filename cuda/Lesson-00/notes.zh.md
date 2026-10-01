@@ -95,6 +95,21 @@ int main()
 - `printIDs<<<1, 1>>>();` 用一个线程块、一个线程启动核函数。
 - `cudaDeviceSynchronize();` 等待 GPU 完成，这样打印内容会在程序结束前显示出来。
 
+## 代码逐步讲解
+
+按照你从一个空文件开始写代码的顺序，一步一步看这个程序。
+
+<div class="code-walk" markdown>
+
+1. `1-3 cpu` **头文件。** 先写三行 `#include`，因为下面所有代码都要用到它们声明的名字。`cuda_runtime.h` 提供 `cudaDeviceSynchronize()`，`stdio.h` 提供 `printf`。没有 `stdio.h`，核函数里的 `printf` 调用就无法通过编译。
+2. `5-6,8 gpu` **空的核函数。** 先写核函数的框架，再写函数体：`__global__`、返回类型 `void`、函数名和一对空的花括号。核函数必须返回 `void`，因为没有调用者在等它返回值。如果漏掉 `__global__`，编译器会把它编译成普通的 CPU 函数，后面启动核函数的那一行就无法通过编译。
+3. `7 gpu` **核函数的函数体。** 加一行 `printf`，打印 `blockIdx.x` 和 `threadIdx.x`。这一行在每个线程里都运行一次，运行在 GPU 上。每个 `%d` 按顺序由字符串后面列出的值来填。
+4. `10-11,14-15 cpu` **main 函数。** 现在先写好 `main`、它的花括号和 `return 0;`，再填中间的部分。这是在 CPU 上运行的普通 C 代码。
+5. `12 cpu` **启动核函数。** 先写核函数名，然后是 `<<<1, 1>>>`，最后是参数列表 `()`。规则是：线程块数量在前，每个线程块的线程数在后。虽然 `printIDs` 不接收任何参数，空的 `()` 也不能省。
+6. `13 cpu` **等待 GPU。** 启动会马上返回，所以要紧接着加上 `cudaDeviceSynchronize();`。这是最常见的第一个错误：没有它，程序照样能编译、能运行，但什么都不打印。
+
+</div>
+
 ## 编译和运行
 
 第一条命令把代码编译成程序。第二条命令运行它。
@@ -118,6 +133,51 @@ Block ID: 0  ===  Thread ID: 0
 - 只有一行，因为只有一个线程，而每个线程只打印一次。
 - 两个编号都是 0，因为唯一的线程块和唯一的线程编号都是 0。
 - 每次运行的输出都一样，因为只有一个线程，没有别的线程和它抢先后。
+
+## 自己动手写
+
+从零开始写一个只有一个线程的核函数，让它从 GPU 向你问好。
+
+1. 用下面的框架创建文件 `hello.cu`。
+2. 写出核函数 `hello`，用 `blockIdx.x` 和 `threadIdx.x` 打印 `Hello from block 0, thread 0`。
+3. 用一个线程块、一个线程启动它，并让 CPU 等它完成。
+
+```c
+#include "cuda_runtime.h"
+#include <stdio.h>
+
+// TODO: write the kernel hello() that prints its block ID and thread ID
+
+int main()
+{
+    // TODO: launch hello with 1 block of 1 thread
+    // TODO: wait for the GPU to finish
+    return 0;
+}
+```
+
+??? tip "提示"
+    一个核函数以 `__global__ void` 开头。启动写成 `hello<<<1, 1>>>();`，等待写成 `cudaDeviceSynchronize();`。
+
+??? note "答案"
+    ```c
+    #include "cuda_runtime.h"
+    #include <stdio.h>
+
+    __global__ void hello()
+    {
+        printf("Hello from block %d, thread %d\n", blockIdx.x, threadIdx.x);
+    }
+
+    int main()
+    {
+        hello<<<1, 1>>>();
+        cudaDeviceSynchronize();
+        return 0;
+    }
+    ```
+
+    用 `nvcc -o hello hello.cu` 和 `./hello` 编译并运行。你应该会看到一行：`Hello from block 0, thread 0`。
 
 ## 术语表
 
