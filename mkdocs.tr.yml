@@ -34,3 +34,4 @@ nav:
       - "05 CUDA Platform Katmanları": cuda/Lesson-05/notes.md
       - "06 Linux'ta CUDA Derlemek": cuda/Lesson-06/notes.md
       - "07 Warp ID'leri": cuda/Lesson-07/notes.md
+      - "08 Vektör Toplama": cuda/Lesson-08/notes.md

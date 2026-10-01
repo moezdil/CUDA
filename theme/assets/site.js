@@ -280,7 +280,8 @@ customElements.define("cc-progress", class extends HTMLElement {
           '<div class="bar"><small>' + T("FP32 cores") + '</small><i style="--w:' + (g[2] / 128 * 100) + '%"></i><em>' + g[2] + "</em></div>" +
           '<div class="bar sm"><small>' + T("shared memory") + '</small><i style="--w:' + (g[3] / 228 * 100) + '%"></i><em>' + g[3] + " KB</em></div></div>";
       }).join("") + '</div><div class="dg-title sub">' + T("Did not change since CC 6.0") + '</div><div class="dg-facts">' +
-      same.map(function(x){ return "<span>" + x + "</span>"; }).join("") + "</div>";
+      same.map(function(x){ return "<span>" + x + "</span>"; }).join("") + "</div>" +
+      '<p class="dg-note">' + T("These hold for the x.0 chips above. CC 8.6, 8.9 (the L40S in these lessons) and 12.0 allow only 48 warps and 1536 threads per SM.") + "</p>";
   }
 });
 
@@ -365,6 +366,339 @@ customElements.define("printf-order", class extends HTMLElement {
       }, 500 + N * 450);
     });
   }
+});
+
+// The CUDA track diagrams below share this: a tag that builds itself once, and segmented tabs.
+var CALM = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+function cuda(name, build){
+  customElements.define(name, class extends HTMLElement {
+    connectedCallback(){
+      if (this.ready) { return; }
+      this.ready = true;
+      this.classList.add("dg");
+      this.setAttribute("role", "group");
+      build(this);
+    }
+  });
+}
+function segs(items, on, label){
+  return '<div class="dg-tabs" role="group" aria-label="' + label + '">' + items.map(function(t, i){
+    return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === on) + '"' + (i === on ? ' class="on"' : "") + ">" + t + "</button>";
+  }).join("") + "</div>";
+}
+function segOn(box, i){
+  box.querySelectorAll("button").forEach(function(x, k){ x.classList.toggle("on", k === i); x.setAttribute("aria-pressed", k === i); });
+}
+function onSegs(box, fn){
+  box.addEventListener("click", function(e){
+    var b = e.target.closest("button[data-i]");
+    if (b) { segOn(box, +b.dataset.i); fn(+b.dataset.i); }
+  });
+}
+function term(label, v, cls){ return '<span class="' + cls + '"><small>' + label + "</small><b>" + v + "</b></span>"; }
+
+// Blocks of threads above, the same threads as one flat row of global IDs below. Pick a thread to see the formula with its numbers.
+cuda("global-id", function(el){
+  var sel = [2, 3], timer = 0;
+  el.setAttribute("aria-label", T("Global thread ID"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Global thread ID") + '</span><div class="dg-ctl">' +
+    '<label>' + T("blocks") + ' <b class="nb"></b><input type="range" min="1" max="4" value="3" aria-label="' + T("blocks") + '"></label>' +
+    '<label>' + T("threads / block") + ' <b class="nt"></b><input type="range" min="1" max="8" value="4" aria-label="' + T("threads / block") + '"></label>' +
+    '<button class="dg-btn" type="button">' + T("play") + '</button></div></div>' +
+    '<code class="dg-call"></code><div class="gi-grid"></div>' +
+    '<span class="dg-lbl">' + T("the same threads as one flat row of global IDs") + '</span><div class="gi-flat"></div>' +
+    '<div class="dg-eq" aria-live="polite"></div><div class="dg-info"></div>';
+  var ins = el.querySelectorAll("input"), grid = el.querySelector(".gi-grid"), flat = el.querySelector(".gi-flat"), btn = el.querySelector(".dg-btn"), B, N;
+  function draw(){
+    B = +ins[0].value; N = +ins[1].value;
+    el.querySelector(".nb").textContent = B; el.querySelector(".nt").textContent = N;
+    sel = [Math.min(sel[0], B - 1), Math.min(sel[1], N - 1)];
+    el.querySelector(".dg-call").innerHTML = '<span class="fn">kernel</span>&lt;&lt;&lt;<span class="n">' + B + '</span>, <span class="n">' + N + '</span>&gt;&gt;&gt;();';
+    var g = "", f = "";
+    for (var b = 0; b < B; b++) {
+      g += '<div class="gi-blk c' + b + '"><div class="dg-bh"><b>' + F("block {0}", b) + "</b><span>blockIdx.x = " + b + '</span></div><div class="gi-th">';
+      for (var t = 0; t < N; t++) {
+        g += '<button type="button" data-b="' + b + '" data-t="' + t + '" aria-label="' + F("block {0}, thread {1}", b, t) + '">' + t + "</button>";
+        f += '<button type="button" class="c' + b + '" data-b="' + b + '" data-t="' + t + '" aria-label="' + F("global ID {0}", b * N + t) + '">' + (b * N + t) + "</button>";
+      }
+      g += "</div></div>";
+    }
+    grid.innerHTML = g; flat.innerHTML = f;
+    show();
+  }
+  function show(){
+    var b = sel[0], t = sel[1], id = b * N + t;
+    el.querySelectorAll("[data-t]").forEach(function(c){
+      c.classList.toggle("hot", +c.dataset.b === b && +c.dataset.t === t);
+      c.classList.toggle("mine", +c.dataset.b === b);
+    });
+    el.querySelector(".dg-eq").innerHTML = term("blockIdx.x", b, "e1") + "<i>×</i>" + term("blockDim.x", N, "e2") + "<i>+</i>" + term("threadIdx.x", t, "e3") + "<i>=</i>" + term(T("global ID"), id, "e4");
+    el.querySelector(".dg-info").innerHTML = F("Block {0} starts at global ID {0} × {1} = <b>{2}</b>. Thread {3} is {3} places further, so its global ID is {2} + {3} = <em>{4}</em>.", b, N, b * N, t, id);
+  }
+  function stop(){ clearInterval(timer); timer = 0; btn.textContent = T("play"); }
+  function choose(e){
+    var c = e.target.closest("[data-t]");
+    if (!c || (sel[0] === +c.dataset.b && sel[1] === +c.dataset.t)) { return; }
+    if (e.type === "click") { stop(); }
+    sel = [+c.dataset.b, +c.dataset.t]; show();
+  }
+  ["click", "mouseover", "focusin"].forEach(function(k){ grid.addEventListener(k, choose); flat.addEventListener(k, choose); });
+  btn.addEventListener("click", function(){
+    if (timer) { stop(); return; }
+    var id = 0;
+    btn.textContent = T("stop");
+    function tick(){ sel = [Math.floor(id / N), id % N]; show(); if (++id >= B * N) { stop(); } }
+    tick();
+    if (id < B * N) { timer = setInterval(tick, 700); }
+  });
+  ins.forEach(function(i){ i.addEventListener("input", function(){ stop(); draw(); }); });
+  draw();
+});
+
+// Type a launch configuration and check it against the hardware limits, row by row.
+cuda("block-limits", function(el){
+  var presets = [[[256, 1, 1], [4, 1, 1]], [[16, 16, 1], [8, 8, 1]], [[32, 32, 2], [1, 1, 1]], [[8, 8, 128], [2, 1, 1]], [[2048, 1, 1], [1, 1, 1]], [[32, 1, 1], [1, 70000, 1]]];
+  function box(name, sub, k){
+    return '<fieldset><legend><code>' + name + "</code> " + sub + "</legend>" + ["x", "y", "z"].map(function(a, i){
+      return '<label>' + a + ' <input type="number" min="1" step="1" inputmode="numeric" data-k2="' + (k * 3 + i) + '" aria-label="' + name + "." + a + '"></label>';
+    }).join("") + "</fieldset>";
+  }
+  el.setAttribute("aria-label", T("Is this launch valid?"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Is this launch valid?") + '</span><span class="dg-note">' + T("try a preset or type your own numbers") + '</span></div>' +
+    segs(presets.map(function(p){ return "&lt;&lt;&lt;(" + p[1].join(",") + "), (" + p[0].join(",") + ")&gt;&gt;&gt;"; }), 0, T("presets")) +
+    '<div class="bl-in">' + box("blockDim", T("threads per block"), 0) + box("gridDim", T("blocks in the grid"), 1) + "</div>" +
+    '<code class="bl-code"></code><div class="bl-meter"><div class="bar"><i></i></div><span></span></div><ul class="bl-checks"></ul><div class="dg-info" aria-live="polite"></div>';
+  var ins = el.querySelectorAll("input"), tb = el.querySelector(".dg-tabs");
+  var LIM = [[0, 1024, "1024"], [1, 1024, "1024"], [2, 64, "64"], [3, 2147483647, "2^31 - 1"], [4, 65535, "65535"], [5, 65535, "65535"]];
+  function draw(){
+    var v = [].map.call(ins, function(i){ return Math.max(1, Math.floor(+i.value) || 1); });
+    var tpb = v[0] * v[1] * v[2], nb = v[3] * v[4] * v[5], rows = [], ok = true;
+    LIM.forEach(function(l){
+      var good = v[l[0]] <= l[1]; ok = ok && good;
+      rows.push([(l[0] < 3 ? "blockDim." : "gridDim.") + "xyz"[l[0] % 3], v[l[0]] + (good ? " ≤ " : " &gt; ") + l[2], good]);
+    });
+    rows.splice(3, 0, [T("threads per block"), v[0] + " × " + v[1] + " × " + v[2] + " = <b>" + tpb + "</b>" + (tpb <= 1024 ? " ≤ " : " &gt; ") + "1024", tpb <= 1024]);
+    ok = ok && tpb <= 1024;
+    el.querySelector(".bl-code").innerHTML = "dim3 block(" + v.slice(0, 3).join(", ") + ");<br>dim3 grid(" + v.slice(3).join(", ") + ');<br><span class="fn">kernel</span>&lt;&lt;&lt;grid, block&gt;&gt;&gt;();';
+    el.querySelector(".bl-checks").innerHTML = rows.map(function(r){
+      return '<li class="' + (r[2] ? "ok" : "no") + '"><span aria-hidden="true">' + (r[2] ? "✓" : "✕") + "</span><code>" + r[0] + "</code><b>" + r[1] + "</b></li>";
+    }).join("");
+    var m = el.querySelector(".bl-meter");
+    m.classList.toggle("over", tpb > 1024);
+    m.querySelector("i").style.width = Math.min(100, tpb / 1024 * 100) + "%";
+    m.querySelector("span").innerHTML = F("{0} of 1024 threads per block · {1} warps", "<b>" + tpb + "</b>", Math.ceil(tpb / 32));
+    el.querySelector(".dg-info").innerHTML = ok
+      ? F("<b>Valid.</b> {0} blocks × {1} threads = <em>{2}</em> threads in total.", nb, tpb, nb * tpb)
+      : T("<b>Launch fails.</b> It compiles, but the kernel never runs. <code>cudaGetLastError()</code> returns <code>cudaErrorInvalidConfiguration</code>.");
+  }
+  function preset(i){ presets[i][0].concat(presets[i][1]).forEach(function(x, k){ ins[k].value = x; }); draw(); }
+  onSegs(tb, preset);
+  ins.forEach(function(i){ i.addEventListener("input", function(){ segOn(tb, -1); draw(); }); });
+  preset(0);
+});
+
+// One block as rows of 32 lanes, one row per warp. Pick a thread to see its warp and lane worked out.
+cuda("warp-lane", function(el){
+  var lanes = "";
+  for (var l = 0; l < 32; l++) { lanes += "<i>" + (l % 8 === 0 ? l : "") + "</i>"; }
+  el.setAttribute("aria-label", T("Warp and lane of a thread"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Warp and lane of a thread") + '</span><div class="dg-ctl">' +
+    '<label>' + T("threads / block") + ' <b class="nn"></b><input type="range" min="1" max="256" value="128" aria-label="' + T("threads / block") + '"></label>' +
+    '<label>threadIdx.x <b class="nt"></b><input type="range" min="0" max="127" value="33" aria-label="threadIdx.x"></label></div></div>' +
+    '<div class="dg-stats"></div><div class="wl"><div class="wl-row lanes"><span>' + T("lane") + '</span><div class="wl-cells">' + lanes + '</div></div><div class="wl-rows"></div></div>' +
+    '<div class="dg-eq wl-eq" aria-live="polite"></div><div class="dg-info"></div>';
+  var ins = el.querySelectorAll("input"), rows = el.querySelector(".wl-rows"), N = 0;
+  function draw(){
+    N = +ins[0].value;
+    var W = Math.ceil(N / 32), h = "";
+    ins[1].max = N - 1;
+    if (+ins[1].value > N - 1) { ins[1].value = N - 1; }
+    for (var w = 0; w < W; w++) {
+      h += '<div class="wl-row" data-w="' + w + '"><span>' + F("warp {0}", w) + '</span><div class="wl-cells">';
+      for (var k = w * 32; k < w * 32 + 32; k++) { h += k < N ? '<i class="a w' + (w & 3) + '" data-t="' + k + '"></i>' : '<i class="idle"></i>'; }
+      h += "</div></div>";
+    }
+    rows.innerHTML = h;
+    el.querySelector(".nn").textContent = N;
+    el.querySelector(".dg-stats").innerHTML = "<span>blockDim.x <b>" + N + "</b></span><span>" + T("warps") + " <b>" + W + "</b></span><span>" + T("idle lanes") + " <b>" + (W * 32 - N) + "</b></span>";
+    show();
+  }
+  function show(){
+    var t = +ins[1].value, w = t >> 5, l = t & 31;
+    el.querySelector(".nt").textContent = t;
+    rows.querySelectorAll(".wl-row").forEach(function(r){ r.classList.toggle("on", +r.dataset.w === w); });
+    rows.querySelectorAll("i").forEach(function(c, k){ c.classList.toggle("col", (k & 31) === l); c.classList.toggle("hot", k === t); });
+    el.querySelectorAll(".lanes i").forEach(function(c, k){ c.classList.toggle("col", k === l); });
+    el.querySelector(".wl-eq").innerHTML = '<div><span class="e2">warp</span> = threadIdx.x / 32 = ' + t + " / 32 = <b class='e2'>" + w + "</b></div>" +
+      '<div><span class="e3">lane</span> = threadIdx.x % 32 = ' + t + " % 32 = <b class='e3'>" + l + "</b></div>";
+    el.querySelector(".dg-info").innerHTML = F("Thread <b>{0}</b> is in warp <em>{1}</em> at lane <em>{2}</em>. Check: {1} × 32 + {2} = {0}.", t, w, l) + " " +
+      T("<code>/</code> between two ints drops the remainder, and <code>%</code> gives exactly that remainder.") +
+      (N % 32 ? " " + F("The last warp has only {0} threads, so {1} of its lanes are idle.", N % 32, 32 - N % 32) : "");
+  }
+  function point(e){ var c = e.target.closest("i[data-t]"); if (c && +c.dataset.t !== +ins[1].value) { ins[1].value = c.dataset.t; show(); } }
+  rows.addEventListener("mouseover", point);
+  rows.addEventListener("click", point);
+  ins[0].addEventListener("input", draw);
+  ins[1].addEventListener("input", show);
+  draw();
+});
+
+// The CUDA platform in five layers. Click a layer or anything in it to read what it is.
+cuda("cuda-stack", function(el){
+  var L = [
+    [T("Languages"), T("how you write GPU code"), T("You write GPU code in one of these. All of them run on the same GPU."), [
+      ["CUDA C/C++", T("the main one"), T("C++ with a few additions such as <code>__global__</code> and <code>&lt;&lt;&lt; &gt;&gt;&gt;</code>. Every kernel in these lessons is written in it.")],
+      ["CUDA Fortran", T("Fortran + CUDA"), T("Fortran with the same CUDA ideas. Common in older science and weather code.")],
+      ["OpenACC", T("directive-based"), T("You add <code>#pragma acc</code> lines (directives) above normal C or Fortran loops, and the compiler writes the GPU code. No kernels by hand.")],
+      ["Python", "CuPy · Numba · CUDA Python", T("<b>CuPy</b>: NumPy-style arrays that live on the GPU. <b>Numba</b>: compiles Python functions into GPU kernels. <b>NVIDIA CUDA Python</b>: direct access to the CUDA driver and runtime from Python.")]]],
+    [T("AI libraries"), T("ready-made fast GPU code"), T("Fast GPU code you call instead of writing it. PyTorch and TensorFlow use these under the hood."), [
+      ["cuDNN", T("deep learning"), T("CUDA Deep Neural Network library. Building blocks like convolution and attention, tuned for each GPU.")],
+      ["cuBLAS", T("linear algebra"), T("CUDA Basic Linear Algebra Subprograms. Matrix and vector math, above all matrix multiply.")],
+      ["TensorRT", T("inference"), T("Takes a trained model and makes it run as fast as possible on one specific GPU.")],
+      ["NCCL", T("multi-GPU"), T("NVIDIA Collective Communications Library, said like \"nickel\". Moves data between GPUs, which you need to train on more than one GPU.")]]],
+    [T("Tools"), T("measure and debug"), T("Tools that show where time goes and find bugs."), [
+      ["Nsight Systems", T("timeline profiler"), T("Records CPU and GPU work on one timeline for the whole program, so you see where it waits.")],
+      ["Nsight Compute", T("kernel profiler"), T("Looks deep into one kernel: how busy the SMs are and how well it uses memory.")],
+      ["Compute Sanitizer", T("memory error checker"), T("Runs your program and reports bad memory access inside kernels, like reading past the end of an array.")]]],
+    [T("Compiler"), T("from .cu file to GPU code"), T("Turns your <code>.cu</code> file into a program the GPU can run."), [
+      ["nvcc", T("the CUDA compiler"), T("NVIDIA CUDA Compiler. Splits a <code>.cu</code> file: host code goes to the normal C++ compiler, device code to NVIDIA's compiler.")],
+      ["PTX", T("virtual ISA"), T("Parallel Thread Execution. A virtual instruction set architecture (ISA) that is not tied to one GPU. It is stored inside the program.")],
+      ["SASS", T("real machine code"), T("Streaming ASSembler. The real machine code for one GPU generation, for example <code>sm_89</code>.")],
+      [T("driver JIT"), T("PTX → SASS at run time"), T("Just-in-time compilation. If the program has no SASS for your GPU, the driver turns the stored PTX into SASS when it starts. That is how old programs run on new GPUs.")]]],
+    [T("Hardware capabilities"), T("built into the GPU"), T("Features of the GPU chip itself. Software can use them, but cannot add them."), [
+      ["Tensor Cores", T("matrix math"), T("Units inside each SM made for matrix math. Much faster than the FP32 cores for FP16 and FP8 matrix work, which is what AI needs.")],
+      ["MIG", T("one GPU, up to 7 parts"), T("Multi-Instance GPU. Splits one GPU into up to 7 isolated instances. Each one acts like its own GPU, with its own SMs and memory.")],
+      ["Dynamic Parallelism", T("kernels launch kernels"), T("A running kernel can launch another kernel from the GPU, without going back to the CPU.")],
+      ["GPUDirect", T("direct data paths"), T("GPUs send data to each other or to a network card directly, without a detour through system memory.")]]]
+  ];
+  el.setAttribute("aria-label", T("The CUDA platform"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("The CUDA platform") + '</span><span class="dg-note">' + T("click a layer or any part of it") + '</span></div><div class="cs">' +
+    L.map(function(l, i){
+      return '<div class="cs-layer l' + i + '"><button type="button" class="cs-name" data-k="' + i + '"><b>' + l[0] + "</b><small>" + l[1] + '</small></button><div class="cs-items">' +
+        l[3].map(function(it, j){ return '<button type="button" data-k="' + i + "." + j + '"><b>' + it[0] + "</b><small>" + it[1] + "</small></button>"; }).join("") + "</div></div>";
+    }).join("") + '</div><div class="dg-info" aria-live="polite"></div>';
+  var info = el.querySelector(".dg-info");
+  el.querySelector(".cs").addEventListener("click", function(e){
+    var b = e.target.closest("[data-k]");
+    if (!b) { return; }
+    var k = b.dataset.k.split(".").map(Number), l = L[k[0]];
+    el.querySelectorAll("[data-k].on,.cs-layer.cur").forEach(function(x){ x.classList.remove("on", "cur"); });
+    b.classList.add("on");
+    b.closest(".cs-layer").classList.add("cur");
+    info.innerHTML = k.length === 1
+      ? "<b>" + l[0] + "</b><br>" + l[2] + "<br>" + F("In this layer: {0}.", l[3].map(function(it){ return it[0]; }).join(", "))
+      : "<b>" + l[3][k[1]][0] + "</b> · " + l[0] + "<br>" + l[3][k[1]][2];
+  });
+  el.querySelector('[data-k="0.0"]').click();
+});
+
+// c = a + b, once as a CPU loop (one element per step), once as GPU threads (all elements in one step).
+cuda("vector-add", function(el){
+  var N = Math.max(2, Math.min(32, +el.getAttribute("n") || 16)), gpu = 0, done = 0, steps = 0, timer = 0;
+  var code = ["<span class='k'>for</span> (int i = 0; i &lt; " + N + "; i++) {<br>    c[i] = a[i] + b[i];<br>}",
+    "<span class='fn'>vectorAdd</span>&lt;&lt;&lt;1, " + N + "&gt;&gt;&gt;(a, b, c);<br><span class='dg-note'>// " + T("inside the kernel, every thread runs:") + "</span><br>int i = threadIdx.x;  c[i] = a[i] + b[i];"];
+  function row(n, f){ var h = '<div class="va-row ' + n + '"><span>' + n + "</span>"; for (var i = 0; i < N; i++) { h += "<i>" + f(i) + "</i>"; } return h + "</div>"; }
+  el.setAttribute("aria-label", T("Adding two arrays"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">c = a + b</span>' + segs([T("CPU loop"), T("GPU threads")], 0, T("mode")) + "</div>" +
+    '<pre class="dg-code"></pre><div class="va" style="--n:' + N + '">' + row("i", function(i){ return i; }) + row("a", function(i){ return i; }) + row("b", function(i){ return N - i; }) +
+    row("c", function(){ return ""; }) + '</div><div class="dg-head"><div class="dg-ctl"><button class="dg-btn go" type="button">' + T("play") + '</button><button class="dg-btn alt one" type="button">' + T("step") +
+    '</button><button class="dg-btn alt clr" type="button">' + T("reset") + '</button></div><span class="dg-big">' + T("step count") + ' <b>0</b></span></div><div class="dg-info" aria-live="polite"></div>';
+  var box = el.querySelector(".va"), cells = function(r){ return box.querySelectorAll("." + r + " i"); }, info = el.querySelector(".dg-info");
+  function reset(){
+    clearInterval(timer); timer = 0; done = steps = 0;
+    box.classList.toggle("gpu", !!gpu);
+    el.querySelector(".dg-code").innerHTML = code[gpu];
+    box.querySelectorAll("i").forEach(function(c){ c.classList.remove("on", "now"); });
+    cells("c").forEach(function(c){ c.textContent = ""; });
+    count();
+    info.innerHTML = gpu ? F("{0} threads, one per element. Thread i adds element i. They all run at the same time.", N) : T("One CPU core walks the loop: one element per step, in order.");
+  }
+  function count(){ el.querySelector(".dg-big b").textContent = steps; }
+  function fill(i){
+    cells("c")[i].textContent = N;
+    ["i", "a", "b", "c"].forEach(function(r){ cells(r)[i].classList.add("on", "now"); });
+  }
+  function step(){
+    if (done >= N) { return false; }
+    box.querySelectorAll(".now").forEach(function(c){ c.classList.remove("now"); });
+    steps++;
+    if (gpu) { for (var i = 0; i < N; i++) { fill(i); } done = N; }
+    else { fill(done); info.innerHTML = F("Step {0}: i = {1}, c[{1}] = a[{1}] + b[{1}] = {2} + {3} = <em>{4}</em>", steps, done, done, N - done, N); done++; }
+    count();
+    if (done === N) {
+      info.innerHTML = gpu ? F("<b>Done in 1 step.</b> {0} threads each added one pair at the same time. The CPU loop needs {0} steps.", N)
+        : F("<b>Done in {0} steps.</b> One element per step. With one GPU thread per element it takes 1 step.", N);
+    }
+    return done < N;
+  }
+  el.querySelector(".one").addEventListener("click", function(){ clearInterval(timer); timer = 0; if (done >= N) { reset(); } step(); });
+  el.querySelector(".clr").addEventListener("click", reset);
+  el.querySelector(".go").addEventListener("click", function(){
+    reset();
+    if (gpu || CALM) { while (step()) {} return; }
+    step();
+    timer = setInterval(function(){ if (!step()) { clearInterval(timer); timer = 0; } }, 320);
+  });
+  onSegs(el.querySelector(".dg-tabs"), function(i){ gpu = i; reset(); });
+  reset();
+});
+
+// Host memory and device memory side by side, stepped through the six steps of a CUDA program.
+cuda("host-device-flow", function(el){
+  var N = 8, cur = 0, ARR = ["a", "b", "c"];
+  // For each step: the code, what it does, and when each array gets its values (step index) or is freed (5).
+  var S = [
+    [T("allocate"), "int *h_a = (int *)malloc(bytes);\nint *h_b = (int *)malloc(bytes);\nint *h_c = (int *)malloc(bytes);\nCHECK(cudaMalloc(&d_a, bytes));\nCHECK(cudaMalloc(&d_b, bytes));\nCHECK(cudaMalloc(&d_c, bytes));",
+      T("Reserve memory on both sides: <code>malloc</code> on the host, <code>cudaMalloc</code> on the device. New memory holds leftover garbage, shown as ?.")],
+    [T("fill"), "for (int i = 0; i < N; i++) {\n    h_a[i] = i;\n    h_b[i] = N - i;\n}",
+      T("The CPU writes the inputs into host memory. The device arrays still hold garbage.")],
+    [T("copy in"), "CHECK(cudaMemcpy(d_a, h_a, bytes, cudaMemcpyHostToDevice));\nCHECK(cudaMemcpy(d_b, h_b, bytes, cudaMemcpyHostToDevice));",
+      T("<code>cudaMemcpy</code> copies <code>h_a</code> to <code>d_a</code> and <code>h_b</code> to <code>d_b</code> over PCIe. Destination first, then source.")],
+    [T("launch"), "vectorAdd<<<1, N>>>(d_a, d_b, d_c, N);",
+      T("The kernel runs on the GPU. Thread i reads <code>d_a[i]</code> and <code>d_b[i]</code> and writes <code>d_c[i]</code>. It only touches device memory.")],
+    [T("copy back"), "CHECK(cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost));",
+      F("<code>cudaMemcpy</code> copies <code>d_c</code> back into <code>h_c</code>. Now the CPU can read the result: every element is i + (N - i) = {0}.", N)],
+    [T("free"), "CHECK(cudaFree(d_a));\nCHECK(cudaFree(d_b));\nCHECK(cudaFree(d_c));\nfree(h_a);\nfree(h_b);\nfree(h_c);",
+      T("<code>cudaFree</code> gives the device memory back, <code>free</code> the host memory. Nothing is left.")]
+  ];
+  var when = { h_a: 1, h_b: 1, h_c: 4, d_a: 2, d_b: 2, d_c: 3 };
+  function side(p, name){
+    return '<div class="hd-side ' + p + '"><span class="dg-lbl">' + name + "</span>" + ARR.map(function(a){
+      var c = ""; for (var i = 0; i < N; i++) { c += '<i style="--i:' + i + '"></i>'; }
+      return '<div class="hd-arr" data-a="' + p + "_" + a + '"><code>' + p + "_" + a + "</code><div>" + c + "</div></div>";
+    }).join("") + (p === "d" ? '<div class="hd-kernel">vectorAdd&lt;&lt;&lt;1, N&gt;&gt;&gt;</div>' : "") + "</div>";
+  }
+  el.setAttribute("aria-label", T("The six steps"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("The six steps") + '</span><span class="dg-note">' + F("N = {0} here so it fits. The code in this lesson uses N = 1024.", N) + "</span></div>" +
+    segs(S.map(function(s, i){ return (i + 1) + " · " + s[0]; }), 0, T("steps")) +
+    '<div class="hd">' + side("h", T("host memory (CPU)")) + '<div class="hd-link"><span>PCIe</span><b aria-hidden="true"></b></div>' + side("d", T("device memory (GPU)")) + "</div>" +
+    '<pre class="dg-code"></pre><div class="dg-info" aria-live="polite"></div>' +
+    '<div class="dg-head"><div class="dg-ctl"><button class="dg-btn alt prev" type="button" aria-label="' + T("previous step") + '">← ' + T("back") + '</button>' +
+    '<button class="dg-btn next" type="button" aria-label="' + T("next step") + '">' + T("next step") + ' →</button></div><span class="dg-note pos"></span></div>';
+  var tb = el.querySelector(".dg-tabs"), hd = el.querySelector(".hd");
+  function go(i){
+    cur = Math.max(0, Math.min(5, i));
+    segOn(tb, cur);
+    hd.dataset.s = cur;
+    el.querySelectorAll(".hd-arr").forEach(function(r){
+      var a = r.dataset.a, full = cur >= when[a] && cur < 5;
+      r.classList.toggle("gone", cur === 5);
+      r.classList.toggle("new", cur === when[a]);
+      r.querySelectorAll("i").forEach(function(c, k){
+        c.textContent = cur === 5 ? "" : !full ? "?" : a.slice(-1) === "a" ? k : a.slice(-1) === "b" ? N - k : N;
+        c.classList.toggle("v", full);
+      });
+    });
+    el.querySelector(".dg-code").textContent = S[cur][1];
+    el.querySelector(".dg-info").innerHTML = "<b>" + (cur + 1) + " · " + S[cur][0] + "</b><br>" + S[cur][2];
+    el.querySelector(".prev").disabled = cur === 0;
+    el.querySelector(".next").disabled = cur === 5;
+    el.querySelector(".pos").textContent = F("step {0} of {1}", cur + 1, 6);
+  }
+  onSegs(tb, go);
+  el.querySelector(".prev").addEventListener("click", function(){ go(cur - 1); });
+  el.querySelector(".next").addEventListener("click", function(){ go(cur + 1); });
+  go(0);
 });
 
 (function(){

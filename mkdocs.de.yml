@@ -34,3 +34,4 @@ nav:
       - "05 Der CUDA-Plattform-Stack": cuda/Lesson-05/notes.md
       - "06 CUDA unter Linux kompilieren": cuda/Lesson-06/notes.md
       - "07 Warp-IDs": cuda/Lesson-07/notes.md
+      - "08 Vektoraddition": cuda/Lesson-08/notes.md

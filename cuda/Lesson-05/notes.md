@@ -1,59 +1,105 @@
 # Lesson 05: The CUDA Platform Stack
 
-This lesson shows the full CUDA platform as it ships with Toolkit 13.x for Blackwell. It has five layers, with languages at the top, hardware at the bottom, and tools in between.
+Lessons 00 to 04 used one small part of CUDA (Compute Unified Device Architecture): a kernel written in C/C++ and compiled with `nvcc`. This lesson steps back and shows the whole platform as it ships with CUDA Toolkit 13. Knowing the layers helps you see where each new tool or library you meet later fits in.
 
-## Programming languages
+## The Five Layers
+
+The CUDA platform has five layers. The languages you write in sit at the top, the GPU (Graphics Processing Unit) hardware sits near the bottom, and the AI (Artificial Intelligence) libraries build on all of them. Click a layer or an item to read about it.
+
+<cuda-stack></cuda-stack>
+
+1. Programming languages: how you write GPU code.
+2. Development tools: how you find slow parts and bugs.
+3. Compiler toolchain: how your source code becomes GPU instructions.
+4. Hardware capabilities: special units and features of the GPU itself.
+5. AI framework layer: ready-made libraries that deep learning frameworks use.
+
+## Programming Languages
 
 - CUDA C/C++ is the main language for writing kernels. Lessons 00 to 04 all used it.
-- OpenACC and CUDA Fortran add GPU support through code annotations, so you do not write kernels by hand.
-- Python reaches the GPU through libraries like CuPy and Numba.
+- CUDA Fortran lets Fortran programmers write kernels in Fortran instead of C++.
+- OpenACC (Open Accelerators) works the other way: you add short annotations to normal C, C++ or Fortran loops, and the compiler turns those loops into GPU code. You never write a kernel by hand.
+- Python reaches the GPU through libraries. CuPy gives you NumPy-style arrays that live on the GPU. Numba compiles Python functions into GPU kernels. NVIDIA's own CUDA Python packages (`cuda-python`) give Python direct access to the CUDA driver and runtime APIs (Application Programming Interfaces).
 
-All four run on the same GPU hardware.
+All of them end up running on the same GPU hardware, with the same blocks, threads and warps you met in Lessons 00 to 04.
 
-## Development tools
+## Development Tools
 
-- Nsight Systems records a timeline of CPU and GPU work. It shows where the application spends its time.
-- Nsight Compute looks at one kernel and shows how well it uses the hardware.
-- Compute Sanitizer runs the program and reports memory errors inside kernels.
+- Nsight Systems records a timeline of CPU (Central Processing Unit) and GPU work for the whole program. It shows where the time goes, for example whether the GPU sits idle while the CPU copies data.
+- Nsight Compute looks at one kernel in detail and shows how well it uses the hardware.
+- Compute Sanitizer runs the program and reports memory errors inside kernels, such as a thread that writes past the end of an array.
 
-## Compiler toolchain
+> [!TIP]
+> Start with Nsight Systems to find the slow part of a program, then use Nsight Compute on that one kernel. Measuring a kernel that only takes 1% of the run time is wasted effort.
 
-`nvcc` compiles `.cu` files. Every lesson so far called it in the compile step. It sends host code to the normal C++ compiler and device code to the NVIDIA compiler. Device code first becomes PTX, a virtual instruction set not tied to one GPU. The GPU driver then turns PTX into SASS, the real instructions for that GPU. The binary stores the PTX, so the same program can run on future GPUs without a rebuild.
+## Compiler Toolchain
+
+`nvcc` (NVIDIA CUDA Compiler) compiles `.cu` files. Every lesson so far used it in the compile step. It splits the file in two:
+
+- Host code, the part that runs on the CPU, goes to the normal C++ compiler: `gcc` or `clang` on Linux, MSVC (Microsoft Visual C++) on Windows.
+- Device code, the kernels, is compiled by NVIDIA's own tools in two stages. First it becomes PTX (Parallel Thread Execution), a virtual instruction set that is not tied to one GPU. Then PTX becomes SASS (Streaming ASSembler), the real machine instructions of one GPU generation.
 
 <nvcc-pipeline></nvcc-pipeline>
 
-## Hardware capabilities
+The program file can hold both the SASS and the PTX. When the program starts, the driver picks the SASS that fits the GPU. If there is none, it compiles the PTX into SASS on the spot. This is called JIT (just-in-time) compilation.
 
-- Tensor Cores are units inside each SM built for matrix math. They are separate from the FP32 cores, and much faster for FP16 and FP8 matrix work.
-- MIG splits one GPU into up to seven independent parts. Each part acts like its own GPU.
-- Dynamic Parallelism lets a running kernel launch another kernel from the GPU, without going back to the CPU. In Lesson 00, the CPU launched kernels. Dynamic Parallelism moves that step onto the GPU.
-- GPU Direct lets GPUs send data to each other or to a network card directly, without going through system memory.
+A worked example: Lesson 06 builds with `-arch=sm_89`. That stores SASS for compute capability (CC) 8.9 and PTX for CC 8.9 in the program.
+
+- On the L40S (CC 8.9), the driver runs the stored SASS directly.
+- On a newer GPU, for example one with CC 12.0, there is no SASS for 12.0. The driver compiles the stored PTX into SASS for CC 12.0 at startup, and the program still runs.
+- On an older GPU, for example one with CC 8.0, neither fits, because PTX for CC 8.9 may use features that CC 8.0 does not have. The program fails to launch its kernels.
 
 > [!NOTE]
-> The SM is the physical processor blocks run on (Lesson 02). Lesson 03 listed the FP32 cores per SM.
+> JIT compilation takes time when the program starts, and the driver can only use the features of the PTX version it was given. For the best speed on a GPU, build SASS for that GPU's compute capability (Lesson 03).
 
-## AI framework layer
+## Hardware Capabilities
 
-- cuDNN is a library of GPU operations for deep learning. PyTorch and TensorFlow use it for convolutions, attention, and similar operations.
-- TensorRT takes a trained model and makes it run fast on a specific GPU.
-- NCCL handles communication between GPUs. You need it to train on more than one GPU at a time.
+- Tensor Cores are units inside each SM (Streaming Multiprocessor) built for matrix math. They are separate from the FP32 (32-bit floating point) cores you counted in Lesson 03, and much faster for matrix work in smaller number formats such as FP16 (16-bit floating point) and FP8 (8-bit floating point). Deep learning uses them heavily.
+- MIG (Multi-Instance GPU) splits one data center GPU into up to seven isolated parts. Each part has its own SMs and memory and acts like its own GPU. For example, an 80 GB (gigabyte) A100 can be split into seven parts of about 10 GB each, so seven users share one card without slowing each other down.
+- Dynamic Parallelism lets a running kernel launch another kernel from the GPU. In Lessons 00 to 04 only the CPU launched kernels. Dynamic Parallelism moves that step onto the GPU, so a kernel can start more work without a round trip to the CPU.
+- GPUDirect lets GPUs move data to each other, to a network card, or to storage directly, without a detour through CPU memory.
+- NVLink is NVIDIA's fast direct link between GPUs. It is much faster than PCIe (Peripheral Component Interconnect Express), the normal slot a GPU sits in.
 
-## Visual
+Smaller number formats matter because they save memory and time. One FP32 number takes 4 bytes, one FP16 number 2 bytes, and one FP8 number 1 byte. A model with 1 billion numbers needs 4 GB in FP32, 2 GB in FP16 and 1 GB in FP8. A Tensor Core also does more FP8 math per second than FP16 math.
 
-![CUDA Platform Stack](05.png)
+> [!NOTE]
+> Not every GPU has every feature. The L40S used in these lessons has FP8 Tensor Cores, but no MIG, no NVLink, and GDDR6 memory instead of the HBM (High Bandwidth Memory) of GPUs such as the H100 and B200. Check the data sheet of your own GPU.
+
+## AI Framework Layer
+
+- cuBLAS (CUDA Basic Linear Algebra Subprograms) is NVIDIA's library for matrix and vector math on the GPU. It ships with the CUDA Toolkit.
+- cuDNN (CUDA Deep Neural Network library) is a library of GPU operations for deep learning, such as convolutions and attention. PyTorch and TensorFlow call it under the hood.
+- TensorRT takes a trained model and rebuilds it to run as fast as possible on one specific GPU.
+- NCCL (NVIDIA Collective Communications Library, pronounced "nickel") moves data between GPUs, for example to add up results from eight GPUs that train one model together. It uses NVLink and GPUDirect when they are available.
+
+You rarely call these libraries yourself when you use PyTorch. They are still the reason a single line of PyTorch code can run fast on the GPU.
 
 ## Glossary
 
-- PTX (Parallel Thread Execution): the in-between instruction set that CUDA compiles device code to first. It is not tied to one GPU. The driver turns it into real GPU instructions at runtime.
-- SASS (Streaming ASSembler): the real machine code for a specific GPU. PTX becomes SASS before it runs.
-- `nvcc`: the CUDA compiler. It handles host and device code in the same `.cu` file.
-- Nsight Systems: profiler that shows a timeline of CPU and GPU work for the whole application.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for running general programs on the GPU.
+- CUDA Fortran: Fortran with extensions for writing GPU kernels.
+- OpenACC (Open Accelerators): annotations for C, C++ and Fortran loops that let the compiler create GPU code for you.
+- CuPy: Python library with NumPy-style arrays on the GPU.
+- Numba: Python compiler that can turn Python functions into GPU kernels.
+- CUDA Python (`cuda-python`): NVIDIA's Python packages for direct access to the CUDA driver and runtime APIs.
+- API (Application Programming Interface): the set of functions a library offers to your code.
+- `nvcc` (NVIDIA CUDA Compiler): the CUDA compiler. It handles host and device code in the same `.cu` file.
+- MSVC (Microsoft Visual C++): the C++ compiler `nvcc` uses for host code on Windows.
+- PTX (Parallel Thread Execution): the virtual instruction set device code is compiled to first. It is not tied to one GPU.
+- SASS (Streaming ASSembler): the real machine code for one GPU generation.
+- JIT (just-in-time) compilation: the driver compiles PTX into SASS when the program starts, if no matching SASS is stored.
+- Nsight Systems: profiler that shows a timeline of CPU and GPU work for the whole program.
 - Nsight Compute: profiler that measures how well one kernel uses the GPU hardware.
 - Compute Sanitizer: tool that finds memory errors inside kernels while the program runs.
-- MIG (Multi-Instance GPU): splits one physical GPU into isolated parts. Each part acts as its own GPU.
-- Tensor Core: matrix-multiply unit inside each SM. Faster than regular FP32 cores for matrix work.
+- Tensor Core: matrix math unit inside each SM. Much faster than the FP32 cores for matrix work.
+- FP32 / FP16 / FP8: 32-, 16- and 8-bit floating point numbers. They take 4, 2 and 1 bytes.
+- MIG (Multi-Instance GPU): splits one physical GPU into up to seven isolated parts. Each part acts as its own GPU.
 - Dynamic Parallelism: a kernel on the GPU can launch another kernel without going back to the CPU.
-- GPU Direct: lets GPUs move data to each other or to a network card without going through the CPU.
-- NCCL: library for communication between GPUs. Used for distributed training.
-- cuDNN: library of GPU operations for deep learning. PyTorch and TensorFlow use it under the hood.
+- GPUDirect: lets GPUs move data to each other, to a network card or to storage without going through CPU memory.
+- NVLink: NVIDIA's fast direct connection between GPUs.
+- PCIe (Peripheral Component Interconnect Express): the standard slot and bus that connects a GPU to the rest of the computer.
+- HBM (High Bandwidth Memory): very fast GPU memory used on data center GPUs such as the H100 and B200.
+- cuBLAS (CUDA Basic Linear Algebra Subprograms): NVIDIA's GPU library for matrix and vector math.
+- cuDNN (CUDA Deep Neural Network library): library of GPU operations for deep learning. PyTorch and TensorFlow use it under the hood.
 - TensorRT: makes a trained model run fast on a specific GPU.
+- NCCL (NVIDIA Collective Communications Library): library for moving data between GPUs. Used for training on many GPUs.

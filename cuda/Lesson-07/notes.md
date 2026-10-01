@@ -1,27 +1,29 @@
 # Lesson 07: Warp IDs
 
-This lesson covers warps, the third level of the CUDA hierarchy. Lesson-01 and Lesson-02 covered block and thread IDs. Here you learn how a thread finds its own warp inside the kernel.
+[Lesson 01](../Lesson-01/notes.md) and [Lesson 02](../Lesson-02/notes.md) covered block and thread IDs. This lesson adds the warp, the group of 32 threads that the GPU (Graphics Processing Unit) really schedules, and shows how a thread works out its own warp ID and lane ID inside the kernel.
 
 > [!NOTE]
 > All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
 
-## CUDA Hierarchy
+## The CUDA Hierarchy
 
-The software levels in CUDA are:
+The levels in CUDA (Compute Unified Device Architecture) are the grid, the blocks inside it, the warps inside each block, and the threads inside each warp:
 
 <cuda-hierarchy warps></cuda-hierarchy>
 
-You choose the number of blocks and threads per block with `<<<num_blocks, threads_per_block>>>` (see Lesson-01, Lesson-02). The warp size is always 32 on NVIDIA GPUs. It is fixed in the hardware and cannot be changed. The warp is the real scheduling unit on the GPU. The GPU does not run threads one by one. It runs them in groups of 32.
+You choose the number of blocks and threads per block with `<<<num_blocks, threads_per_block>>>` (see [Lesson 01](../Lesson-01/notes.md) and [Lesson 02](../Lesson-02/notes.md)). The warp size is always 32 on NVIDIA GPUs. It is fixed in the hardware and cannot be changed. The warp is the real scheduling unit on the GPU. The GPU does not run threads one by one. It runs them in groups of 32.
 
 > [!NOTE]
 > Warp limits depend on the hardware. These values were measured on the L40S with `cudaGetDeviceProperties`:
 >
 > - Max warps per block: 32 (max 1024 threads / 32, applies to all GPUs)
-> - Max concurrent warps per SM: 48
+> - Max concurrent warps per SM (Streaming Multiprocessor): 48, which is 48 × 32 = 1536 threads
 > - SM count: 142
-> - Max concurrent warps across the entire GPU: 6,816
+> - Max concurrent warps across the entire GPU: 142 × 48 = 6,816
+>
+> The L40S has compute capability (CC) 8.9. GPUs with CC 8.6, 8.9 and 12.0 hold 48 warps per SM. Data center GPUs such as the A100 (CC 8.0) and H100 (CC 9.0) hold 64 warps, which is 2048 threads, per SM ([Lesson 03](../Lesson-03/notes.md)).
 
-## warp_id Is Not a Built-in Variable
+## `warp_id` Is Not a Built-in Variable
 
 `blockIdx.x` and `threadIdx.x` are filled in by the GPU for each thread. You only read them. There is no such variable for the warp ID. You calculate it yourself inside the kernel:
 
@@ -67,17 +69,37 @@ Checked on the machine: warps 0-31, exactly 32 threads each, 1024 lines in total
 
 Each line gives a count, then the warp ID. Every count is 32 because each warp holds exactly 32 threads. There are 32 such lines, and 32 × 32 = 1024.
 
-## Warp ID Resets Per Block
+## Warp ID Resets per Block
 
-The warp ID starts at zero in every block. With 2 blocks, both blocks have warp 0 and warp 1. So warp ID 0 alone does not tell you the block. You also need the block ID. With `<<<2, 64>>>`, each block has 64 threads, which is 2 warps. `warp_id=0` appears twice, once in block 0 and once in block 1.
+The warp ID starts at zero in every block. With `<<<2, 64>>>`, each block has 64 threads, which is 2 warps. So both blocks have a warp 0 and a warp 1, and `warp_id = 0` appears twice, once in block 0 and once in block 1.
 
-## Lane ID (Exercise)
+> [!WARNING]
+> The warp ID alone does not tell you which warp of the whole launch a thread is in. Always read it together with the block ID. Thread 40 of block 0 and thread 40 of block 1 both get warp ID 40 / 32 = 1, but they are in different warps.
 
-Each warp has 32 threads. A thread's position inside its warp, from 0 to 31, is its lane ID. You get it with the modulo operator, `threadIdx.x % 32`. For example, thread 33 is in warp 1 and has lane ID 1 (33 % 32 = 1). Threads 0, 32, and 64 are in different warps but all have lane ID 0. So modulo does not give the warp ID. For the warp ID you need division (`/`).
+## Lane ID
+
+Each warp has 32 threads. A thread's position inside its warp, from 0 to 31, is its lane ID. You get it with the modulo operator, `threadIdx.x % 32`, which gives the remainder of the division. Division gives the warp, the remainder gives the place inside it:
+
+| `threadIdx.x` | warp ID (`/ 32`) | lane ID (`% 32`) |
+|---|---|---|
+| 0 | 0 | 0 |
+| 31 | 0 | 31 |
+| 32 | 1 | 0 |
+| 33 | 1 | 1 |
+| 70 | 2 | 6 |
+| 127 | 3 | 31 |
+
+For thread 70: 70 / 32 = 2 with remainder 6, because 2 × 32 + 6 = 70. Threads 0, 32 and 64 are in different warps but all have lane ID 0. So modulo does not give the warp ID. For the warp ID you need division (`/`).
+
+Move the slider to change the block size, and hover a thread to see both numbers:
+
+<warp-lane></warp-lane>
 
 ## Code
 
-The kernel runs with 1 block of 128 threads. The `test01` function runs on the GPU. Each thread computes its `warp_id` with `threadIdx.x / 32` and prints its block ID, thread ID, and warp ID. After the launch, `cudaDeviceSynchronize()` makes the CPU wait for the GPU, so the output is not lost when the program ends.
+### `warp_ids.cu`
+
+The kernel runs with 1 block of 128 threads. The `test01` function runs on the GPU. Each thread computes its `warp_id` with `threadIdx.x / 32` and prints its block ID, thread ID, and warp ID. After the launch, `cudaDeviceSynchronize()` makes the CPU (Central Processing Unit) wait for the GPU, so the output is not lost when the program ends.
 
 ```c
 #include "cuda_runtime.h"
@@ -109,7 +131,7 @@ int main()
 - `test01<<<1, 128>>>();`: launches the kernel with 1 block of 128 threads.
 - `cudaDeviceSynchronize();`: makes the CPU wait until all GPU threads finish and the output is written.
 
-## warp_ids_2blocks.cu
+### `warp_ids_2blocks.cu`
 
 This file uses the same kernel as `warp_ids.cu`. Only the launch config is different, `<<<2, 64>>>`. That is 2 blocks of 64 threads, so each block has 64 / 32 = 2 warps. The file shows that the warp ID resets in each block.
 
@@ -158,7 +180,9 @@ nvcc -arch=sm_89 -o warp_ids_2blocks warp_ids_2blocks.cu
 - `warp_ids.cu` is the source file.
 - `./warp_ids` runs the program from the current folder.
 
-## Output: `<<<1, 128>>>`
+## Output
+
+### `<<<1, 128>>>`
 
 This is the output of `./warp_ids`. There are 128 lines, one per thread, and 4 warps. This is real L40S output. Thread order is not guaranteed, so the listing below is sorted.
 
@@ -182,7 +206,7 @@ Block ID: 0 --- Thread ID: 127 --- Warp ID: 3
 
 The block ID is always 0 because there is only one block. The warp ID goes up by one at threads 32, 64, and 96, because each of those is a new multiple of 32. Each `...` stands for lines that were left out.
 
-## Output: `<<<2, 64>>>`
+### `<<<2, 64>>>`
 
 This is the output of `./warp_ids_2blocks`. There are 128 lines, 2 blocks, and 2 warps per block. The warp ID resets in each block.
 
@@ -202,14 +226,22 @@ Block ID: 1 --- Thread ID: 63 --- Warp ID: 1
 ```
 
 The thread ID only goes up to 63 because each block has 64 threads. Block 1 shows warp_id 0 again because `threadIdx.x` starts at zero in every block, and the warp ID is computed from it. There is no global warp number for the whole GPU. The `<- resets to zero` mark was added by hand. The program does not print it.
+
 ## Visual
 
 <cuda-launch blocks="1" threads="128" fn="test01"></cuda-launch>
 
 <cuda-launch blocks="2" threads="64" fn="test01"></cuda-launch>
 
+## Try It
+
+- Launch `test01<<<1, 100>>>()`. 100 is not a multiple of 32, so the last warp is only partly full: warps 0, 1 and 2 have 32 threads each, and warp 3 has only threads 96 to 99. The GPU still schedules a full warp of 32 for it, and 28 lanes stay idle.
+- Add `int lane_id = threadIdx.x % 32;` to the kernel and print it. Thread 70 should print lane ID 6.
+
 ## Glossary
 
+- GPU (Graphics Processing Unit): the processor that runs the kernels.
+- SM (Streaming Multiprocessor): the processor inside the GPU that runs blocks and their warps. The L40S has 142.
 - warp: a group of 32 threads that the GPU runs as one unit. The GPU schedules warps, not single threads.
 - warp size: always 32 on NVIDIA GPUs. Software cannot change it.
 - warp ID: the warp a thread belongs to inside its block. It is `threadIdx.x / 32`.

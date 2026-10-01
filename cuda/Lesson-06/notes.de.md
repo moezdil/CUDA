@@ -1,11 +1,13 @@
 # Lektion 06: CUDA unter Linux kompilieren
 
-Diese Lektion zeigt, wie du ein CUDA-Programm unter Linux kompilierst und ausführst. Sie zeigt auch, warum ein Kernel manchmal gar nichts ausgibt, wenn `cudaDeviceSynchronize()` fehlt.
+Die Lektionen 00 bis 04 haben ihre Programme mit einem kurzen Befehl kompiliert. Diese Lektion geht jeden Schritt durch, mit dem du ein CUDA-Programm (Compute Unified Device Architecture) unter Linux baust und ausführst. Dazu kommt das Flag `-arch`, das die GPU (Graphics Processing Unit) nennt, für die du baust. Außerdem siehst du, warum ein Kernel manchmal gar nichts ausgibt, wenn `cudaDeviceSynchronize()` fehlt.
 
 > [!NOTE]
-> Das Video nutzt Windows 11 + WSL2 (Ubuntu) mit CUDA 11.5. Diese Seite nutzt natives Linux (Ubuntu 24), CUDA 13.0 und eine NVIDIA L40S (46 GB, Ada Lovelace, sm_89). Die Befehle zum Kompilieren sind in beiden Versionen gleich.
+> Alle Ausgaben auf dieser Seite stammen von einer NVIDIA L40S mit CUDA 13.0 unter Ubuntu 24.
 
-## Quelldatei: `project001.cu`
+## Code
+
+Das Programm steht in `code/project001.cu`:
 
 ```c
 #include "cuda_runtime.h"
@@ -31,15 +33,17 @@ int main()
 }
 ```
 
-Der Start nutzt 2 Blöcke mit je 64 Threads, also insgesamt 128 Threads. Jeder Block hat 64 / 32 = 2 Warps.
+Der Start nutzt 2 Blöcke mit je 64 Threads, also insgesamt 2 × 64 = 128 Threads. Jeder Block hat 64 / 32 = 2 Warps.
 
 - Die drei `#include`-Zeilen holen die CUDA-Runtime-Funktionen, die eingebauten Variablen wie `blockIdx` und `threadIdx` und `printf` herein.
-- `__global__` markiert `test01` als Kernel. Die CPU startet ihn, und die GPU führt ihn aus.
-- `threadIdx.x / 32` ergibt die Warp-ID, weil ein Warp 32 Threads hat. Die Threads 0-31 bekommen 0 und die Threads 32-63 bekommen 1.
-- `test01 <<<2, 64>>> ();` startet den Kernel mit 2 Blöcken aus 64 Threads.
+- `__global__` markiert `test01` als Kernel. Die CPU (Central Processing Unit) startet ihn, und die GPU führt ihn aus.
+- `threadIdx.x / 32` ergibt die Warp-ID, weil ein Warp 32 Threads hat. Beide Seiten sind ganze Zahlen, also fällt der Rest weg. Thread 45 bekommt zum Beispiel 45 / 32 = 1. Die Threads 0-31 bekommen 0 und die Threads 32-63 bekommen 1.
+- `test01 <<<2, 64>>> ();` startet den Kernel mit 2 Blöcken aus je 64 Threads.
 - `cudaDeviceSynchronize();` lässt die CPU auf die GPU warten. Der Abschnitt zur Synchronisierung weiter unten zeigt, warum diese Zeile wichtig ist.
 
-## Schritt 1: nvcc prüfen
+## Kompilieren und ausführen
+
+### Schritt 1: nvcc prüfen
 
 Prüf zuerst, ob der CUDA-Compiler installiert ist und welche Version er hat. Wenn dieser Befehl fehlschlägt, funktioniert nichts anderes in dieser Lektion.
 
@@ -47,8 +51,8 @@ Prüf zuerst, ob der CUDA-Compiler installiert ist und welche Version er hat. We
 nvcc --version
 ```
 
-- `nvcc` ist der CUDA-Compiler.
-- `--version` gibt die Version des Compilers aus und beendet sich dann. Es kompiliert nichts.
+- `nvcc` (NVIDIA CUDA Compiler) ist der CUDA-Compiler.
+- `--version` gibt die Compiler-Version aus und beendet sich. Es wird nichts kompiliert.
 
 Ausgabe auf diesem Rechner:
 
@@ -60,18 +64,18 @@ Cuda compilation tools, release 13.0, V13.0.88
 Build cuda_13.0.r13.0/compiler.36424714_0
 ```
 
-Die wichtige Zeile ist `release 13.0, V13.0.88`. Sie sagt dir, dass das CUDA 13.0 ist. Die anderen Zeilen zeigen den Namen des Werkzeugs, das Copyright sowie Build-Datum und Build-ID des Compilers.
+Die wichtige Zeile ist `release 13.0, V13.0.88`. Sie sagt, dass es CUDA 13.0 ist. Die anderen Zeilen nennen den Namen des Werkzeugs, das Copyright sowie Build-Datum und Build-ID des Compilers.
 
-## Schritt 2: kompilieren
+### Schritt 2: kompilieren
 
-Jetzt machst du aus der Quelldatei ein Programm, das der Rechner ausführen kann.
+Jetzt machst du aus der Quelldatei ein Programm, das der Rechner ausführen kann. Das ist derselbe Befehl wie in den Lektionen 00 bis 05:
 
 ```bash
 nvcc -o project001 project001.cu
 ```
 
-- `nvcc` kompiliert sowohl den CPU-Code als auch den GPU-Code in der `.cu`-Datei.
-- `-o project001` legt den Namen des erzeugten Programms fest. Ohne `-o` heißt es `a.out`. Wenn du immer `-o` nutzt, vermeidest du Verwirrung.
+- `nvcc` kompiliert den CPU-Code und den GPU-Code in der `.cu`-Datei.
+- `-o project001` legt den Namen des fertigen Programms fest. Ohne `-o` heißt es `a.out`. Wenn du immer `-o` nutzt, vermeidest du Verwirrung.
 - `project001.cu` ist die Quelldatei.
 
 > [!WARNING]
@@ -85,15 +89,45 @@ ls -lh project001
 
 - `ls` listet Dateien auf.
 - `-l` zeigt das lange Format mit Rechten, Besitzer, Größe und Datum.
-- `-h` zeigt die Größe in einer gut lesbaren Einheit, zum Beispiel `K` oder `M`.
+- `-h` zeigt die Größe in einer gut lesbaren Einheit wie `K` oder `M`.
 
 ```
 -rwxrwxr-x 1 ubuntu ubuntu 966K Jun  9 21:58 project001
 ```
 
-Die Zeile beginnt mit `-`, also ist es eine normale Datei. Die Buchstaben `x` in `rwxrwxr-x` bedeuten, dass sich die Datei ausführen lässt. `ubuntu ubuntu` sind Besitzer und Gruppe. `966K` ist die Größe des Programms. Danach kommen Datum und Uhrzeit des Builds und der Name. Wäre das Kompilieren fehlgeschlagen, würde `ls` melden, dass die Datei nicht existiert.
+Die Zeile beginnt mit `-`, also ist es eine normale Datei. Die Buchstaben `x` in `rwxrwxr-x` bedeuten, dass sich die Datei ausführen lässt. `ubuntu ubuntu` sind Besitzer und Gruppe. `966K` ist die Größe des Programms, etwa 966 KB (Kilobyte). Danach folgen Datum und Uhrzeit des Builds und der Name. Wäre das Kompilieren fehlgeschlagen, würde `ls` melden, dass die Datei nicht existiert.
 
-## Schritt 3: ausführen
+### Schritt 3: die GPU-Architektur nennen
+
+Ohne `-arch` wählt `nvcc` ein sicheres, allgemeines Standardziel. Besser ist es, die GPU zu nennen, für die du baust. Die L40S hat Compute Capability (CC) 8.9 (siehe [Lektion 03](../Lesson-03/notes.md)), und ihr Architekturname ist `sm_89`:
+
+```bash
+nvcc -arch=sm_89 -o project001 project001.cu
+```
+
+- `-arch=sm_89` baut für Compute Capability 8.9, also die L40S. Die Zahl ist die CC ohne Punkt: Aus 8.9 wird `89`.
+- `-o project001` und `project001.cu` sind wie vorher.
+
+Ab hier kompiliert jede Lektion mit `-arch=sm_89`. Auf einer anderen GPU setzt du deren CC ein, zum Beispiel `-arch=sm_80` für CC 8.0. [Lektion 05](../Lesson-05/notes.md) erklärt, was der Compiler für dieses Ziel baut.
+
+Prüf, ob dieses Toolkit sm_89 unterstützt:
+
+```bash
+nvcc --help | grep sm_89
+```
+
+- `nvcc --help` gibt alle Compiler-Optionen und ihre erlaubten Werte aus.
+- `|` schickt diesen Text an den nächsten Befehl statt auf den Bildschirm.
+- `grep sm_89` behält nur die Zeilen, die `sm_89` enthalten.
+
+```
+        'sm_75','sm_80','sm_86','sm_87','sm_88','sm_89','sm_90','sm_90a'.
+        'sm_86','sm_87','sm_88','sm_89','sm_90','sm_90a'.
+```
+
+Jede Zeile gehört zu einer Liste erlaubter Werte im Hilfetext. `grep` gibt jede passende Zeile aus, deshalb taucht `sm_89` zweimal auf. Jeder Treffer bedeutet, dass dieses Toolkit für die L40S bauen kann. Gäbe es keine Ausgabe, würde `-arch=sm_89` mit diesem `nvcc` nicht funktionieren.
+
+### Schritt 4: ausführen
 
 Führ das Programm aus, das du gerade gebaut hast.
 
@@ -101,14 +135,14 @@ Führ das Programm aus, das du gerade gebaut hast.
 ./project001
 ```
 
-- `./` bedeutet "im aktuellen Ordner". Linux sucht Programme standardmäßig nicht im aktuellen Ordner. Deshalb musst du das dazuschreiben.
+- `./` bedeutet "im aktuellen Ordner". Linux sucht Programme standardmäßig nicht im aktuellen Ordner, deshalb musst du es angeben.
 - `project001` ist der Programmname, den du mit `-o` festgelegt hast.
 
 ## Das Synchronisierungsproblem
 
-In der Zeile mit dem Kernel-Start schickt die CPU den Kernel an die GPU. Sie wartet nicht. Sie geht direkt zur nächsten Zeile. Wenn diese Zeile `return 0` ist, endet das Programm, bevor die GPU etwas ausgibt.
+In der Zeile mit dem Kernel-Start schickt die CPU den Kernel an die GPU. Sie wartet nicht. Sie geht direkt zur nächsten Zeile. Ist diese Zeile `return 0`, endet das Programm, bevor die GPU etwas ausgibt.
 
-Probier es aus: Entferne die Zeile `cudaDeviceSynchronize();`, kompiliere neu und führ das Programm dreimal aus. Auf diesem Rechner hat das Programm nie etwas ausgegeben:
+Um das zu sehen, entfernst du die Zeile `cudaDeviceSynchronize();`, kompilierst neu und führst das Programm dreimal aus. Auf diesem Rechner hat das Programm nie etwas ausgegeben:
 
 ```bash
 $ ./project001
@@ -119,28 +153,28 @@ $ ./project001
 $
 ```
 
-Das `$` ist der Shell-Prompt. Es gehört nicht zum Befehl. Nach jedem `./project001` kommt in der nächsten Zeile ein leerer Prompt. Keiner der drei Läufe hat also etwas ausgegeben. Der Kernel lief zwar auf der GPU. Aber das Programm endete, bevor der Druckpuffer der GPU geleert wurde (also im Terminal ausgegeben wurde).
+Das `$` ist der Shell-Prompt. Es gehört nicht zum Befehl. Nach jedem `./project001` kommt als nächste Zeile ein leerer Prompt, also hat keiner der drei Läufe etwas ausgegeben. Der Kernel lief durchaus auf der GPU. Aber das Programm endete, bevor der Ausgabepuffer der GPU geleert (ins Terminal geschrieben) wurde.
 
-> [!NOTE]
-> Im Video (CUDA 11.5, WSL2) erschien die Ausgabe manchmal und manchmal nicht, je nach Timing. Auf diesem Rechner (CUDA 13.0, L40S, natives Ubuntu) erschien sie nie.
+> [!WARNING]
+> Ob Ausgabe fehlt, hängt vom Timing ab. Auf diesem Rechner kam sie nie, aber auf einem anderen Rechner, Treiber oder OS (Operating System, Betriebssystem) siehst du in manchen Läufen vielleicht einige oder alle Zeilen. Verlass dich nie darauf: Ohne `cudaDeviceSynchronize()` wartet die CPU nicht auf die GPU.
 
-`cudaDeviceSynchronize()` lässt die CPU an dieser Zeile warten, bis alle GPU-Threads fertig sind. Wenn die Funktion zurückkehrt, ist der Druckpuffer geleert und die ganze Ausgabe steht im Terminal. Dann gibt jeder Lauf die vollständige Ausgabe aus.
+`cudaDeviceSynchronize()` lässt die CPU an dieser Zeile warten, bis alle GPU-Threads fertig sind. Wenn der Aufruf zurückkehrt, ist der Ausgabepuffer geleert und alle Ausgaben stehen im Terminal. Dann gibt jeder Lauf die volle Ausgabe aus.
 
-Füg die Zeile wieder ein, kompiliere neu und führ das Programm noch einmal aus:
+Setz die Zeile wieder ein, kompiliere neu und führ das Programm noch einmal aus:
 
 ```bash
-nvcc -o project001 project001.cu
+nvcc -arch=sm_89 -o project001 project001.cu
 ./project001
 ```
 
-- Die erste Zeile baut das Programm neu, damit die Änderung in der Quelldatei enthalten ist. Das alte Programm würde immer noch das alte Verhalten zeigen.
+- Die erste Zeile baut das Programm neu, damit die Änderung in der Quelldatei drin ist. Das alte Programm würde noch das alte Verhalten zeigen.
 - Die zweite Zeile führt das neue Programm aus.
 
 <kernel-sync cmd="./project001" out="The block ID is 0 --- The thread ID is 0 --- The warp ID 0|The block ID is 0 --- The thread ID is 1 --- The warp ID 0|... 128 lines in total"></kernel-sync>
 
 ## Ausgabe
 
-Das ist die vollständige Ausgabe von `./project001` mit `cudaDeviceSynchronize()` und `<<<2, 64>>>` (128 Zeilen). Jede Zeile stammt von einem GPU-Thread.
+Das ist die volle Ausgabe von `./project001` mit `cudaDeviceSynchronize()` und `<<<2, 64>>>` (128 Zeilen). Jede Zeile kommt von einem GPU-Thread.
 
 ```
 The block ID is 0 --- The thread ID is 0 --- The warp ID 0
@@ -276,20 +310,20 @@ The block ID is 1 --- The thread ID is 63 --- The warp ID 1
 So liest du sie:
 
 - Es sind 128 Zeilen, weil 2 Blöcke × 64 Threads = 128 Threads sind und jeder Thread einmal `printf` aufruft.
-- Die Thread-ID geht in Block 0 von 0 bis 63 und beginnt dann in Block 1 wieder bei 0. `threadIdx.x` zählt innerhalb eines Blocks, nicht über den ganzen Start hinweg.
-- Die Warp-ID ist 0 für die Threads 0-31 und 1 für die Threads 32-63, weil `threadIdx.x / 32` eine Ganzzahldivision ist. Da die Thread-ID in jedem Block neu beginnt, beginnt auch die Warp-ID neu.
+- Die Thread-ID läuft in Block 0 von 0 bis 63 und beginnt in Block 1 wieder bei 0. `threadIdx.x` zählt innerhalb eines Blocks, nicht über den ganzen Start.
+- Die Warp-ID ist 0 für die Threads 0-31 und 1 für die Threads 32-63, weil `threadIdx.x / 32` eine Ganzzahldivision ist. Da die Thread-ID in jedem Block neu beginnt, gilt das auch für die Warp-ID.
 
-Auf diesem Rechner hat Block 0 in beiden Läufen vor Block 1 ausgegeben. Ein zweiter Lauf lieferte dieselben 128 Zeilen in derselben Reihenfolge. Die Reihenfolge der Blöcke ist bei anderen Läufen oder auf anderen Rechnern trotzdem nicht garantiert.
+Auf diesem Rechner hat Block 0 in beiden Läufen vor Block 1 ausgegeben. Ein zweiter Lauf lieferte dieselben 128 Zeilen in derselben Reihenfolge. Die Reihenfolge der Blöcke ist in anderen Läufen oder auf anderen Rechnern trotzdem nicht garantiert.
 
-## Kompilierfehler finden
+## Kompilierfehler
 
 Um zu sehen, wie der Compiler Fehler meldet, entfernst du das `;` am Ende von `warp_ID_Value = threadIdx.x / 32` (Zeile 10). Dann kompilierst du neu:
 
 ```bash
-nvcc -o project001 project001.cu
+nvcc -arch=sm_89 -o project001 project001.cu
 ```
 
-Das ist derselbe Befehl zum Kompilieren wie vorher. Diesmal schlägt er fehl, also wird kein neues Programm geschrieben.
+Das ist derselbe Kompilierbefehl wie vorher. Diesmal schlägt er fehl, also wird kein neues Programm geschrieben.
 
 Ausgabe auf diesem Rechner:
 
@@ -303,52 +337,31 @@ project001.cu(9): error: expected a ";"
 
 So liest du sie:
 
-- `project001.cu(9)` ist der Dateiname und in Klammern die Zeilennummer.
-- `error: expected a ";"` sagt, was der Compiler erwartet hat.
-- Die nächste Zeile wiederholt die Quellzeile. Das `^` markiert die Stelle, an der der Compiler das Problem bemerkt hat.
+- `project001.cu(9)` ist der Dateiname mit der Zeilennummer in Klammern.
+- `error: expected a ";"` sagt, wonach der Compiler gesucht hat.
+- Die nächste Zeile wiederholt die Quellzeile, und das `^` markiert die Stelle, an der der Compiler das Problem bemerkt hat.
 - Die letzte Zeile zählt die Fehler in der Datei.
 
-Der Fehler zeigt auf die Zeile mit `printf`, nicht auf die Zeile, in der das Semikolon fehlt. Der Compiler sieht das Problem erst, wenn er beim nächsten Wort ankommt, und das steht in der Zeile mit `printf`. Schau deshalb immer auch in die Zeile direkt vor der, die der Compiler meldet.
+Der Fehler zeigt auf die `printf`-Zeile, nicht auf die Zeile, in der das Semikolon fehlt. Der Compiler bemerkt das Problem erst, wenn er das nächste Wort erreicht, und das steht in der `printf`-Zeile.
+
+> [!TIP]
+> Wenn der Compiler einen Fehler in einer Zeile meldet, die in Ordnung aussieht, schau dir die Zeile direkt davor an. Ein fehlendes `;` oder `)` fällt meist erst eine Zeile zu spät auf.
 
 > [!NOTE]
-> Diese Ausgabe entstand, bevor die zwei Kommentarzeilen in den Kernel kamen. Deshalb steht dort Zeile 9. Mit der Datei von oben fehlt das Semikolon in Zeile 10, und der Fehler zeigt auf Zeile 11.
+> Diese Ausgabe entstand, bevor die beiden Kommentarzeilen in den Kernel kamen, deshalb steht dort Zeile 9. Mit der oben gezeigten Datei fehlt das Semikolon in Zeile 10, und der Fehler zeigt auf Zeile 11.
 
-Füg das Semikolon wieder ein, kompiliere neu und prüf, dass der Build ohne Fehler durchläuft.
+Setz das Semikolon wieder ein, kompiliere neu und prüf, dass der Build ohne Fehler durchläuft.
 
-## Hinweise speziell zur L40S
+## Dieser Rechner
 
-| Parameter | Video | Dieser Rechner |
-|---|---|---|
-| CUDA-Release | 11.5 | 13.0 |
-| GPU | generisch | NVIDIA L40S (sm_89) |
-| Betriebssystem | WSL2 (Ubuntu) | natives Ubuntu 24 |
-| Shell | cmd.exe + wsl | direkt per SSH |
+| Einstellung | Wert |
+|---|---|
+| CUDA-Release | 13.0 |
+| GPU | NVIDIA L40S (46 GB, Ada Lovelace, CC 8.9, `sm_89`) |
+| OS | natives Ubuntu 24 |
+| Zugang | SSH (Secure Shell) von einem anderen Computer |
 
-Auf der L40S nennst du beim Kompilieren am besten die GPU-Architektur. Ohne `-arch` wählt NVCC einen sicheren, allgemeinen Standardwert. `-arch=sm_89` zielt direkt auf diese GPU und vermeidet Überraschungen.
-
-```bash
-nvcc -arch=sm_89 -o project001 project001.cu
-```
-
-- `-arch=sm_89` baut für Compute Capability 8.9, also die L40S.
-- `-o project001` und `project001.cu` sind wie vorher.
-
-Prüf, ob dieses Toolkit sm_89 unterstützt:
-
-```bash
-nvcc --help | grep sm_89
-```
-
-- `nvcc --help` gibt alle Optionen des Compilers und ihre erlaubten Werte aus.
-- `|` schickt diesen Text an den nächsten Befehl statt auf den Bildschirm.
-- `grep sm_89` behält nur die Zeilen, in denen `sm_89` vorkommt.
-
-```
-        'sm_75','sm_80','sm_86','sm_87','sm_88','sm_89','sm_90','sm_90a'.
-        'sm_86','sm_87','sm_88','sm_89','sm_90','sm_90a'.
-```
-
-Jede Zeile ist Teil einer Liste erlaubter Werte im Hilfetext. `grep` gibt jede passende Zeile aus. Deshalb taucht `sm_89` zweimal auf. Jeder Treffer bedeutet, dass dieses Toolkit für die L40S bauen kann. Gäbe es keine Ausgabe, würde `-arch=sm_89` mit diesem nvcc nicht funktionieren.
+Die Befehle in dieser Lektion funktionieren auf anderen Linux-Rechnern genauso. Nur der Wert von `-arch` ändert sich mit der GPU.
 
 ## Zusammenfassung
 
@@ -359,12 +372,14 @@ Jede Zeile ist Teil einer Liste erlaubter Werte im Hilfetext. `grep` gibt jede p
 | Kompilieren (L40S) | `nvcc -arch=sm_89 -o project001 project001.cu` |
 | Ausführen | `./project001` |
 
-Setz `cudaDeviceSynchronize()` hinter einen Kernel-Start, wenn die CPU die Ausgabe oder die Ergebnisse der GPU braucht, bevor das Programm endet. Ohne diese Zeile gibt dieser Rechner überhaupt nichts aus.
+Füg nach einem Kernel-Start `cudaDeviceSynchronize()` ein, wenn die CPU die Ausgabe oder die Ergebnisse der GPU braucht, bevor das Programm endet. Ohne diese Zeile gibt dieser Rechner überhaupt nichts aus.
 
 ## Glossar
 
-- `nvcc`: der CUDA-Compilertreiber. Er verarbeitet Host-Code und Device-Code in derselben `.cu`-Datei.
-- `-o`: legt den Namen des erzeugten Programms fest. Der Standardname ist `a.out`.
+- `nvcc` (NVIDIA CUDA Compiler): der CUDA-Compilertreiber. Er verarbeitet Host-Code und Device-Code in derselben `.cu`-Datei.
+- `-o`: legt den Namen des fertigen Programms fest. Standard ist `a.out`.
 - `-arch=sm_89`: kompiliert für Compute Capability 8.9, also die L40S (Ada Lovelace).
-- `cudaDeviceSynchronize()`: lässt die CPU warten, bis alle bisher gestarteten GPU-Arbeiten fertig sind.
+- CC (Compute Capability): die Versionsnummer einer GPU-Generation, etwa 8.9. Siehe [Lektion 03](../Lesson-03/notes.md).
+- `cudaDeviceSynchronize()`: lässt die CPU warten, bis alle bisher gestartete GPU-Arbeit fertig ist.
 - Warp-ID: der Warp, zu dem ein Thread innerhalb seines Blocks gehört. Sie ist `threadIdx.x / 32`.
+- SSH (Secure Shell): ein Weg, sich über das Netzwerk auf einem anderen Computer anzumelden und dort Befehle auszuführen.

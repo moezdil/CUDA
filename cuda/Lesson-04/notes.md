@@ -1,6 +1,9 @@
 # Lesson 04: Built-in Variables
 
-Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The hardware sets them at launch, based on the launch configuration.
+Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The GPU (Graphics Processing Unit) fills them in for each thread at launch, based on the launch configuration. This lesson prints all five from every thread, so you can see which ones change and which stay the same.
+
+> [!NOTE]
+> All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
 
 ## gridDim
 
@@ -8,7 +11,11 @@ Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `bloc
 
 ## blockDim
 
-`blockDim` holds the number of threads per block in each direction. With `<<<2, 4>>>`, `blockDim.x` is 4, and `blockDim.y` and `blockDim.z` are 1. The global ID formula from Lesson 02 uses it: `blockIdx.x * blockDim.x + threadIdx.x`.
+`blockDim` holds the number of threads per block in each direction. With `<<<2, 4>>>`, `blockDim.x` is 4, and `blockDim.y` and `blockDim.z` are 1. Every thread sees the same `blockDim`.
+
+The global ID formula from [Lesson 02](../Lesson-02/notes.md) uses it: `blockIdx.x * blockDim.x + threadIdx.x`. With `<<<2, 4>>>`, thread 3 in block 1 gets 1 * 4 + 3 = 7, the last of the 8 threads.
+
+<global-id></global-id>
 
 ## blockIdx
 
@@ -16,20 +23,20 @@ Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `bloc
 
 ## threadIdx
 
-`threadIdx` is the index of the thread inside its block. It restarts at 0 in every block. In a block of 4 threads, `threadIdx.x` is 0, 1, 2, 3.
+`threadIdx` is the index of the thread inside its block. It restarts at 0 in every block. In a block of 4 threads, `threadIdx.x` is 0, 1, 2, 3. It is always less than `blockDim.x`.
 
-`gridDim`, `blockDim`, `blockIdx`, and `threadIdx` are all `dim3` structs with `.x`, `.y`, `.z` fields. If you write `<<<2, 4>>>` with plain numbers, CUDA sets `.y = 1` and `.z = 1` for you.
+`gridDim`, `blockDim`, `blockIdx`, and `threadIdx` all have `.x`, `.y`, `.z` fields. `gridDim` and `blockDim` are of type `dim3`. If you write `<<<2, 4>>>` with plain numbers, CUDA (Compute Unified Device Architecture) sets `.y = 1` and `.z = 1` for you. So `<<<2, 4>>>` is the same as `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>`.
 
 ## warpSize
 
-`warpSize` is the number of threads per warp. It is 32 on every current GPU. It is a variable and not a fixed constant because NVIDIA may change it in a future architecture.
+`warpSize` is the number of threads per warp. It is 32 on every NVIDIA GPU so far. CUDA gives it to you as a variable, so your code does not have to write the number 32 by hand.
 
 > [!TIP]
-> Writing 32 works today. Reading `warpSize` stays correct if it ever changes.
+> Writing 32 works today. Reading `warpSize` keeps your code correct even if a future GPU uses another size.
 
-## Hardware limits
+## Hardware Limits
 
-Before running a kernel, the driver checks the launch configuration against hardware limits. If any value is too large, the kernel does not launch. These are the limits for CC 3.0 and later (Kepler to Blackwell):
+Before running a kernel, the CUDA runtime checks the launch configuration against hardware limits. If any value is too large, the kernel does not launch. These are the limits for CC (compute capability) 3.0 and later, from Kepler to Blackwell:
 
 | Variable      | Dimension    | Max value |
 |---------------|--------------|-----------|
@@ -41,7 +48,17 @@ Before running a kernel, the driver checks the launch configuration against hard
 | `blockDim.z`  | threads in z | 64        |
 | threads/block | total        | 1024      |
 
-`blockDim.x * blockDim.y * blockDim.z` must not be more than 1024, even if each single value is within its limit. This is the same 1024 threads-per-block limit from Lesson 02.
+`blockDim.x * blockDim.y * blockDim.z` must not be more than 1024, even if each single value is within its limit. This is the same 1024 threads-per-block limit from [Lesson 02](../Lesson-02/notes.md). Two examples:
+
+- `dim3(16, 16, 4)`: every value is within its limit, and 16 x 16 x 4 = 1024 threads. Valid.
+- `dim3(32, 32, 2)`: every value is within its limit, but 32 x 32 x 2 = 2048 threads. Invalid, the kernel does not run.
+
+> [!WARNING]
+> A launch that breaks a limit compiles and runs without any message, but the kernel never starts. Check `cudaGetLastError()` after the launch, as [Lesson 08](../Lesson-08/notes.md) does.
+
+Enter your own block and grid sizes to see if the launch is valid:
+
+<block-limits></block-limits>
 
 ## Code
 
@@ -71,26 +88,30 @@ int main()
 ```
 
 - The two CUDA headers declare the runtime functions (such as `cudaDeviceSynchronize`) and the built-in variables. `stdio.h` provides `printf`.
-- `__global__` marks `printBuiltins` as a kernel. It runs on the GPU and is launched from the CPU.
+- `__global__` marks `printBuiltins` as a kernel. It runs on the GPU and is launched from the CPU (Central Processing Unit).
 - The `printf` inside the kernel runs once per thread. Each `%d` is filled with one field, in the order listed below the format string.
 - `printBuiltins<<<2, 4>>>()` launches 2 blocks of 4 threads, so 8 threads run the kernel and print 8 lines.
 - `cudaDeviceSynchronize()` makes the CPU wait until the kernel is done. A kernel launch returns right away, so without this wait `main` could end before the GPU output appears.
 
-## Compile and run
+<cuda-launch blocks="2" threads="4" fn="printBuiltins"></cuda-launch>
 
-Compile the source file into a program, then run it to see the printed values.
+## Compile and Run
+
+The first command compiles the code into a program. The second command runs it.
 
 ```bash
-nvcc first_kernel.cu -o first_kernel
+nvcc -o first_kernel first_kernel.cu
 ./first_kernel
 ```
 
 - `nvcc` is the CUDA compiler.
-- `first_kernel.cu` is the source file with the code above.
 - `-o first_kernel` names the program `first_kernel`. Without it the name is `a.out`.
+- `first_kernel.cu` is the source file with the code above.
 - `./first_kernel` runs the program from the current folder.
 
-The program prints the output below. It has 8 lines, one per thread.
+## Output
+
+The program prints 8 lines, one per thread:
 
 ```
 gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(1,0,0)  threadIdx=(0,0,0)  warpSize=32
@@ -103,19 +124,20 @@ gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(0,0,0)  threadIdx=(2,0,0)  warpSize
 gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(0,0,0)  threadIdx=(3,0,0)  warpSize=32
 ```
 
-`gridDim` and `blockDim` are the same on every line because the launch configuration is the same for all threads. `blockIdx` changes per block. `threadIdx` changes per thread and restarts at 0 in the second block. The `.y` and `.z` sizes are 1 and the `.y` and `.z` indices are 0 because `<<<2, 4>>>` used plain numbers. `warpSize` is always 32.
-
-Block 1 printed before block 0 here. The GPU runs blocks independently and in no fixed order, so the order of blocks, and of threads inside each block, can change between runs.
-
-## Visual
-
-<cuda-launch blocks="2" threads="4" fn="printBuiltins"></cuda-launch>
+- `gridDim` and `blockDim` are the same on every line, because the launch configuration is the same for all threads.
+- `blockIdx` changes per block. `threadIdx` changes per thread and restarts at 0 in the second block.
+- The `.y` and `.z` sizes are 1 and the `.y` and `.z` indices are 0, because `<<<2, 4>>>` used plain numbers.
+- `warpSize` is always 32.
+- Block 1 printed before block 0 here. The GPU runs blocks independently and in no fixed order, so the order of blocks, and of threads inside each block, can change between runs.
 
 ## Glossary
 
+- GPU (Graphics Processing Unit): the processor that runs kernels.
+- CPU (Central Processing Unit): the main processor that runs `main()` and launches kernels.
+- CC (compute capability): the version number of a GPU generation. It sets the limits in the table above ([Lesson 03](../Lesson-03/notes.md)).
 - `gridDim`: number of blocks in each direction (x, y, z). Same for every thread in the launch.
 - `blockDim`: number of threads per block in each direction. Same for every thread in the launch.
 - `blockIdx`: index of the thread's block. Always less than `gridDim` in each direction.
 - `threadIdx`: index of the thread inside its block. Restarts at zero in every block.
-- `warpSize`: number of threads per warp. Always 32 on current hardware.
-- `dim3`: a CUDA struct with `.x`, `.y`, `.z` integer fields. The four index and size variables use this type. Plain numbers in `<<<>>>` become a `dim3` with `.y=1` and `.z=1`.
+- `warpSize`: number of threads per warp. 32 on all current hardware.
+- `dim3`: a CUDA struct with `.x`, `.y`, `.z` integer fields, used for grid and block sizes. Plain numbers in `<<<>>>` become a `dim3` with `.y=1` and `.z=1`.
