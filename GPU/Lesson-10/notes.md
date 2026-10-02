@@ -145,11 +145,11 @@ A floating-point number is a sign, an exponent for range and a mantissa for prec
 - hidden bit: the leading 1 of a normal number, which is not stored.
 - range: how large and how small the numbers in a format can be.
 - precision: how close neighbouring numbers in a format are, set by the mantissa bits.
-- FP64 / FP32 / FP16: 64-bit, 32-bit and 16-bit floating-point formats.
+- FP64 / FP32 / FP16 (64-, 32- and 16-bit floating point): 64-bit, 32-bit and 16-bit floating-point formats.
 - BF16 (bfloat16, brain floating point): a 16-bit format with the range of FP32 and 7 mantissa bits.
 - TF32 (TensorFloat-32): FP32 with a 10-bit mantissa, used by Tensor Cores for FP32 matrix math since Ampere.
 - FP8 / E4M3 / E5M2: 8-bit floating point; E4M3 has 4 exponent and 3 mantissa bits, E5M2 has 5 and 2.
-- FP6 / FP4: 6-bit and 4-bit floating point, used with block scaling on Blackwell.
+- FP6 / FP4 (6-bit / 4-bit floating point): 6-bit and 4-bit floating point, used with block scaling on Blackwell.
 - NVFP4 (NVIDIA 4-bit floating point): FP4 E2M1 values with one FP8 E4M3 scale per block of 16 and one FP32 scale per tensor.
 - MXFP4 (microscaling FP4): the open OCP (Open Compute Project) 4-bit format with blocks of 32 and a power-of-2 scale.
 - OCP (Open Compute Project): an industry group that publishes open hardware standards, including the MX formats.
@@ -167,7 +167,7 @@ A floating-point number is a sign, an exponent for range and a mantissa for prec
 - 2:4 sparsity: weights with at least 2 zeros in every group of 4, which Tensor Cores can skip for up to 2 times the throughput.
 - dense / sparse: a peak without sparsity, or the doubled peak that needs 2:4 sparse weights.
 - FLOP (floating-point operation): one add, subtract, multiply or divide on floating-point numbers.
-- TFLOPS / TOPS: trillions of floating-point operations, or integer operations, per second.
+- TFLOPS / TOPS (tera floating-point operations per second / tera operations per second): trillions of floating-point operations, or integer operations, per second.
 - compute capability (CC): NVIDIA's version number for what a GPU's hardware supports.
 - ridge point: peak FLOPS divided by memory bandwidth; kernels with less arithmetic intensity are memory bound.
 - WMMA (Warp Matrix Multiply-Accumulate): the CUDA C++ API in `mma.h` for using Tensor Cores from a kernel.

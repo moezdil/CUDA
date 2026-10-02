@@ -130,7 +130,7 @@ CC numaranı bil. Onu CUDA dokümantasyonuyla karşılaştır. Doğru araç seti
 - NVFP4 (NVIDIA 4 bit kayan noktalı sayı): büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkaran Blackwell duyarlık biçimi.
 - FP8 (8 bit kayan noktalı sayı): FP16'dan daha az hassas, ama onu destekleyen Tensor Core'larda iki kat hızlı bir sayı biçimi.
 - çıkarım (inference): eğitilmiş bir yapay zekâ modelini cevap almak için çalıştırmak; model eğitiminin tersi.
-- FP16: yarım duyarlıklı işlemler; CC 5.0'daki GPU'lar bunları desteklemez.
+- FP16 (16-bit floating point): yarım duyarlıklı işlemler; CC 5.0'daki GPU'lar bunları desteklemez.
 - emülasyon: eksik donanımı yazılımla taklit etmek; genelde çok daha yavaştır ya da hiç mümkün değildir.
 - araç seti (CUDA Toolkit): nvcc derleyicisini, kütüphaneleri ve araçları içeren NVIDIA paketi; her sürüm belirli bir compute capability aralığını destekler.
 - CUDA 13: güncel ana CUDA sürümü; sadece CC 7.5 ve üstünü destekler.

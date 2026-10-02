@@ -134,7 +134,7 @@ GPU programlamak, paralel düşünmek demektir. CUDA'da bundan sonra gelen her �
 - çekirdek (core): komut çalıştıran tek bir işlem birimi; CPU'da birkaç güçlü, GPU'da binlerce basit çekirdek vardır.
 - saat hızı (clock speed): tek bir çekirdeğin ne kadar hızlı çalıştığı; CPU'da çoğu zaman birkaç GHz.
 - GHz (gigahertz): saniyede bir milyar saat döngüsü; 3 GHz'lik bir çekirdek saniyede 3 milyar kez tıklar.
-- PCIe (PCI Express): CPU ile GPU'nun birbirine veri göndermek için kullandığı bağlantı; PCIe 4.0 x16 her yönde yaklaşık 32 GB/s taşır.
+- PCIe (Peripheral Component Interconnect Express): CPU ile GPU'nun birbirine veri göndermek için kullandığı bağlantı; PCIe 4.0 x16 her yönde yaklaşık 32 GB/s taşır.
 - SM (Streaming Multiprocessor): GPU'nun içindeki en önemli işlem birimi, GPU çok sayıda SM'den oluşur.
 - register (yazmaç): SM'deki en hızlı depolama alanı; her thread kendi değişkenlerini register'larda tutar.
 - kayan noktalı sayı birimleri (floating-point units): 3,14 gibi ondalıklı sayılarla hesap yapan birimler; özellik tablolarında CUDA çekirdeği diye geçer.

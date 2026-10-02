@@ -96,7 +96,7 @@ CUDA 平台分为五层。你写代码用的编程语言在最上层，GPU 硬�
 - SM（Streaming Multiprocessor，流式多处理器）：组成 GPU 的处理器单元之一。每个 SM 都有自己的核心、Tensor Core 和片上高速存储。
 - GB（gigabyte，吉字节）：大约十亿字节。
 - Tensor Core：每个 SM 内部的矩阵运算单元。做矩阵运算时比 FP32 核心快得多。
-- FP32 / FP16 / FP8：32 位、16 位和 8 位浮点数，分别占 4、2 和 1 字节。
+- FP32 / FP16 / FP8（32-, 16- and 8-bit floating point）：32 位、16 位和 8 位浮点数，分别占 4、2 和 1 字节。
 - MIG（Multi-Instance GPU，多实例 GPU）：把一块物理 GPU 切分成最多七个互相隔离的部分。每个部分都像一块单独的 GPU。
 - 动态并行（Dynamic Parallelism）：GPU 上的核函数可以启动另一个核函数，不用回到 CPU。
 - GPUDirect：让 GPU 之间、GPU 和网卡之间、或者 GPU 和存储之间传输数据，不用经过 CPU 内存。

@@ -143,7 +143,7 @@ GPU 架构展示了计算本身正在怎样变化。这条路从图形走到计�
 - Turing：2018 年推出的架构（RTX 20 系列），把 Tensor Core 和光线追踪单元带到了消费级 GPU 上；CC 7.5。
 - Ada Lovelace：2022 年推出的消费级和工作站架构（RTX 40 系列、L40S）；CC 8.9。
 - Transformer：现代语言模型背后的神经网络结构；它主要由大型矩阵乘法组成。
-- FP8 / NVFP4：面向 AI 的 8 位和 4 位数值格式；Hopper 加入了 FP8，Blackwell 加入了 NVFP4。
+- FP8 / NVFP4（8-bit floating point / NVIDIA 4-bit floating point）：面向 AI 的 8 位和 4 位数值格式；Hopper 加入了 FP8，Blackwell 加入了 NVFP4。
 - Blackwell：2024 至 2025 年推出的架构（B200、B300、RTX 50 系列），围绕大规模 AI 工作负载设计。
 - Blackwell Ultra：Blackwell 在 2025 年的升级版（B300），每块 GPU 配有 288 GB HBM3e。
 - 带宽（bandwidth）：每秒能在显存和芯片之间搬运多少字节。

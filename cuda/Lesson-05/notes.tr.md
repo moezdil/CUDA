@@ -96,7 +96,7 @@ PyTorch kullanırken bu kütüphaneleri nadiren kendin çağırırsın, ama tek 
 - SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'yu oluşturan işlemci bloklarından biri; her SM'nin kendi çekirdekleri, Tensor Core'ları ve hızlı çip üstü belleği vardır.
 - GB (gigabyte, gigabayt): yaklaşık bir milyar bayt.
 - Tensor Core: her SM'nin içindeki matris hesap birimi; matris işlerinde FP32 çekirdeklerinden çok daha hızlıdır.
-- FP32 / FP16 / FP8: 32, 16 ve 8 bitlik kayan noktalı sayılar; sırasıyla 4, 2 ve 1 bayt yer kaplarlar.
+- FP32 / FP16 / FP8 (32-, 16- and 8-bit floating point): 32, 16 ve 8 bitlik kayan noktalı sayılar; sırasıyla 4, 2 ve 1 bayt yer kaplarlar.
 - MIG (Multi-Instance GPU): tek bir fiziksel GPU'yu en fazla yedi yalıtılmış parçaya böler; her parça kendi başına bir GPU gibi davranır.
 - Dynamic Parallelism: GPU'daki bir kernel, CPU'ya geri dönmeden başka bir kernel başlatabilir.
 - GPUDirect: GPU'ların CPU belleğinden geçmeden birbirine, bir ağ kartına ya da depolamaya veri taşımasını sağlar.

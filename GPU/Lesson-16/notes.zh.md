@@ -72,13 +72,13 @@ WSL 是一座实用的桥梁：你可以留在 Windows 里，以接近真实生�
 - HPC（High-Performance Computing，高性能计算）：许多强大的处理器协同解决大型问题，比如天气或物理仿真。
 - WSL（Windows Subsystem for Linux）：在 Windows 里运行一个真正的 Linux 环境。
 - 模拟（emulation）：用软件模仿另一个系统，而不是真正运行它，通常更慢，兼容性也更差。
-- WSL2：运行真正 Linux 内核的 WSL 版本，是在 Windows 上使用 CUDA 的基础。
+- WSL2（Windows Subsystem for Linux 2）：运行真正 Linux 内核的 WSL 版本，是在 Windows 上使用 CUDA 的基础。
 - Linux 内核（Linux kernel）：Linux 操作系统的核心，负责管理内存、进程和硬件；它和 CUDA 的核函数不是一回事。
 - 虚拟机（virtual machine）：用软件模拟出来的一整台计算机，有自己的操作系统，运行在真实的机器上。
 - 终端（terminal）：输入命令的文本窗口，比如 PowerShell 或 Windows Terminal。
 - `wsl --install`：在 Windows 终端里运行的命令，用来安装 WSL 和 Ubuntu。
 - `wsl --update`：把 WSL 内核更新到最新版本。
-- WSL1：较老的 WSL 版本，兼容性更差，也不支持 GPU。
+- WSL1（Windows Subsystem for Linux 1）：较老的 WSL 版本，兼容性更差，也不支持 GPU。
 - Linux 发行版（Linux distribution）：一个独立的 Linux 环境，有自己的用户、文件系统和包管理器；做 CUDA 通常选 Ubuntu。
 - 文件系统（file system）：操作系统存储和组织文件的方式；WSL 发行版有自己的文件系统，和 Windows 的磁盘分开。
 - 包管理器（package manager）：从在线软件列表安装和更新软件的工具，比如 Ubuntu 上的 apt。

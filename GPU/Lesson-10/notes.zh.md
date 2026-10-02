@@ -145,11 +145,11 @@ Tensor Core 上的稠密 FP16 是 CUDA 核心 FP32 峰值的 362 / 91.6 ≈ 4 �
 - 隐藏位（hidden bit）：正规数开头的那个 1，它不被存储。
 - 范围（range）：一种格式里的数能有多大、多小。
 - 精度（precision）：一种格式里相邻两个数挨得多近，由尾数位决定。
-- FP64 / FP32 / FP16：64 位、32 位和 16 位浮点格式。
+- FP64 / FP32 / FP16（64-, 32- and 16-bit floating point）：64 位、32 位和 16 位浮点格式。
 - BF16（bfloat16，brain floating point，脑浮点）：拥有 FP32 的范围、7 个尾数位的 16 位格式。
 - TF32（TensorFloat-32）：尾数为 10 位的 FP32，从 Ampere 起 Tensor Core 用它做 FP32 矩阵运算。
 - FP8 / E4M3 / E5M2：8 位浮点；E4M3 有 4 个指数位和 3 个尾数位，E5M2 有 5 个和 2 个。
-- FP6 / FP4：6 位和 4 位浮点，在 Blackwell 上配合块缩放使用。
+- FP6 / FP4（6-bit / 4-bit floating point）：6 位和 4 位浮点，在 Blackwell 上配合块缩放使用。
 - NVFP4（NVIDIA 4-bit floating point，NVIDIA 4 位浮点）：FP4 E2M1 值，每 16 个一块共用一个 FP8 E4M3 缩放因子，每个张量再有一个 FP32 缩放因子。
 - MXFP4（microscaling FP4，微缩放 FP4）：OCP（Open Compute Project，开放计算项目）的开放 4 位格式，32 个值一块，缩放因子是 2 的幂。
 - OCP（Open Compute Project，开放计算项目）：发布开放硬件标准的行业组织，MX 格式也出自这里。
@@ -167,7 +167,7 @@ Tensor Core 上的稠密 FP16 是 CUDA 核心 FP32 峰值的 362 / 91.6 ≈ 4 �
 - 2:4 稀疏（2:4 sparsity）：每 4 个权重里至少有 2 个 0，Tensor Core 可以跳过它们，吞吐最多提高到 2 倍。
 - 稠密 / 稀疏（dense / sparse）：不带稀疏的峰值，或者需要 2:4 稀疏权重的翻倍峰值。
 - FLOP（floating-point operation，浮点运算）：对浮点数做一次加、减、乘或除。
-- TFLOPS / TOPS：每秒万亿次浮点运算，或每秒万亿次整数运算。
+- TFLOPS / TOPS（tera floating-point operations per second / tera operations per second）：每秒万亿次浮点运算，或每秒万亿次整数运算。
 - 计算能力（compute capability，CC）：NVIDIA 用来表示 GPU 硬件支持哪些功能的版本号。
 - 脊点（ridge point）：峰值 FLOPS 除以显存带宽；算术强度低于它的核函数受显存限制。
 - WMMA（Warp Matrix Multiply-Accumulate，线程束矩阵乘累加）：`mma.h` 里的 CUDA C++ API，用来在核函数里使用 Tensor Core。

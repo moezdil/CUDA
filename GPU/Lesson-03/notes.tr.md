@@ -146,7 +146,7 @@ Bu cevaplarla özelliklerin geri kalanı anlam kazanır. CUDA çalışmasında C
 - RTX 5090: 2025'ten, Blackwell tabanlı, 21.760 CUDA çekirdeği ve 32 GB GDDR7 belleğe sahip bir GeForce GPU'su.
 - B200: iki kalıplı, 208 milyar transistörlü ve 180 GB HBM3e belleğe sahip bir Blackwell veri merkezi GPU'su.
 - Blackwell: RTX 50 serisinde, RTX PRO kartlarında ve B200'de kullanılan, 2024 ve 2025'ten NVIDIA mimarisi.
-- GDDR7: RTX 50 serisinin grafik belleği; hızlıdır ama veri merkezi GPU'larının HBM'inden çok daha küçük ve yavaştır.
+- GDDR7 (Graphics Double Data Rate 7): RTX 50 serisinin grafik belleği; hızlıdır ama veri merkezi GPU'larının HBM'inden çok daha küçük ve yavaştır.
 - Hopper: NVIDIA'nın H100'de kullanılan, Tensor Core'larla dolu 2022 veri merkezi mimarisi.
 - fansız (fanless): yalnızca soğutucusu olan, fanı olmayan kart; havayı sunucunun kendi fanları içinden iter.
 - soğutma (cooling): GPU'nun ürettiği ısıyı uzaklaştırmak; kartın kendi fanlarıyla, sunucunun hava akışıyla ya da sıvıyla.

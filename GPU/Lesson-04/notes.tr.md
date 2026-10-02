@@ -143,7 +143,7 @@ GPU mimarileri, hesaplamanın kendisinin nasıl değiştiğini gösterir. Yol gr
 - Turing: Tensor Core'ları ve ışın izleme birimlerini tüketici GPU'larına getiren 2018 mimarisi (RTX 20 serisi); CC 7.5.
 - Ada Lovelace: 2022'nin tüketici ve iş istasyonu mimarisi (RTX 40 serisi, L40S); CC 8.9.
 - transformer: modern dil modellerinin arkasındaki sinir ağı tasarımı; büyük ölçüde dev matris çarpımlarından oluşur.
-- FP8 / NVFP4: yapay zekâ için 8 bitlik ve 4 bitlik sayı biçimleri; FP8'i Hopper, NVFP4'ü Blackwell getirdi.
+- FP8 / NVFP4 (8-bit floating point / NVIDIA 4-bit floating point): yapay zekâ için 8 bitlik ve 4 bitlik sayı biçimleri; FP8'i Hopper, NVFP4'ü Blackwell getirdi.
 - Blackwell: büyük ölçekli yapay zekâ iş yükleri etrafında tasarlanmış 2024 ile 2025 arası mimari (B200, B300, RTX 50 serisi).
 - Blackwell Ultra: Blackwell'in 2025 yükseltmesi (B300); GPU başına 288 GB HBM3e.
 - bant genişliği (bandwidth): bellek ile çip arasında saniyede kaç bayt taşınabildiği.

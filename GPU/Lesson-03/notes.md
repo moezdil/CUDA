@@ -146,7 +146,7 @@ With these answers, the rest of the specs make sense. For CUDA work, the CC tell
 - RTX 5090: a GeForce GPU from 2025 based on Blackwell, with 21,760 CUDA cores and 32 GB of GDDR7 memory.
 - B200: a Blackwell data center GPU with two dies, 208 billion transistors and 180 GB of HBM3e memory.
 - Blackwell: the NVIDIA architecture from 2024 and 2025 used in the RTX 50 series, the RTX PRO cards and the B200.
-- GDDR7: the graphics memory of the RTX 50 series, fast but far smaller and slower than the HBM of data center GPUs.
+- GDDR7 (Graphics Double Data Rate 7): the graphics memory of the RTX 50 series, fast but far smaller and slower than the HBM of data center GPUs.
 - Hopper: NVIDIA's 2022 data center architecture, used in the H100, full of Tensor Cores.
 - fanless: a card with only a heatsink and no fan; the server's own fans push air through it.
 - cooling: removing the heat a GPU makes, with the card's own fans, the server's airflow or liquid.

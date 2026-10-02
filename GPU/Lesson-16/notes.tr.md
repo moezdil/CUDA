@@ -72,13 +72,13 @@ WSL pratik bir köprü: Windows'ta kalırsın ve Linux tabanlı GPU araçların�
 - HPC (High-Performance Computing): hava tahmini ya da fizik simülasyonları gibi büyük problemler üzerinde birlikte çalışan çok sayıda güçlü işlemci.
 - WSL (Windows Subsystem for Linux): Windows'un içinde gerçek bir Linux ortamı çalıştırır.
 - emülasyon (emulation): başka bir sistemi gerçekten çalıştırmak yerine yazılımla taklit etmek; genelde daha yavaş ve daha az uyumludur.
-- WSL2: gerçek bir Linux çekirdeği çalıştıran WSL sürümü; Windows'ta CUDA'nın temeli.
+- WSL2 (Windows Subsystem for Linux 2): gerçek bir Linux çekirdeği çalıştıran WSL sürümü; Windows'ta CUDA'nın temeli.
 - Linux çekirdeği (Linux kernel): belleği, süreçleri ve donanımı yöneten Linux işletim sisteminin kalbi; CUDA kernel'ı ile aynı şey değildir.
 - sanal makine (virtual machine): yazılımla taklit edilen, kendi işletim sistemi olan ve gerçek bir makinede çalışan tam bir bilgisayar.
 - terminal: komut yazdığın metin penceresi; örneğin PowerShell ya da Windows Terminal.
 - `wsl --install`: WSL'i ve Ubuntu'yu kurmak için Windows terminalinde çalıştırdığın komut.
 - `wsl --update`: WSL çekirdeğini en yeni sürüme günceller.
-- WSL1: uyumluluğu daha düşük ve GPU desteği olmayan eski WSL sürümü.
+- WSL1 (Windows Subsystem for Linux 1): uyumluluğu daha düşük ve GPU desteği olmayan eski WSL sürümü.
 - Linux dağıtımı (Linux distribution): kendi kullanıcıları, dosya sistemi ve paket yöneticisi olan ayrı bir Linux ortamı; CUDA için genelde Ubuntu seçilir.
 - dosya sistemi (file system): işletim sisteminin dosyaları saklama ve düzenleme şekli; bir WSL dağıtımının Windows disklerinden ayrı, kendi dosya sistemi vardır.
 - paket yöneticisi (package manager): yazılımları çevrim içi listelerden kuran ve güncelleyen araç; örneğin Ubuntu'daki apt.

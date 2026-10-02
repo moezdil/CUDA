@@ -143,7 +143,7 @@ GPU architectures show how computing itself is changing. The path goes from grap
 - Turing: the 2018 architecture (RTX 20 series) that brought Tensor Cores and ray tracing units to consumer GPUs; CC 7.5.
 - Ada Lovelace: the 2022 consumer and workstation architecture (RTX 40 series, L40S); CC 8.9.
 - transformer: the neural network design behind modern language models; it is built mostly from large matrix multiplications.
-- FP8 / NVFP4: 8-bit and 4-bit number formats for AI; Hopper added FP8 and Blackwell added NVFP4.
+- FP8 / NVFP4 (8-bit floating point / NVIDIA 4-bit floating point): 8-bit and 4-bit number formats for AI; Hopper added FP8 and Blackwell added NVFP4.
 - Blackwell: the 2024 to 2025 architecture (B200, B300, RTX 50 series) designed around large-scale AI workloads.
 - Blackwell Ultra: the 2025 upgrade of Blackwell (B300) with 288 GB of HBM3e per GPU.
 - bandwidth: how many bytes per second can move between memory and the chip.

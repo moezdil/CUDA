@@ -130,7 +130,7 @@ Know your CC number. Check it against the CUDA documentation. Choose the right t
 - NVFP4 (NVIDIA 4-bit floating point): a Blackwell precision format that doubles throughput compared to FP8 for large model inference.
 - FP8 (8-bit floating point): a number format less exact than FP16, but twice as fast on Tensor Cores that support it.
 - inference: running a trained AI model to get answers, as opposed to training it.
-- FP16: half-precision operations. GPUs at CC 5.0 do not support them.
+- FP16 (16-bit floating point): half-precision operations. GPUs at CC 5.0 do not support them.
 - emulation: imitating missing hardware in software, which is usually far slower or not possible at all.
 - toolkit (CUDA Toolkit): NVIDIA's package with the nvcc compiler, libraries and tools; each version supports a range of compute capabilities.
 - CUDA 13: the current major CUDA version; it supports CC 7.5 and newer only.

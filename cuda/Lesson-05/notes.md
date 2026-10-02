@@ -96,7 +96,7 @@ You rarely call these libraries yourself when you use PyTorch. They are still th
 - SM (Streaming Multiprocessor): one of the processor blocks a GPU is built from. Each SM has its own cores, Tensor Cores and fast on-chip memory.
 - GB (gigabyte): about one billion bytes.
 - Tensor Core: matrix math unit inside each SM. Much faster than the FP32 cores for matrix work.
-- FP32 / FP16 / FP8: 32-, 16- and 8-bit floating point numbers. They take 4, 2 and 1 bytes.
+- FP32 / FP16 / FP8 (32-, 16- and 8-bit floating point): 32-, 16- and 8-bit floating point numbers. They take 4, 2 and 1 bytes.
 - MIG (Multi-Instance GPU): splits one physical GPU into up to seven isolated parts. Each part acts as its own GPU.
 - Dynamic Parallelism: a kernel on the GPU can launch another kernel without going back to the CPU.
 - GPUDirect: lets GPUs move data to each other, to a network card or to storage without going through CPU memory.

@@ -72,13 +72,13 @@ WSL is a practical bridge. You stay in Windows and use Linux-based GPU tools in 
 - HPC (High-Performance Computing): many powerful processors working together on big problems, such as weather or physics simulations.
 - WSL (Windows Subsystem for Linux): runs a real Linux environment inside Windows.
 - emulation: software that imitates another system instead of running it for real, which is usually slower and less compatible.
-- WSL2: the WSL version that runs a real Linux kernel. It is the base for CUDA on Windows.
+- WSL2 (Windows Subsystem for Linux 2): the WSL version that runs a real Linux kernel. It is the base for CUDA on Windows.
 - Linux kernel: the core of the Linux operating system that manages memory, processes and hardware; not the same as a CUDA kernel.
 - virtual machine: a complete computer simulated in software, with its own operating system, running on a real machine.
 - terminal: a text window where you type commands, such as PowerShell or Windows Terminal.
 - `wsl --install`: the command you run in a Windows terminal to install WSL and Ubuntu.
 - `wsl --update`: updates the WSL kernel to the newest version.
-- WSL1: the older WSL version with lower compatibility and no GPU support.
+- WSL1 (Windows Subsystem for Linux 1): the older WSL version with lower compatibility and no GPU support.
 - Linux distribution: a separate Linux environment with its own users, file system and package manager; Ubuntu is the usual choice for CUDA.
 - file system: the way an operating system stores and organizes files; a WSL distribution has its own, separate from the Windows drives.
 - package manager: a tool that installs and updates software from online lists, such as apt on Ubuntu.

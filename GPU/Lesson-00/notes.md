@@ -134,7 +134,7 @@ GPU programming means thinking in parallel. This idea is the base for everything
 - core: one processing unit that runs instructions; a CPU has a few strong ones, a GPU thousands of simple ones.
 - clock speed: how fast a single core runs, often several GHz on a CPU.
 - GHz (gigahertz): one billion clock cycles per second, so a 3 GHz core ticks 3 billion times a second.
-- PCIe (PCI Express): a connection the CPU and GPU use to send data to each other; PCIe 4.0 x16 moves about 32 GB/s in each direction.
+- PCIe (Peripheral Component Interconnect Express): a connection the CPU and GPU use to send data to each other; PCIe 4.0 x16 moves about 32 GB/s in each direction.
 - SM (Streaming Multiprocessor): the most important processing unit inside a GPU, and a GPU is many SMs.
 - register: the fastest storage in an SM; each thread keeps its own variables in registers.
 - floating-point unit: a unit that does math on numbers with a decimal point, such as 3.14; spec sheets call these CUDA cores.

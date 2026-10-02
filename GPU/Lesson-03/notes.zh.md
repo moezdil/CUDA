@@ -146,7 +146,7 @@ GeForce 显卡带有大风扇和散热片。它们用在台式电脑和个人工
 - RTX 5090：2025 年推出的 GeForce GPU，基于 Blackwell，有 21,760 个 CUDA 核心和 32 GB GDDR7 显存。
 - B200：一块 Blackwell 数据中心 GPU，由两个裸片组成，有 2080 亿个晶体管和 180 GB HBM3e 显存。
 - Blackwell：NVIDIA 2024 至 2025 年的架构，用于 RTX 50 系列、RTX PRO 显卡和 B200。
-- GDDR7：RTX 50 系列使用的显存，速度快，但比数据中心 GPU 的 HBM 小得多、慢得多。
+- GDDR7（Graphics Double Data Rate 7）：RTX 50 系列使用的显存，速度快，但比数据中心 GPU 的 HBM 小得多、慢得多。
 - Hopper：NVIDIA 2022 年的数据中心架构，用于 H100，配备大量 Tensor Core。
 - 无风扇（fanless）：显卡上只有散热片，没有风扇；靠服务器自己的风扇把气流吹过散热片。
 - 散热（cooling）：带走 GPU 产生的热量，靠显卡自带的风扇、服务器的气流或液冷。

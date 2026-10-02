@@ -145,11 +145,11 @@ Kayan noktalı bir sayı bir işaret, aralık için bir üs ve hassasiyet için 
 - gizli bit (hidden bit): normal bir sayının baştaki 1'i; saklanmaz.
 - aralık (range): bir biçimdeki sayıların ne kadar büyük ve ne kadar küçük olabildiği.
 - hassasiyet (precision): bir biçimde komşu sayıların birbirine ne kadar yakın olduğu; mantis bitleri belirler.
-- FP64 / FP32 / FP16: 64 bit, 32 bit ve 16 bit kayan nokta biçimleri.
+- FP64 / FP32 / FP16 (64-, 32- and 16-bit floating point): 64 bit, 32 bit ve 16 bit kayan nokta biçimleri.
 - BF16 (bfloat16, brain floating point): FP32'nin aralığına ve 7 mantis bitine sahip 16 bitlik biçim.
 - TF32 (TensorFloat-32): 10 bit mantisli FP32; Ampere'den beri Tensor Core'lar FP32 matris hesabı için kullanır.
 - FP8 / E4M3 / E5M2: 8 bit kayan nokta; E4M3'te 4 üs ve 3 mantis biti, E5M2'de 5 ve 2 vardır.
-- FP6 / FP4: Blackwell'de blok ölçeklemeyle kullanılan 6 bit ve 4 bit kayan nokta.
+- FP6 / FP4 (6-bit / 4-bit floating point): Blackwell'de blok ölçeklemeyle kullanılan 6 bit ve 4 bit kayan nokta.
 - NVFP4 (NVIDIA 4-bit floating point): 16'lık blok başına bir FP8 E4M3 ölçek ve tensör başına bir FP32 ölçek kullanan FP4 E2M1 değerleri.
 - MXFP4 (microscaling FP4): OCP'nin (Open Compute Project) 32'lik bloklu ve 2'nin kuvveti ölçekli açık 4 bitlik biçimi.
 - OCP (Open Compute Project): MX biçimleri dahil açık donanım standartları yayımlayan bir sektör grubu.
@@ -167,7 +167,7 @@ Kayan noktalı bir sayı bir işaret, aralık için bir üs ve hassasiyet için 
 - 2:4 seyreklik (2:4 sparsity): her 4'lük grupta en az 2 sıfır olan ağırlıklar; Tensor Core'lar bunları atlayarak verimi 2 katına kadar çıkarır.
 - yoğun / seyrek (dense / sparse): seyreklik olmadan tepe değer, ya da 2:4 seyrek ağırlık isteyen iki katlı tepe değer.
 - FLOP (floating-point operation): kayan noktalı sayılar üzerinde bir toplama, çıkarma, çarpma ya da bölme.
-- TFLOPS / TOPS: saniyede trilyon kayan nokta işlemi ya da tam sayı işlemi.
+- TFLOPS / TOPS (tera floating-point operations per second / tera operations per second): saniyede trilyon kayan nokta işlemi ya da tam sayı işlemi.
 - hesaplama yeteneği (compute capability, CC): NVIDIA'nın bir GPU donanımının neyi desteklediğini gösteren sürüm numarası.
 - kırılma noktası (ridge point): tepe FLOPS bölü bellek bant genişliği; aritmetik yoğunluğu bunun altında kalan kernel'ler bellek sınırlıdır.
 - WMMA (Warp Matrix Multiply-Accumulate): kernel içinden Tensor Core kullanmak için `mma.h` içindeki CUDA C++ API'si.

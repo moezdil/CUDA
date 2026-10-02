@@ -134,7 +134,7 @@ GPU 编程意味着用并行的方式思考。后面所有的 CUDA 内容都建�
 - 核心（core）：执行指令的一个处理单元；CPU 有几个强大的核心，GPU 有成千上万个简单的核心。
 - 时钟频率（clock speed）：单个核心运行的速度，CPU 上常常有好几 GHz。
 - GHz（吉赫兹）：每秒十亿个时钟周期，所以 3 GHz 的核心每秒要走 30 亿个时钟周期。
-- PCIe（PCI Express）：CPU 和 GPU 之间互相传送数据的一种连接；PCIe 4.0 x16 每个方向大约 32 GB/s。
+- PCIe（Peripheral Component Interconnect Express）：CPU 和 GPU 之间互相传送数据的一种连接；PCIe 4.0 x16 每个方向大约 32 GB/s。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 里最重要的处理单元，一块 GPU 由许多个 SM 组成。
 - 寄存器（register）：SM 里速度最快的存储；每个线程把自己的变量放在寄存器里。
 - 浮点单元（floating-point unit）：对带小数点的数（比如 3.14）做运算的单元；规格表上把它们叫作 CUDA 核心。
