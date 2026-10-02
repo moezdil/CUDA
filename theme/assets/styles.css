@@ -1104,3 +1104,7 @@ footer{padding:13px 0 16px}
   .cf-vs{display:none}
   .cf-gpu .cf-grid{grid-template-columns:repeat(12,1fr);gap:2px}
 }
+
+/* Home: a little more air above the title. */
+.home .hero{padding-top:clamp(64px,8vw,120px)}
+@media (max-width:700px){.home .hero{padding-top:40px}}
