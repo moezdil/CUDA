@@ -136,7 +136,7 @@ cudaEventElapsedTime(&ms, start, stop);
 
 ## 你应该预期什么
 
-只有 2048 个元素时，核函数内部的工作量非常小。每次启动的大部分时间都花在启动本身上：CPU 把核函数交给驱动程序，GPU 准备好并开始执行。这部分开销对 2 个线程块和 64 个线程块来说差不多。所以在这里，不同配置的结果应该很接近，每次运行之间也会有小的波动。
+只有 2048 个元素时，核函数内部的工作量非常小。每次启动的大部分时间都花在启动本身上：CPU 把核函数交给驱动程序，GPU 准备好并开始执行。这部分启动开销对 2 个线程块和 64 个线程块来说差不多。所以在这里，不同配置的结果应该很接近，每次运行之间也会有小的波动。
 
 这是一个结论，不是失败。它说明 GPU 需要足够大的任务，网格布局才开始变得重要。下面的 “动手试试” 部分会把向量放大 8192 倍，让你看到差距是怎么拉开的。
 
@@ -428,7 +428,7 @@ int main()
 
 - 全局索引（global index）：线程在整个网格中的位置，`blockIdx.x * blockDim.x + threadIdx.x`。它把每个线程对应到一个元素。
 - 网格大小（grid size）：一次启动中的线程块数，也就是 `<<<blocks, threads>>>` 里的第一个数。
-- 向上取整除法（round-up division）：`(N + threads - 1) / threads`，让 `blocks * threads` 至少等于 `N` 所需的线程块数。
+- 向上取整公式（round-up formula）：`(N + threads - 1) / threads`，让 `blocks * threads` 至少等于 `N` 所需的线程块数。
 - 边界检查（bounds check）：`if (i < n)`，防止向上取整的网格里多出来的线程碰到末尾之外的内存。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 内部运行线程块的处理器。一个线程块在一个 SM 上运行；一个 SM 可以容纳多个线程块。L40S 有 142 个。
 - `nvidia-smi` GPU utilization：有核函数在运行的时间所占的比例。它不能说明有多少个 SM 在忙。
@@ -440,3 +440,12 @@ int main()
 - 启动开销（launch overhead）：把核函数交给 GPU 并启动所需的固定时间。核函数本身很小时，它占了大头。
 - SAXPY（Single-precision A times X Plus Y）：在 float 向量上计算 `y = a * x + y`，一个经典的入门 GPU 核函数。
 - Compute Sanitizer：NVIDIA 用来发现核函数内存错误的工具，比如写到数组末尾之外。
+- 计算能力（compute capability，CC）：一代 GPU 的版本号，L40S 是 8.9。它规定了每个线程块最多 1024 个线程这样的上限（[第 03 课](../Lesson-03/notes.md)）。
+- `blockIdx.x`：线程所在线程块在网格里的编号。
+- `blockDim.x`：每个线程块的线程数，也就是 `<<<blocks, threads>>>` 里的第二个数。
+- `threadIdx.x`：线程在自己线程块里的位置。它在每个线程块里都从 0 重新开始。
+- 驱动程序（driver）：位于你的程序和 GPU 之间的 NVIDIA 软件。它接收每一次核函数启动，并在 GPU 上把它准备好。
+- 微秒（µs）：百万分之一秒。1 毫秒（ms）等于 1000 µs。
+- `argc` / `argv`：`main` 的参数。`argc` 统计命令行里的单词数，`argv` 以文本形式保存它们，`argv[0]` 是程序名。
+- `nvcc`：CUDA 编译器。它把 `.cu` 文件里的 CPU 部分和 GPU 部分编译成一个程序。
+- `-arch=sm_89`：为计算能力 8.9 编译，也就是 L40S。

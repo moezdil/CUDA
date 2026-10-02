@@ -331,3 +331,16 @@ int main()
 - lane ID: a thread's position inside its warp, from 0 to 31. It is `threadIdx.x % 32`. It does not give the warp ID.
 - warps per block: `(threads per block) / 32`. 128 threads/block → 4 warps/block.
 - warp ID reset: warp IDs start at zero in every block, like `threadIdx.x`. There is no global warp ID for the whole GPU.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for running your own code on the GPU.
+- block: a group of threads that runs on one SM. In the hierarchy it sits between the grid and the warps.
+- thread: one running copy of the kernel, the lowest level of the hierarchy.
+- `cudaGetDeviceProperties`: a runtime call that fills a `cudaDeviceProp` struct with the limits of a GPU, such as `maxThreadsPerBlock` and `multiProcessorCount` (the SM count).
+- compute capability (CC): the version number of a GPU generation, 8.9 on the L40S ([Lesson 03](../Lesson-03/notes.md)).
+- integer division: `/` between whole numbers drops the remainder, so 70 / 32 = 2.
+- modulo (`%`): the remainder of a division. 70 % 32 = 6, because 2 × 32 + 6 = 70.
+- `__global__`: marks a function as a kernel, launched from the CPU and run on the GPU.
+- `cudaDeviceSynchronize()`: makes the CPU wait until the GPU has finished, so no output is lost.
+- launch config (launch configuration): the `<<<blocks, threads>>>` numbers of a launch.
+- `nvcc`: the CUDA compiler. It compiles the CPU and GPU parts of a `.cu` file into one program.
+- `-arch=sm_89`: builds for compute capability 8.9, the L40S.
+- `-o`: sets the name of the output program. Without it the name is `a.out`.

@@ -437,3 +437,13 @@ int main()
 - `cudaGetLastError`: son kernel başlatmasının kabul edilip edilmediğini söyler.
 - sınır kontrolü: `if (i < n)`, böylece bir thread asla bir vektörün sonunu aşıp okumaz ya da yazmaz.
 - unified memory (birleşik bellek): `cudaMallocManaged` ile alınan, iki tarafın da tek bir pointer ile kullanabildiği bellek.
+- GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran, binlerce küçük çekirdekli işlemci.
+- CPU (Central Processing Unit, merkezi işlem birimi): `main()`'i çalıştıran ve kernel'ları başlatan ana işlemci.
+- indeks (index): bir elemanın dizideki konumu, 0'dan sayılır. `c[3]`, `c`'nin dördüncü elemanıdır.
+- paralel (parallel): sırayla tek tek değil, birçok çekirdekte aynı anda.
+- `__global__`: bir fonksiyonu kernel olarak işaretler. CPU onu başlatır, GPU çalıştırır.
+- `const`: salt okunur veri için bir C anahtar kelimesi. `const int *a` ile kernel `a[i]`'yi okuyabilir ama ona yazamaz.
+- `threadIdx.x`: thread'in kendi block'u içindeki indeksi. 1024 thread'lik tek bir block'ta 0'dan 1023'e gider, her eleman için bir değer.
+- `CHECK`: bu programdaki hata kontrol makrosu. Bir CUDA çağrısını sarar, çağrı `cudaSuccess` döndürmezse dosya, satır ve sebeple durur.
+- `nvcc`: CUDA compiler'ı. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `-arch=sm_89`: compute capability 8.9 için, yani L40S için derler.

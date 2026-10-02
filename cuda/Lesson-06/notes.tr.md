@@ -453,3 +453,14 @@ int main()
 - `cudaDeviceSynchronize()`: o ana kadar başlatılan tüm GPU işleri bitene kadar CPU'yu bekletir.
 - warp ID: bir thread'in kendi block'u içinde ait olduğu warp. Değeri `threadIdx.x / 32`.
 - SSH (Secure Shell): ağ üzerinden başka bir bilgisayara girip orada komut çalıştırmanın bir yolu.
+- CUDA runtime: `cudaDeviceSynchronize()` gibi çağrıların arkasındaki kütüphane. Fonksiyonlarını `cuda_runtime.h` başlık dosyası tanımlar.
+- `__global__`: bir fonksiyonu kernel olarak işaretler. CPU onu başlatır, GPU çalıştırır.
+- warp: GPU'nun birlikte çalıştırdığı 32 thread'lik grup. Block başına 64 thread, 2 warp eder.
+- tam sayı bölmesi (integer division): iki tam sayının kalanı atan bölmesi. 45 / 32 = 1 ve 63 / 32 = 1, ama 64 / 32 = 2.
+- `printf`: C'nin yazdırma fonksiyonu. Kernel'da her thread onu çalıştırır ve satırları önce yazdırma tamponuna gider.
+- yazdırma tamponu (print buffer): kernel'daki `printf` satırlarının beklediği GPU belleği. `cudaDeviceSynchronize()` anında terminale boşaltılır.
+- komut istemi (shell prompt): shell'in bir komut beklerken gösterdiği, genellikle `$` ile biten metin. Onu sen yazmazsın.
+- OS (operating system, işletim sistemi): bir bilgisayarın temel yazılımı. Burada bir Linux sistemi olan Ubuntu 24.
+- noktalı virgül (semicolon): her C ve C++ ifadesini bitiren `;`. Biri eksikse compiler hatayı bir sonraki ifadenin başında bildirir.
+- L40S: bu derslerin çalıştığı NVIDIA veri merkezi GPU'su: Ada Lovelace mimarisi, CC 8.9 ve 142 SM.
+- Ada Lovelace: NVIDIA'nın 2022'de çıkan, CC 8.9'lu GPU mimarisi. L40S'te ve GeForce RTX 40 serisinde kullanılır.

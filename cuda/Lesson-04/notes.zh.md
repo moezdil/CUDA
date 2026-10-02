@@ -213,3 +213,13 @@ int main()
 - `threadIdx`：线程在它的线程块里的编号。在每个线程块里都从 0 重新开始。
 - `warpSize`：每个线程束的线程数。在目前所有硬件上都是 32。
 - `dim3`：一个 CUDA 结构体，有 `.x`、`.y`、`.z` 三个整数字段，用来表示网格和线程块的大小。`<<<>>>` 里的普通数字会变成一个 `.y=1`、`.z=1` 的 `dim3`。
+- 启动配置（launch configuration）：一次启动里的 `<<<blocks, threads>>>` 部分。GPU 会把它填进 `gridDim` 和 `blockDim`。
+- 网格（grid）：一次启动的所有线程块。它的大小就是 `gridDim`。
+- 线程束（warp）：GPU 一起运行的 32 个线程（[第 01 课](../Lesson-01/notes.md)）。
+- CUDA 运行时（CUDA runtime）：`cudaDeviceSynchronize()` 这类调用背后的库。它会拿启动配置和硬件上限做比较。
+- `cudaGetLastError()`：返回最近一次的 CUDA 错误，比如一次超出上限的启动。
+- `__global__`：把一个函数标记为核函数，由 CPU 启动，在 GPU 上运行。
+- 格式字符串（format string）：`printf` 的第一个参数。里面的每个 `%d` 依次被后面的参数替换。
+- `cudaDeviceSynchronize()`：让 CPU 一直等到 GPU 完成工作。单独一次启动会马上返回。
+- `nvcc`：CUDA 编译器。它把 `.cu` 文件里的 CPU 部分和 GPU 部分编译成一个程序。
+- `-o`：设置输出程序的名字。不加它时，名字是 `a.out`。

@@ -437,3 +437,13 @@ int main()
 - `cudaGetLastError`：告诉你上一次核函数启动有没有被接受。
 - 边界检查（bounds check）：`if (i < n)`，这样线程就不会读写到向量末尾之外。
 - 统一内存（unified memory）：用 `cudaMallocManaged` 分配的内存，两侧都能用同一个指针访问。
+- GPU（Graphics Processing Unit，图形处理器）：拥有成千上万个小核心、负责运行核函数的处理器。
+- CPU（Central Processing Unit，中央处理器）：运行 `main()` 并启动核函数的主处理器。
+- 下标（index）：元素在数组里的位置，从 0 开始数。`c[3]` 是 `c` 的第四个元素。
+- 并行（parallel）：在许多核心上同时进行，而不是一个接一个地进行。
+- `__global__`：把一个函数标记为核函数，由 CPU 启动，在 GPU 上运行。
+- `const`：表示只读数据的 C 关键字。有了 `const int *a`，核函数可以读 `a[i]`，但不能写它。
+- `threadIdx.x`：线程在自己线程块里的编号。一个线程块有 1024 个线程时，它从 0 到 1023，每个元素对应一个值。
+- `CHECK`：这个程序里的错误检查宏。它包住一次 CUDA 调用，如果调用没有返回 `cudaSuccess`，就打印文件、行号和原因，然后停止。
+- `nvcc`：CUDA 编译器。它把 `.cu` 文件里的 CPU 部分和 GPU 部分编译成一个程序。
+- `-arch=sm_89`：为计算能力 8.9 编译，也就是 L40S。

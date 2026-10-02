@@ -196,3 +196,18 @@ int main()
 - 全局线程 ID（global thread ID）：整个网格里每个线程独有的编号。计算方式是 `blockIdx.x * blockDim.x + threadIdx.x`。线程编号在不同线程块之间会重复，全局线程 ID 不会。
 - `cudaGetLastError()`：返回最近一次的 CUDA 错误码。它能发现无声的失败，比如被悄悄丢弃、没有任何提示的无效启动配置。
 - 非确定性（non-deterministic）：结果或顺序无法预测。线程块调度取决于启动时哪个 SM 有空间。
+- CPU（Central Processing Unit，中央处理器）：运行 `main()` 并启动核函数的主处理器。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台，让你在 GPU 上运行自己的代码。
+- 计算能力（compute capability）：GPU 某一代产品的版本号，L40S 是 8.9。它规定了每个线程块最多 1024 个线程这样的上限（[第 03 课](../Lesson-03/notes.md)）。
+- 寄存器堆（register file）：每个 SM 里的高速存储，存放线程的局部变量。L40S 每个 SM 有 65536 个 32 位寄存器。
+- 共享内存（shared memory）：每个 SM 内部的高速内存，同一个线程块里的线程可以共享它。
+- 线程束调度器（warp scheduler）：SM 里决定下一个运行哪个线程束的单元。每个 SM 有好几个。
+- 线程块（block）：最多 1024 个线程组成的一组，在一个 SM 上运行。每个线程块里的线程编号都从 0 重新开始。
+- 网格（grid）：一次启动的所有线程块。`<<<2, 1024>>>` 建立一个有 2 个线程块、共 2048 个线程的网格。
+- `blockIdx.x`：线程所在线程块的编号，这节课里是 0 或 1。
+- `threadIdx.x`：线程在自己线程块里的编号，这里是 0 到 1023。它在每个线程块里都从 0 重新开始。
+- 启动配置（launch configuration）：`<<<blocks, threads>>>` 里的两个数。编译器不检查它们，CUDA 运行时会在核函数启动时检查。
+- CUDA 运行时（CUDA runtime）：程序让 GPU 干活时调用的库，比如 `cudaDeviceSynchronize()`。它也会检查每一个启动配置。
+- 无效启动（invalid launch）：违反某个上限的启动，比如 `<<<1, 2048>>>`。核函数根本不会运行，只有 `cudaGetLastError()` 会给出错误（`invalid configuration argument`）。
+- `nvcc`：CUDA 编译器。它把 `.cu` 文件里的 CPU 部分和 GPU 部分编译成一个程序。
+- `-o`：设置输出程序的名字。不加它时，名字是 `a.out`。

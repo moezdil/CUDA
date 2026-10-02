@@ -196,3 +196,18 @@ int main()
 - global thread ID: tüm grid'deki her thread için benzersiz bir ID. `blockIdx.x * blockDim.x + threadIdx.x` ile hesaplanır. Thread ID'leri block'lar arasında tekrar eder. Global ID'ler etmez.
 - `cudaGetLastError()`: son CUDA hata kodunu döndürür. Mesaj vermeden iptal edilen geçersiz bir başlatma ayarı gibi sessiz hataları yakalar.
 - non-deterministic (belirlenemez): sonuç veya sıra önceden tahmin edilemez. Block zamanlaması, başlatma anında hangi SM'de yer olduğuna bağlıdır.
+- CPU (Central Processing Unit, merkezi işlem birimi): `main()`'i çalıştıran ve kernel'ları başlatan ana işlemci.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, kendi kodunu GPU'da çalıştırmanı sağlayan platformu.
+- compute capability (hesaplama yeteneği): bir GPU neslinin sürüm numarası, L40S'te 8.9. Block başına en fazla 1024 thread gibi sınırları belirler ([Ders 03](../Lesson-03/notes.md)).
+- register file (yazmaç dosyası): her SM'de thread'lerin yerel değişkenlerini tutan hızlı depolama. L40S'te SM başına 65536 adet 32 bitlik register vardır.
+- shared memory (paylaşımlı bellek): her SM'nin içinde, bir block'un thread'lerinin paylaşabildiği hızlı bellek.
+- warp zamanlayıcı (warp scheduler): bir SM'de sıradaki warp'ı seçen birim. Her SM'de birkaç tane vardır.
+- block: bir SM'de çalışan, en fazla 1024 thread'lik grup. Thread ID'leri her block'ta yeniden 0'dan başlar.
+- grid: bir başlatmadaki tüm block'lar. `<<<2, 1024>>>`, 2 block'luk, toplam 2048 thread'lik bir grid oluşturur.
+- `blockIdx.x`: thread'in bulunduğu block'un indeksi, bu derste 0 ya da 1.
+- `threadIdx.x`: thread'in kendi block'u içindeki indeksi, burada 0 ile 1023 arası. Her block'ta 0'dan yeniden başlar.
+- başlatma ayarı (launch configuration): `<<<blocks, threads>>>` içindeki iki sayı. Compiler onları kontrol etmez. Kernel başlarken CUDA runtime kontrol eder.
+- CUDA runtime: programının GPU işi için çağırdığı kütüphane, örneğin `cudaDeviceSynchronize()`. Her başlatma ayarını da o kontrol eder.
+- geçersiz başlatma (invalid launch): bir sınırı aşan başlatma, örneğin `<<<1, 2048>>>`. Kernel hiç çalışmaz, hatayı (`invalid configuration argument`) yalnızca `cudaGetLastError()` gösterir.
+- `nvcc`: CUDA compiler'ı. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `-o`: çıkan programın adını belirler. O olmadan ad `a.out` olur.

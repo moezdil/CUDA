@@ -453,3 +453,14 @@ int main()
 - `cudaDeviceSynchronize()`：让 CPU 等待，直到目前已启动的所有 GPU 工作都完成。
 - 线程束编号（warp ID）：线程在自己的线程块里属于哪个线程束。它等于 `threadIdx.x / 32`。
 - SSH（Secure Shell，安全外壳协议）：通过网络登录另一台电脑并在上面运行命令的方式。
+- CUDA 运行时（CUDA runtime）：`cudaDeviceSynchronize()` 这类调用背后的库。头文件 `cuda_runtime.h` 声明了它的函数。
+- `__global__`：把一个函数标记为核函数，由 CPU 启动，在 GPU 上运行。
+- 线程束（warp）：GPU 一起运行的 32 个线程。每个线程块 64 个线程就是 2 个线程束。
+- 整数除法（integer division）：两个整数相除并丢掉余数。45 / 32 = 1，63 / 32 = 1，而 64 / 32 = 2。
+- `printf`：C 的打印函数。在核函数里每个线程都会运行它，输出的行先进入打印缓冲区。
+- 打印缓冲区（print buffer）：GPU 内存里存放核函数 `printf` 输出行的地方。它在 `cudaDeviceSynchronize()` 时被刷新到终端上。
+- 提示符（shell prompt）：shell 等待命令时显示的文字，通常以 `$` 结尾。你不用输入它。
+- OS（operating system，操作系统）：电脑的基础软件。这里是 Ubuntu 24，一个 Linux 系统。
+- 分号（semicolon）：每条 C 和 C++ 语句末尾的 `;`。少了一个时，编译器会在下一条语句的开头报错。
+- L40S：这些课运行所用的 NVIDIA 数据中心 GPU，Ada Lovelace 架构，CC 8.9，142 个 SM。
+- Ada Lovelace：NVIDIA 2022 年推出的 GPU 架构，CC 8.9，用于 L40S 和 GeForce RTX 40 系列。

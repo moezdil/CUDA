@@ -213,3 +213,13 @@ int main()
 - `threadIdx`: index of the thread inside its block. Restarts at zero in every block.
 - `warpSize`: number of threads per warp. 32 on all current hardware.
 - `dim3`: a CUDA struct with `.x`, `.y`, `.z` integer fields, used for grid and block sizes. Plain numbers in `<<<>>>` become a `dim3` with `.y=1` and `.z=1`.
+- launch configuration: the `<<<blocks, threads>>>` part of a launch. The GPU copies it into `gridDim` and `blockDim`.
+- grid: all blocks of one launch. Its size is `gridDim`.
+- warp: a group of 32 threads that the GPU runs together ([Lesson 01](../Lesson-01/notes.md)).
+- CUDA runtime: the library behind calls such as `cudaDeviceSynchronize()`. It checks the launch configuration against the hardware limits.
+- `cudaGetLastError()`: returns the last CUDA error, for example from a launch that broke a limit.
+- `__global__`: marks a function as a kernel, launched from the CPU and run on the GPU.
+- format string: the first argument of `printf`. Each `%d` in it is replaced by the next argument, in order.
+- `cudaDeviceSynchronize()`: makes the CPU wait until the GPU has finished. A launch alone returns right away.
+- `nvcc`: the CUDA compiler. It compiles the CPU and GPU parts of a `.cu` file into one program.
+- `-o`: sets the name of the output program. Without it the name is `a.out`.

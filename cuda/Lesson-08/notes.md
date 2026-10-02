@@ -437,3 +437,13 @@ int main()
 - `cudaGetLastError`: tells you if the last kernel launch was accepted.
 - bounds check: `if (i < n)`, so a thread never reads or writes past the end of a vector.
 - unified memory: memory from `cudaMallocManaged` that both sides can use with one pointer.
+- GPU (Graphics Processing Unit): the processor that runs kernels, with thousands of small cores.
+- CPU (Central Processing Unit): the main processor that runs `main()` and launches kernels.
+- index: the position of an element in an array, counted from 0. `c[3]` is the fourth element of `c`.
+- parallel: at the same time, on many cores, instead of one after another.
+- `__global__`: marks a function as a kernel, launched from the CPU and run on the GPU.
+- `const`: a C keyword for read-only data. With `const int *a`, the kernel may read `a[i]` but not write it.
+- `threadIdx.x`: the thread's index inside its block. With one block of 1024 threads it runs from 0 to 1023, one value per element.
+- `CHECK`: the error-check macro in this program. It wraps a CUDA call and stops with the file, line and reason if the call did not return `cudaSuccess`.
+- `nvcc`: the CUDA compiler. It compiles the CPU and GPU parts of a `.cu` file into one program.
+- `-arch=sm_89`: builds for compute capability 8.9, the L40S.

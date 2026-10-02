@@ -84,10 +84,18 @@ FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Amp
 - 计算能力（compute capability，CC）：一个版本号（major.minor）。它说明一块 GPU 支持哪些 CUDA 功能，以及它的硬件上限是多少。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 内部的物理处理器。所有线程都在 SM 上运行。
 - 线程束（warp）：GPU 一起调度、一起运行的 32 个线程。
-- 每个 SM 的活跃线程束数（active warps per SM）：一个 SM 同时能容纳多少个线程束。大多数数据中心 GPU 是 64，CC 8.6、8.9 和 12.0 是 48。
+- 活跃线程束（active warps per SM）：一个 SM 同时能容纳多少个线程束。大多数数据中心 GPU 是 64，CC 8.6、8.9 和 12.0 是 48。
 - FP32（32-bit floating point，32 位浮点）核心：每个时钟周期完成一次 32 位浮点运算的硬件单元。
 - 共享内存（shared memory）：每个 SM 内部的高速片上内存，由同一个线程块里的所有线程共享。比全局（设备端）内存快得多。
-- 寄存器堆（register file）：每个 SM 里的一块高速存储，用来存放每个线程的局部变量。表中所有各代产品每个 SM 都有 65536 个寄存器。
+- 寄存器（register）：SM 寄存器堆里的一个高速存储位置，存放线程的一个局部变量。一个 SM 有 65536 个 32 位寄存器，一个线程最多能用 255 个。
 - KB（kilobyte，千字节）：1024 字节。
 - HBM（High Bandwidth Memory，高带宽内存）：数据中心 GPU 上使用的高速堆叠式内存。
-- CUDA Toolkit 12.8+：为 Blackwell（CC 10.0）编译代码时需要的版本。
+- 主版本号（major version）：CC 的第一个数，比如 8.9 里的 8。主版本号变了，表示新一代架构。
+- 次版本号（minor version）：CC 的第二个数，比如 8.9 里的 9。它表示同一代架构里的一次修订。
+- 架构（architecture）：一代 GPU 的设计。NVIDIA 用科学家的名字来命名它们：Pascal、Volta、Ampere、Ada Lovelace、Hopper、Blackwell。
+- `nvidia-smi`：随驱动程序一起安装的 NVIDIA 命令行工具。它会列出你的 GPU，加上 `--query-gpu=compute_cap` 还会打印它们的计算能力。
+- 线程束大小（warp size）：一个线程束里的线程数，到目前为止每款 NVIDIA GPU 上都是 32。核函数可以通过 `warpSize` 读取它。
+- 线程束调度器（warp scheduler）：每个 SM 里挑选一个准备好的线程束来运行的单元。一个线程束在等待内存时，它就换另一个线程束。
+- 线程块大小（thread block size）：一个线程块里的线程数，也就是 `<<<blocks, threads>>>` 里的第二个数。表中每款 GPU 上最多都是 1024。
+- 时钟周期（clock cycle）：处理器时钟的一次跳动。2 GHz 的时钟每秒有 20 亿个周期。
+- 全局内存（global memory）：GPU 的大容量主内存，L40S 上是 GDDR6，H100 上是 HBM。每个线程都能访问它，但它比共享内存慢得多。

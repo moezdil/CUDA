@@ -237,7 +237,7 @@ Block ID'si her zaman 0, çünkü yalnızca bir block var. Warp ID'si thread 32,
 
 ### `<<<2, 64>>>`
 
-Bu, `./warp_ids_2blocks`'un çıktısı. 128 satır, 2 block ve block başına 2 warp var. Warp ID'si her block'ta sıfırlanır.
+Bu, `./warp_ids_2blocks`'un çıktısı. 128 satır ve 2 block var, block başına warp sayısı 2. Warp ID'si her block'ta sıfırlanır.
 
 ```
 Block ID: 0 --- Thread ID:  0 --- Warp ID: 0
@@ -330,4 +330,17 @@ int main()
 - warp ID: bir thread'in kendi block'u içinde ait olduğu warp. Değeri `threadIdx.x / 32`.
 - lane ID: bir thread'in kendi warp'u içindeki 0 ile 31 arası konumu. Değeri `threadIdx.x % 32`. Warp ID'sini vermez.
 - block başına warp: `(block başına thread) / 32`. 128 thread/block → 4 warp/block.
-- warp ID sıfırlanması: warp ID'leri, `threadIdx.x` gibi her block'ta sıfırdan başlar. Tüm GPU için genel bir warp ID'si yoktur.
+- warp ID sıfırlanması / sıfırlanır: warp ID'leri, `threadIdx.x` gibi her block'ta sıfırdan başlar. Tüm GPU için genel bir warp ID'si yoktur.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, kendi kodunu GPU'da çalıştırmanı sağlayan platformu.
+- block: bir SM'de çalışan bir grup thread. Hiyerarşide grid ile warp'lar arasında durur.
+- thread: kernel'ın çalışan bir kopyası, hiyerarşinin en alt seviyesi.
+- `cudaGetDeviceProperties`: bir GPU'nun sınırlarını, örneğin `maxThreadsPerBlock` ve `multiProcessorCount` (SM sayısı) değerlerini bir `cudaDeviceProp` struct'ına dolduran runtime çağrısı.
+- compute capability (CC, hesaplama yeteneği): bir GPU neslinin sürüm numarası, L40S'te 8.9 ([Ders 03](../Lesson-03/notes.md)).
+- tam sayı bölmesi (integer division): tam sayılar arasındaki `/` kalanı atar, yani 70 / 32 = 2.
+- mod operatörü (modulo, `%`): bir bölmenin kalanı. 70 % 32 = 6, çünkü 2 × 32 + 6 = 70.
+- `__global__`: bir fonksiyonu kernel olarak işaretler. CPU onu başlatır, GPU çalıştırır.
+- `cudaDeviceSynchronize()`: GPU işini bitirene kadar CPU'yu bekletir, böylece çıktı kaybolmaz.
+- başlatma ayarı (launch configuration): bir başlatmanın `<<<blocks, threads>>>` sayıları.
+- `nvcc`: CUDA compiler'ı. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `-arch=sm_89`: compute capability 8.9 için, yani L40S için derler.
+- `-o`: çıkan programın adını belirler. O olmadan ad `a.out` olur.

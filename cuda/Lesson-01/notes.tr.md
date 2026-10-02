@@ -168,3 +168,13 @@ int main()
 - SIMT (Single Instruction, Multiple Threads, tek komut çoklu thread): bir warp'taki her aktif thread aynı komutu çalıştırır. Her thread'in kendi verisi ve kendi ID'si vardır.
 - warp divergence (warp ayrışması): bir warp'taki thread'ler farklı yollara gider. Örneğin thread 0 bir if dalına girer, thread 1 girmez. GPU o zaman iki yolu art arda çalıştırır, bu da daha yavaştır.
 - printf buffer'ı: GPU'daki `printf` doğrudan ekrana yazmaz. GPU belleğindeki bir buffer'a yazar. Buffer, CPU GPU'yu beklediğinde ekrana gelir, örneğin `cudaDeviceSynchronize()`'da.
+- kernel: `__global__` ile işaretlenmiş, GPU'da çalışan fonksiyon. Bir başlatma, her thread için onun bir kopyasını çalıştırır.
+- thread: kernel'ın çalışan bir kopyası. Kendi `threadIdx.x` değeri ve kendi değişkenleri vardır.
+- block: birlikte başlatılan bir grup thread. `<<<1, 4>>>`, 4 thread'lik 1 block oluşturur.
+- `threadIdx.x`: thread'in kendi block'u içindeki indeksi, 0'dan (block başına thread - 1)'e kadar. Burada 0 ile 3 arası.
+- `blockIdx.x`: thread'in bulunduğu block'un indeksi. Tek block varken her thread için 0'dır.
+- başlatma (launch): bir kernel'ı GPU'da başlatan `name<<<blocks, threads>>>();` satırı. İlk sayı block sayısı, ikincisi block başına thread sayısıdır.
+- `cudaDeviceSynchronize()`: GPU işini bitirene kadar CPU'yu bekletir. printf buffer'ı da bu anda ekrana gelir.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, kendi kodunu GPU'da çalıştırmanı sağlayan platformu.
+- `nvcc`: CUDA compiler'ı. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `-o`: çıkan programın adını belirler. O olmadan ad `a.out` olur.

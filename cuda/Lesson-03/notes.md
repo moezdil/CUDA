@@ -87,7 +87,15 @@ More shared memory lets a kernel keep more data on-chip instead of going to glob
 - active warps per SM: how many warps one SM can hold at the same time. 64 on most data center GPUs, 48 on CC 8.6, 8.9 and 12.0.
 - FP32 (32-bit floating point) core: a hardware unit that does one 32-bit floating-point operation per clock cycle.
 - shared memory: fast on-chip memory inside each SM, shared by all threads in a block. Much faster than global (device) memory.
-- register file: a pool of fast storage per SM for each thread's local variables. It has 65536 registers per SM in all generations shown.
+- register: one slot of fast storage in the SM's register file, holding a thread's local variable. An SM has 65536 32-bit registers, and one thread can use at most 255.
 - KB (kilobyte): 1024 bytes.
 - HBM (High Bandwidth Memory): the fast stacked memory on data center GPUs.
-- CUDA Toolkit 12.8+: needed to compile code for Blackwell (CC 10.0).
+- major version: the first number of the CC, such as 8 in 8.9. A new major version means a new architecture generation.
+- minor version: the second number of the CC, such as 9 in 8.9. It marks a revision inside the same generation.
+- architecture: the design of one GPU generation. NVIDIA names them after scientists: Pascal, Volta, Ampere, Ada Lovelace, Hopper, Blackwell.
+- `nvidia-smi`: NVIDIA's command-line tool that comes with the driver. It lists your GPUs, and with `--query-gpu=compute_cap` it prints their compute capability.
+- warp size: the number of threads in a warp, 32 on every NVIDIA GPU so far. A kernel can read it as `warpSize`.
+- warp scheduler: the unit in each SM that picks a ready warp to run. While one warp waits for memory, it switches to another.
+- thread block size: the number of threads in one block, the second number in `<<<blocks, threads>>>`. At most 1024 on every GPU in the table.
+- clock cycle: one tick of the processor's clock. At 2 GHz there are 2 billion cycles per second.
+- global memory: the large main memory of the GPU, GDDR6 on the L40S and HBM on the H100. Every thread can reach it, but it is much slower than shared memory.

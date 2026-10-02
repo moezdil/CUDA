@@ -12,7 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% if page.is_homepage %}{{ config.site_name }}{% else %}{{ page.title }} · {{ config.site_name }}{% endif %}</title>
 <meta name="description" content="{{ config.site_description }}">
-<meta name="theme-color" content="#070b16">
+<meta name="theme-color" content="#0f1628">
 <meta name="color-scheme" content="dark light">
 {% if page.canonical_url %}<link rel="canonical" href="{{ page.canonical_url }}">{% endif %}
 <link rel="icon" type="image/svg+xml" href="{{ 'assets/logo.svg'|url }}">
@@ -57,10 +57,18 @@
   <div class="wrap">
     <h1>{{ S.h1 }}</h1>
     <p class="lede">{{ S.lede }}</p>
-    <div class="frame term die">
-      <div class="termbar"><i></i><i></i><i></i><span class="mono">{{ S.try }}</span></div>
-      <div class="termbody"><gpu-die></gpu-die></div>
-    </div>
+    <nav class="metro" aria-label="{{ S.lessons }}">
+      {%- for sec in nav if sec.children %}
+      <div class="m-line m{{ loop.index }}">
+        <a class="m-name" href="{{ sec.children[0].url|url }}">{{ sec.title }}<small>{{ sec.children|length }}</small></a>
+        <ol>
+          {%- for p in sec.children %}
+          <li><a href="{{ p.url|url }}"><b>{{ p.title[:2] }}</b><span>{{ p.title[3:] }}</span></a></li>
+          {%- endfor %}
+        </ol>
+      </div>
+      {%- endfor %}
+    </nav>
   </div>
 </section>
 

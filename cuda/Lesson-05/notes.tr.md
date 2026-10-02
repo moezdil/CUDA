@@ -103,3 +103,6 @@ PyTorch kullanırken bu kütüphaneleri nadiren kendin çağırırsın. Yine de 
 - cuDNN (CUDA Deep Neural Network library): derin öğrenme için GPU işlemleri kütüphanesi. PyTorch ve TensorFlow onu arka planda kullanır.
 - TensorRT: eğitilmiş bir modelin belirli bir GPU'da hızlı çalışmasını sağlar.
 - NCCL (NVIDIA Collective Communications Library): GPU'lar arasında veri taşıma kütüphanesi. Çok sayıda GPU ile eğitimde kullanılır.
+- GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran, binlerce küçük çekirdekli işlemci.
+- CPU (Central Processing Unit, merkezi işlem birimi): ana işlemci. Host kodunu çalıştırır ve kernel'ları başlatır.
+- AI (Artificial Intelligence, yapay zeka): veriden öğrenen yazılım. Bugün çoğunlukla GPU'larda eğitilen ve çalıştırılan derin öğrenme modelleri anlamına gelir.

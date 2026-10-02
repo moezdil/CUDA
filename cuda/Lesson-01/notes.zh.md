@@ -168,3 +168,13 @@ int main()
 - SIMT（Single Instruction, Multiple Threads，单指令多线程）：线程束里每个活跃线程都执行同一条指令。每个线程有自己的数据和自己的编号。
 - 线程束分化（warp divergence）：同一个线程束里的线程走了不同的路径。例如，线程 0 进入了 if 分支，而线程 1 没有。这时 GPU 会一条接一条地执行两条路径，速度会变慢。
 - printf 缓冲区：GPU 上的 `printf` 不会直接写到屏幕上。它写进 GPU 内存里的一个缓冲区。当 CPU 等待 GPU 时，比如在 `cudaDeviceSynchronize()` 处，缓冲区的内容才会显示到屏幕上。
+- 核函数（kernel）：用 `__global__` 标记、在 GPU 上运行的函数。一次启动会为每个线程运行它的一份副本。
+- 线程（thread）：核函数的一份正在运行的副本，有自己的 `threadIdx.x` 和自己的变量。
+- 线程块（block）：一起启动的一组线程。`<<<1, 4>>>` 会建立 1 个线程块，里面有 4 个线程。
+- `threadIdx.x`：线程在自己线程块里的编号，从 0 到（每块线程数 - 1）。这里是 0 到 3。
+- `blockIdx.x`：线程所在线程块的编号。只有一个线程块时，每个线程的值都是 0。
+- 启动（launch）：在 GPU 上启动核函数的那一行 `name<<<blocks, threads>>>();`。第一个数是线程块数，第二个数是每个线程块的线程数。
+- `cudaDeviceSynchronize()`：让 CPU 一直等到 GPU 完成工作。printf 缓冲区的内容也是在这时显示到屏幕上的。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台，让你在 GPU 上运行自己的代码。
+- `nvcc`：CUDA 编译器。它把 `.cu` 文件里的 CPU 部分和 GPU 部分编译成一个程序。
+- `-o`：设置输出程序的名字。不加它时，名字是 `a.out`。

@@ -136,7 +136,7 @@ Two more habits make the numbers trustworthy:
 
 ## What to Expect
 
-With only 2048 elements, the work inside the kernel is tiny. Most of the time per launch goes to the launch itself: the CPU hands the kernel to the driver, and the GPU sets it up and starts it. That cost is about the same for 2 blocks and for 64 blocks. So expect the configurations to come out close to each other here, with small changes from run to run.
+With only 2048 elements, the work inside the kernel is tiny. Most of the time per launch goes to the launch itself: the CPU hands the kernel to the driver, and the GPU sets it up and starts it. That launch cost is about the same for 2 blocks and for 64 blocks. So expect the configurations to come out close to each other here, with small changes from run to run.
 
 That is a result, not a failure. It shows that a GPU needs a big job before the grid layout starts to matter. The Try It section below makes the vectors 8192 times bigger, so you can see the difference grow.
 
@@ -428,7 +428,7 @@ int main()
 
 - global index: a thread's position in the whole grid, `blockIdx.x * blockDim.x + threadIdx.x`. It maps each thread to one element.
 - grid size: the number of blocks in a launch, the first number in `<<<blocks, threads>>>`.
-- round-up division: `(N + threads - 1) / threads`, the number of blocks needed so that `blocks * threads` is at least `N`.
+- round-up formula (round-up division): `(N + threads - 1) / threads`, the number of blocks needed so that `blocks * threads` is at least `N`.
 - bounds check: `if (i < n)`, which stops the extra threads of a rounded-up grid from touching memory past the end.
 - SM (Streaming Multiprocessor): the processor inside the GPU that runs blocks. A block runs on one SM; one SM can hold several blocks. The L40S has 142.
 - `nvidia-smi` GPU utilization: the share of time in which a kernel was running. It does not tell how many SMs were busy.
@@ -437,6 +437,15 @@ int main()
 - `cudaEventSynchronize`: makes the CPU wait until the GPU has reached a given event.
 - `cudaEventElapsedTime`: the time in milliseconds between two recorded events.
 - warm-up: an untimed first launch that absorbs one-time setup costs.
-- launch overhead: the fixed time to hand a kernel to the GPU and start it. It dominates when the kernel itself is tiny.
+- launch cost (launch overhead): the fixed time to hand a kernel to the GPU and start it. It dominates when the kernel itself is tiny.
 - SAXPY (Single-precision A times X Plus Y): `y = a * x + y` on float vectors, a classic first GPU kernel.
 - Compute Sanitizer: NVIDIA's tool that finds memory errors in kernels, such as writes past the end of an array.
+- compute capability (CC): the version number of a GPU generation, 8.9 on the L40S. It fixes limits such as 1024 threads per block ([Lesson 03](../Lesson-03/notes.md)).
+- `blockIdx.x`: the index of the thread's block in the grid.
+- `blockDim.x`: the number of threads per block, the second number in `<<<blocks, threads>>>`.
+- `threadIdx.x`: the thread's position inside its block. It restarts at 0 in every block.
+- driver: the NVIDIA software between your program and the GPU. It takes each kernel launch and sets it up on the GPU.
+- microsecond (µs): a millionth of a second. 1 millisecond (ms) is 1000 µs.
+- `argc` / `argv`: the arguments of `main`. `argc` counts the words on the command line, `argv` holds them as text, and `argv[0]` is the program name.
+- `nvcc`: the CUDA compiler. It compiles the CPU and GPU parts of a `.cu` file into one program.
+- `-arch=sm_89`: builds for compute capability 8.9, the L40S.

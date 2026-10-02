@@ -453,3 +453,14 @@ int main()
 - `cudaDeviceSynchronize()`: makes the CPU wait until all GPU work launched so far is done.
 - warp ID: the warp a thread belongs to inside its block. It is `threadIdx.x / 32`.
 - SSH (Secure Shell): a way to log in to another computer over the network and run commands there.
+- CUDA runtime: the library behind calls such as `cudaDeviceSynchronize()`. The header `cuda_runtime.h` declares its functions.
+- `__global__`: marks a function as a kernel, launched from the CPU and run on the GPU.
+- warp: a group of 32 threads that the GPU runs together. 64 threads per block make 2 warps.
+- integer division: a division of two whole numbers that drops the remainder. 45 / 32 = 1 and 63 / 32 = 1, but 64 / 32 = 2.
+- `printf`: C's print function. In a kernel every thread runs it, and its lines go to the print buffer first.
+- print buffer: the GPU memory where kernel `printf` lines wait. It is flushed to the terminal at `cudaDeviceSynchronize()`.
+- shell prompt: the text the shell shows while it waits for a command, often ending in `$`. You do not type it.
+- OS (operating system): the base software of a computer. Here it is Ubuntu 24, a Linux system.
+- semicolon: the `;` that ends every C and C++ statement. If one is missing, the compiler reports the error at the start of the next statement.
+- L40S: the NVIDIA data center GPU these lessons run on, with the Ada Lovelace architecture, CC 8.9 and 142 SMs.
+- Ada Lovelace: NVIDIA's GPU architecture from 2022 with CC 8.9, used in the L40S and the GeForce RTX 40 series.

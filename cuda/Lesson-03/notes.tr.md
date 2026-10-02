@@ -84,10 +84,18 @@ Daha fazla shared memory, bir kernel'ın global memory'ye (genel bellek) gitmek 
 - compute capability (CC, hesaplama yeteneği): bir sürüm numarası (major.minor). Bir GPU'nun hangi CUDA özelliklerini desteklediğini ve donanım sınırlarının ne olduğunu söyler.
 - SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içindeki fiziksel işlemci. Tüm thread'ler SM'lerde çalışır.
 - warp: GPU'nun birlikte zamanladığı ve çalıştırdığı 32 thread'lik grup.
-- SM başına aktif warp: bir SM'nin aynı anda tutabileceği warp sayısı. Çoğu veri merkezi GPU'sunda 64, CC 8.6, 8.9 ve 12.0'da 48.
+- aktif warp (active warps per SM): bir SM'nin aynı anda tutabileceği warp sayısı. Çoğu veri merkezi GPU'sunda 64, CC 8.6, 8.9 ve 12.0'da 48.
 - FP32 (32-bit floating point, 32 bitlik kayan noktalı sayı) çekirdeği: saat döngüsü başına bir adet 32 bitlik kayan nokta işlemi yapan donanım birimi.
 - shared memory (paylaşımlı bellek): her SM'nin içinde, bir block'taki tüm thread'lerin paylaştığı hızlı, çip üstü bellek. Global (device) bellekten çok daha hızlıdır.
-- register file (yazmaç dosyası): her SM'de, her thread'in yerel değişkenleri için ayrılmış hızlı depolama havuzu. Gösterilen tüm nesillerde SM başına 65536 register vardır.
+- register (yazmaç): SM'nin register file'ındaki hızlı bir depolama yeri, bir thread'in yerel bir değişkenini tutar. Bir SM'de 65536 adet 32 bitlik register vardır, bir thread en fazla 255 tanesini kullanabilir.
 - KB (kilobayt): 1024 bayt.
 - HBM (High Bandwidth Memory, yüksek bant genişlikli bellek): veri merkezi GPU'larındaki hızlı, üst üste yığılmış bellek.
-- CUDA Toolkit 12.8+: Blackwell (CC 10.0) için kod derlemek için gerekli.
+- major sürüm (major version): CC'nin ilk sayısı, örneğin 8.9'daki 8. Yeni bir major sürüm, yeni bir mimari nesli demektir.
+- minor sürüm (minor version): CC'nin ikinci sayısı, örneğin 8.9'daki 9. Aynı nesil içindeki bir revizyonu gösterir.
+- mimari (architecture): bir GPU neslinin tasarımı. NVIDIA onlara bilim insanlarının adını verir: Pascal, Volta, Ampere, Ada Lovelace, Hopper, Blackwell.
+- `nvidia-smi`: driver ile birlikte gelen NVIDIA komut satırı aracı. GPU'larını listeler, `--query-gpu=compute_cap` ile de compute capability'lerini yazdırır.
+- warp boyutu (warp size): bir warp'taki thread sayısı, şimdiye kadarki her NVIDIA GPU'sunda 32. Kernel onu `warpSize` olarak okuyabilir.
+- warp zamanlayıcı (warp scheduler): her SM'de çalışmaya hazır bir warp'ı seçen birim. Bir warp belleği beklerken başka bir warp'a geçer.
+- block boyutu (thread block size): bir block'taki thread sayısı, `<<<blocks, threads>>>` içindeki ikinci sayı. Tablodaki her GPU'da en fazla 1024.
+- saat döngüsü (clock cycle): işlemci saatinin bir tıklaması. 2 GHz'lik bir saatte saniyede 2 milyar döngü vardır.
+- global memory (genel bellek): GPU'nun büyük ana belleği, L40S'te GDDR6, H100'de HBM. Her thread ona erişebilir, ama shared memory'den çok daha yavaştır.

@@ -196,3 +196,18 @@ int main()
 - global thread ID: a unique ID for each thread in the whole grid. It is `blockIdx.x * blockDim.x + threadIdx.x`. Thread IDs repeat across blocks. Global IDs do not.
 - `cudaGetLastError()`: returns the last CUDA error code. It catches silent failures, such as an invalid launch configuration that is dropped without a message.
 - non-deterministic: the result or order cannot be predicted. Block scheduling depends on which SM has room at launch time.
+- CPU (Central Processing Unit): the main processor that runs `main()` and launches kernels.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for running your own code on the GPU.
+- compute capability: the version number of a GPU generation, 8.9 on the L40S. It fixes limits such as 1024 threads per block ([Lesson 03](../Lesson-03/notes.md)).
+- register file: the fast storage in each SM that holds the threads' local variables. On the L40S it has 65536 32-bit registers per SM.
+- shared memory: fast memory inside each SM that the threads of one block can share.
+- warp scheduler: the unit in an SM that picks which warp runs next. Each SM has several of them.
+- block: a group of up to 1024 threads that runs on one SM. Thread IDs start at 0 again in every block.
+- grid: all blocks of one launch. `<<<2, 1024>>>` makes a grid of 2 blocks, 2048 threads in total.
+- `blockIdx.x`: the index of the thread's block, 0 or 1 in this lesson.
+- `threadIdx.x`: the thread's index inside its block, 0 to 1023 here. It restarts at 0 in every block.
+- launch configuration: the two numbers in `<<<blocks, threads>>>`. The compiler does not check them. The CUDA runtime does, when the kernel starts.
+- CUDA runtime: the library your program calls for GPU work, such as `cudaDeviceSynchronize()`. It also checks every launch configuration.
+- invalid launch: a launch that breaks a limit, such as `<<<1, 2048>>>`. The kernel never runs, and only `cudaGetLastError()` shows the error (`invalid configuration argument`).
+- `nvcc`: the CUDA compiler. It compiles the CPU and GPU parts of a `.cu` file into one program.
+- `-o`: sets the name of the output program. Without it the name is `a.out`.

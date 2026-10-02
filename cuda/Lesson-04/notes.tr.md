@@ -213,3 +213,13 @@ int main()
 - `threadIdx`: thread'in kendi block'u içindeki indeksi. Her block'ta sıfırdan yeniden başlar.
 - `warpSize`: warp başına thread sayısı. Bugünkü tüm donanımlarda 32.
 - `dim3`: grid ve block boyutları için kullanılan, `.x`, `.y`, `.z` tam sayı alanlarına sahip bir CUDA struct'ı. `<<<>>>` içindeki düz sayılar, `.y=1` ve `.z=1` olan bir `dim3`'e dönüşür.
+- başlatma ayarı (launch configuration): bir başlatmanın `<<<blocks, threads>>>` kısmı. GPU onu `gridDim` ve `blockDim` içine kopyalar.
+- grid: bir başlatmadaki tüm block'lar. Boyutu `gridDim`'dir.
+- warp: GPU'nun birlikte çalıştırdığı 32 thread'lik grup ([Ders 01](../Lesson-01/notes.md)).
+- CUDA runtime: `cudaDeviceSynchronize()` gibi çağrıların arkasındaki kütüphane. Başlatma ayarını donanım sınırlarıyla karşılaştırır.
+- `cudaGetLastError()`: son CUDA hatasını döndürür, örneğin bir sınırı aşan başlatmadan gelen hatayı.
+- `__global__`: bir fonksiyonu kernel olarak işaretler. CPU onu başlatır, GPU çalıştırır.
+- biçim metni (format string): `printf`'in ilk argümanı. İçindeki her `%d`, sırayla bir sonraki argümanla değiştirilir.
+- `cudaDeviceSynchronize()`: GPU işini bitirene kadar CPU'yu bekletir. Başlatma tek başına hemen geri döner.
+- `nvcc`: CUDA compiler'ı. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `-o`: çıkan programın adını belirler. O olmadan ad `a.out` olur.

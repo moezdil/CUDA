@@ -136,7 +136,7 @@ Sayıları güvenilir yapan iki alışkanlık daha var:
 
 ## Ne Beklemelisin
 
-Yalnızca 2048 elemanla kernel'ın içindeki iş çok küçük. Başlatma başına sürenin çoğu başlatmanın kendisine gider: CPU kernel'ı sürücüye verir, GPU onu hazırlar ve başlatır. Bu maliyet 2 block için de 64 block için de aşağı yukarı aynı. Bu yüzden burada ayarların birbirine yakın çıkmasını ve çalıştırmadan çalıştırmaya küçük değişiklikler görmeyi bekle.
+Yalnızca 2048 elemanla kernel'ın içindeki iş çok küçük. Başlatma başına sürenin çoğu başlatmanın kendisine gider: CPU kernel'ı sürücüye verir, GPU onu hazırlar ve başlatır. Bu başlatma maliyeti 2 block için de 64 block için de aşağı yukarı aynı. Bu yüzden burada ayarların birbirine yakın çıkmasını ve çalıştırmadan çalıştırmaya küçük değişiklikler görmeyi bekle.
 
 Bu bir başarısızlık değil, bir sonuç. Grid düzeninin önem kazanması için bir GPU'nun büyük bir işe ihtiyacı olduğunu gösteriyor. Aşağıdaki Kendin Dene bölümü vektörleri 8192 kat büyütüyor, böylece farkın büyüdüğünü görebilirsin.
 
@@ -428,7 +428,7 @@ int main()
 
 - global index: bir thread'in bütün grid'deki yeri, `blockIdx.x * blockDim.x + threadIdx.x`. Her thread'i bir elemana eşler.
 - grid boyutu: bir başlatmadaki block sayısı, `<<<blocks, threads>>>` içindeki ilk sayı.
-- yukarı yuvarlayan bölme: `(N + threads - 1) / threads`, `blocks * threads` en az `N` olsun diye gereken block sayısı.
+- yukarı yuvarlama formülü (round-up formula): `(N + threads - 1) / threads`, `blocks * threads` en az `N` olsun diye gereken block sayısı.
 - sınır kontrolü: `if (i < n)`, yukarı yuvarlanmış bir grid'in fazladan thread'lerinin sonun ötesindeki belleğe dokunmasını engeller.
 - SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içinde block'ları çalıştıran işlemci. Bir block tek bir SM'de çalışır; bir SM birden fazla block tutabilir. L40S'te 142 tane var.
 - `nvidia-smi` GPU utilization: bir kernel'ın çalıştığı zamanın oranı. Kaç SM'nin meşgul olduğunu söylemez.
@@ -440,3 +440,12 @@ int main()
 - başlatma maliyeti: bir kernel'ı GPU'ya teslim edip başlatmanın sabit süresi. Kernel'ın kendisi çok küçük olduğunda süreye o hakim olur.
 - SAXPY (Single-precision A times X Plus Y): float vektörler üzerinde `y = a * x + y`, klasik bir ilk GPU kernel'ı.
 - Compute Sanitizer: NVIDIA'nın kernel'lardaki bellek hatalarını, örneğin bir dizinin sonunun ötesine yazmayı, bulan aracı.
+- compute capability (CC, hesaplama yeteneği): bir GPU neslinin sürüm numarası, L40S'te 8.9. Block başına en fazla 1024 thread gibi sınırları belirler ([Ders 03](../Lesson-03/notes.md)).
+- `blockIdx.x`: thread'in bulunduğu block'un grid içindeki indeksi.
+- `blockDim.x`: block başına thread sayısı, `<<<blocks, threads>>>` içindeki ikinci sayı.
+- `threadIdx.x`: thread'in kendi block'u içindeki konumu. Her block'ta 0'dan yeniden başlar.
+- sürücü (driver): programınla GPU arasındaki NVIDIA yazılımı. Her kernel başlatmasını alır ve GPU'da hazırlar.
+- mikrosaniye (µs): saniyenin milyonda biri. 1 milisaniye (ms) 1000 µs'dir.
+- `argc` / `argv`: `main`'in argümanları. `argc` komut satırındaki kelimeleri sayar, `argv` onları metin olarak tutar, `argv[0]` programın adıdır.
+- `nvcc`: CUDA compiler'ı. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `-arch=sm_89`: compute capability 8.9 için, yani L40S için derler.

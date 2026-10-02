@@ -103,3 +103,6 @@ CUDA 平台分为五层。你写代码用的编程语言在最上面，GPU（Gra
 - cuDNN（CUDA Deep Neural Network library，CUDA 深度神经网络库）：面向深度学习的 GPU 运算库。PyTorch 和 TensorFlow 在底层都用它。
 - TensorRT：让训练好的模型在某一款 GPU 上跑得很快。
 - NCCL（NVIDIA Collective Communications Library，NVIDIA 集合通信库）：在 GPU 之间传输数据的库。用于在多块 GPU 上训练。
+- GPU（Graphics Processing Unit，图形处理器）：拥有成千上万个小核心、负责运行核函数的处理器。
+- CPU（Central Processing Unit，中央处理器）：主处理器。它运行主机端代码并启动核函数。
+- AI（Artificial Intelligence，人工智能）：从数据中学习的软件。如今主要指深度学习模型，它们在 GPU 上训练和运行。

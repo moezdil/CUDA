@@ -168,3 +168,13 @@ int main()
 - SIMT (Single Instruction, Multiple Threads): every active thread in a warp runs the same instruction. Each thread has its own data and its own ID.
 - warp divergence: threads in one warp take different paths. For example, thread 0 enters an if-branch and thread 1 does not. The GPU then runs both paths one after the other, which is slower.
 - printf buffer: GPU `printf` does not write to the screen directly. It writes to a buffer in GPU memory. The buffer goes to the screen when the CPU waits for the GPU, for example at `cudaDeviceSynchronize()`.
+- kernel: a function marked `__global__` that runs on the GPU. One launch runs one copy of it per thread.
+- thread: one running copy of the kernel, with its own `threadIdx.x` and its own variables.
+- block: a group of threads that is launched together. `<<<1, 4>>>` makes 1 block of 4 threads.
+- `threadIdx.x`: the thread's index inside its block, from 0 to (threads per block - 1). Here 0 to 3.
+- `blockIdx.x`: the index of the thread's block. With a single block it is 0 for every thread.
+- launch: the line `name<<<blocks, threads>>>();` that starts a kernel on the GPU. The first number is the block count, the second the threads per block.
+- `cudaDeviceSynchronize()`: makes the CPU wait until the GPU has finished. This is also when the printf buffer reaches the screen.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for running your own code on the GPU.
+- `nvcc`: the CUDA compiler. It compiles the CPU and GPU parts of a `.cu` file into one program.
+- `-o`: sets the name of the output program. Without it the name is `a.out`.

@@ -326,8 +326,21 @@ int main()
 - GPU（Graphics Processing Unit，图形处理器）：运行核函数的处理器。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 内部运行线程块及其线程束的处理器。L40S 有 142 个。
 - 线程束（warp）：GPU 作为一个整体来运行的 32 个线程。GPU 调度的是线程束，而不是单个线程。
-- 线程束大小（warp size）：在 NVIDIA GPU 上永远是 32。软件无法更改。
+- 线程束的大小（warp size）：在 NVIDIA GPU 上永远是 32。软件无法更改。
 - 线程束编号（warp ID）：线程在自己的线程块里属于哪个线程束。它等于 `threadIdx.x / 32`。
 - 通道编号（lane ID）：线程在自己线程束里的位置，从 0 到 31。它等于 `threadIdx.x % 32`。它得不到线程束编号。
-- 每个线程块的线程束数：`(threads per block) / 32`。每个线程块 128 个线程 → 每个线程块 4 个线程束。
-- 线程束编号重置：线程束编号在每个线程块里都从零开始，和 `threadIdx.x` 一样。整块 GPU 没有全局的线程束编号。
+- 线程束数（warps per block）：`(threads per block) / 32`。每个线程块 128 个线程 → 每个线程块 4 个线程束。
+- 线程束编号重置 / 重新开始（warp ID reset）：线程束编号在每个线程块里都从零开始，和 `threadIdx.x` 一样。整块 GPU 没有全局的线程束编号。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台，让你在 GPU 上运行自己的代码。
+- 线程块（block）：在一个 SM 上运行的一组线程。在层次结构里，它位于网格和线程束之间。
+- 线程（thread）：核函数的一份正在运行的副本，是层次结构的最底层。
+- `cudaGetDeviceProperties`：一个运行时调用，会把 GPU 的各项上限填进一个 `cudaDeviceProp` 结构体，比如 `maxThreadsPerBlock` 和 `multiProcessorCount`（SM 数量）。
+- 计算能力（compute capability，CC）：一代 GPU 的版本号，L40S 是 8.9（[第 03 课](../Lesson-03/notes.md)）。
+- 整数除法（integer division）：整数之间的 `/` 会丢掉余数，所以 70 / 32 = 2。
+- 取模（modulo，`%`）：除法的余数。70 % 32 = 6，因为 2 × 32 + 6 = 70。
+- `__global__`：把一个函数标记为核函数，由 CPU 启动，在 GPU 上运行。
+- `cudaDeviceSynchronize()`：让 CPU 一直等到 GPU 完成工作，这样输出就不会丢失。
+- 启动配置（launch configuration）：一次启动里 `<<<blocks, threads>>>` 的两个数。
+- `nvcc`：CUDA 编译器。它把 `.cu` 文件里的 CPU 部分和 GPU 部分编译成一个程序。
+- `-arch=sm_89`：为计算能力 8.9 编译，也就是 L40S。
+- `-o`：设置输出程序的名字。不加它时，名字是 `a.out`。

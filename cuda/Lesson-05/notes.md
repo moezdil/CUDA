@@ -103,3 +103,6 @@ You rarely call these libraries yourself when you use PyTorch. They are still th
 - cuDNN (CUDA Deep Neural Network library): library of GPU operations for deep learning. PyTorch and TensorFlow use it under the hood.
 - TensorRT: makes a trained model run fast on a specific GPU.
 - NCCL (NVIDIA Collective Communications Library): library for moving data between GPUs. Used for training on many GPUs.
+- GPU (Graphics Processing Unit): the processor that runs kernels, with thousands of small cores.
+- CPU (Central Processing Unit): the main processor. It runs host code and launches kernels.
+- AI (Artificial Intelligence): software that learns from data. Today it mostly means deep learning models, which are trained and run on GPUs.
