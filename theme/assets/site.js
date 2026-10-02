@@ -102,9 +102,14 @@ function glossaryRail(gh, ul){
     var res = words.filter(Boolean).map(function(w){
       return new RegExp("(?<![A-Za-z0-9_])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/[A-Za-z0-9]$/.test(w) && !(tr && w.length > 3) ? "(?:e?s)?(?![A-Za-z0-9_])" : ""), "i");
     });
+    // the section that first mentions a term lists it first; later sections that use it list it again below
+    var first = true;
     for (var k = 0; k < texts.length; k++) {
-      if (res.some(function(r){ return r.test(texts[k]); })) { groups[k].push(li.innerHTML); found = true; return; }
+      if (res.some(function(r){ return r.test(texts[k]); })) { groups[k].push({ h: li.innerHTML, first: first }); first = false; found = true; }
     }
+  });
+  groups = groups.map(function(g){
+    return g.filter(function(x){ return x.first; }).concat(g.filter(function(x){ return !x.first; })).slice(0, 7);
   });
   if (!found) { return; }
   var rail = doc.appendChild(document.createElement("aside")), cur = -2, queued = false;
@@ -122,7 +127,7 @@ function glossaryRail(gh, ul){
     box.hidden = !list.length;
     if (!list.length) { return; }
     box.querySelector(".rail-s").textContent = hs[k].textContent.replace(/¶$/, "").trim();
-    box.querySelector("ul").innerHTML = list.map(function(x, i){ return '<li style="--i:' + i + '">' + x + "</li>"; }).join("");
+    box.querySelector("ul").innerHTML = list.map(function(x, i){ return "<li" + (x.first ? "" : ' class="again"') + ' style="--i:' + i + '">' + x.h + "</li>"; }).join("");
   }
   function ask(){ if (!queued) { queued = true; requestAnimationFrame(draw); } }
   addEventListener("scroll", ask, { passive: true });
@@ -1039,3 +1044,101 @@ cuda("event-timing", function(el){
 
 document.querySelectorAll(".side details").forEach(function(d){ if (matchMedia("(max-width:900px)").matches) { d.open = false; } });
 
+
+// Homepage schematic: the NVIDIA L40S die (AD102, Ada Lovelace, CC 8.9) and where a launch lands.
+// Blocks go out one per SM first (round-robin). An SM holds at most 24 blocks and 1536 threads (48 warps),
+// so blocks_per_SM = min(24, floor(1536 / threads_per_block)) and a wave is 142 x blocks_per_SM blocks.
+customElements.define("gpu-die", class extends HTMLElement {
+  connectedCallback(){
+    if (this.ready) { return; }
+    this.ready = true;
+    var el = this, SMS = 142, CAP = SMS * 48, FUSED = [59, 119], DRAW = 3, gen = 0;
+    var P = [[2, 1024], [64, 32], [1024, 256], [65536, 256]];
+    var fmt = function(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); };
+    var pct = function(a, b){ return String(+(a / b * 100).toFixed(1)); };
+    var k = function(s){ return '<span class="gd-k">' + s + "</span>"; };
+    var gpcs = function(g0){
+      var h = '<div class="gd-gpcs">';
+      for (var g = g0; g < g0 + 6; g++) {
+        h += '<div class="gd-gpc">' + k("GPC " + g) + "<div>";
+        for (var t = 0; t < 12; t++) { h += FUSED.indexOf(g * 12 + t) < 0 ? "<i></i>" : '<i class="x" title="' + T("fused off") + '"></i>'; }
+        h += "</div></div>";
+      }
+      return h + "</div>";
+    };
+    var mc = '<div class="gd-mc">' + new Array(7).join("<span>GDDR6</span>") + "</div>";
+    var rd = [["b", T("blocks")], ["t", T("threads")], ["s", T("blocks / SM")], ["v", T("waves")], ["w", T("warps resident")], ["m", T("SMs busy")], ["o", T("occupancy")]];
+    el.classList.add("dg", "gd");
+    el.innerHTML =
+      '<div class="gd-head"><code class="gd-call"></code><div class="gd-seg" role="group" aria-label="' + T("Launch configuration") + '">' +
+      P.map(function(p, i){ return '<button type="button" data-i="' + i + '" aria-pressed="false">&lt;&lt;&lt;' + p[0] + ", " + p[1] + "&gt;&gt;&gt;</button>"; }).join("") +
+      '</div></div><div class="gd-board">' +
+      '<div class="gd-host">' + k(T("host")) + "<b>CPU</b><span class=\"gd-q\"></span></div>" +
+      '<div class="gd-link" aria-hidden="true">' + k("PCIe Gen4 x16") + "<div><i></i><i></i><i></i></div></div>" +
+      '<div class="gd-die" role="img" aria-label="' + T("L40S die: 12 GPCs of 12 SMs each, 142 of 144 SMs enabled, the L2 cache across the middle, GDDR6 memory controllers on the top and bottom edges.") + '">' +
+      '<div class="gd-dim">' + k(T("AD102 · 12 GPC × 12 SM = 144 SM · 142 enabled on L40S")) + "</div>" + mc + gpcs(0) +
+      '<div class="gd-l2">' + k(T("L2 cache · 96 MB")) + "</div>" + gpcs(6) + mc +
+      '<div class="gd-dim">' + k(T("48 GB GDDR6 · ECC · 384-bit · 864 GB/s")) + "</div></div>" +
+      '<dl class="gd-spec"><dt>NVIDIA L40S</dt><dd>AD102 · Ada Lovelace<br>CC 8.9</dd><dt>' + T("per SM") + "</dt><dd>" +
+      T("128 CUDA cores") + "<br>" + T("4 warp schedulers") + "<br>" + T("≤ 48 warps = 1536 threads") + "<br>" + T("≤ 24 blocks") +
+      "</dd><dt>" + T("per GPU") + "</dt><dd>" + T("142 SMs × 128 = 18,176 CUDA cores") + "<br>" + T("≤ 1024 threads per block") +
+      '</dd><dt class="gd-lg">' + T("legend") + '</dt><dd class="gd-lg"><span><i class="on"></i>' + T("SM busy") + '</span><span><i class="f"></i>' +
+      T("resident warps, one band per block") + '</span><span><i class="x"></i>' + T("fused off (2 of 144)") + "</span></dd></dl></div>" +
+      '<dl class="gd-read">' + rd.map(function(r){ return "<div><dt>" + r[1] + '</dt><dd data-r="' + r[0] + '"></dd></div>'; }).join("") + "</dl>" +
+      '<p class="gd-verdict" role="status"></p>';
+    var tiles = [].filter.call(el.querySelectorAll(".gd-gpc i"), function(i){ return !i.classList.contains("x"); });
+    var btns = el.querySelectorAll(".gd-seg button"), R = {};
+    el.querySelectorAll("[data-r]").forEach(function(d){ R[d.dataset.r] = d; });
+
+    function run(i, calm){
+      var B = P[i][0], N = P[i][1], wpb = N / 32, bps = Math.min(24, Math.floor(1536 / N)), per = SMS * bps;
+      var W = Math.ceil(B / per), shown = Math.min(W, DRAW), me = ++gen, counts = [];
+      btns.forEach(function(b, j){ b.setAttribute("aria-pressed", String(j === i)); b.classList.toggle("on", j === i); });
+      el.querySelector(".gd-call").innerHTML = '<span class="fn">vectorAdd</span>&lt;&lt;&lt;<span class="n">' + B + '</span>, <span class="n">' + N +
+        "</span>&gt;&gt;&gt;(a, b, c, N);" + (B * N > 1e6 ? ' <span class="c">// N = ' + fmt(B * N) + "</span>" : "");
+      R.b.textContent = fmt(B); R.t.textContent = fmt(B * N); R.v.textContent = W;
+      R.s.textContent = bps + " = min(24, ⌊1536 / " + N + "⌋)";
+      el.querySelector(".gd-verdict").textContent = "";
+      function draw(w, sent){
+        var busy = 0, warps = 0;
+        tiles.forEach(function(t, s){
+          var n = counts[s] || 0;
+          busy += n > 0; warps += n * wpb;
+          t.className = n ? "on" : ""; t.style.setProperty("--n", n); t.style.setProperty("--w", n * wpb);
+          t.title = F("SM {0} · {1} blocks · {2} / 48 warps", s, n, n * wpb);
+        });
+        R.w.textContent = fmt(warps); R.m.textContent = busy + " / 142 (" + pct(busy, SMS) + "%)"; R.o.textContent = pct(warps, CAP) + "%";
+        el.querySelector(".gd-q").innerHTML = F("wave <b>{0}</b> / {1}", w + 1, W) + "<br>" + F("queued <b>{0}</b>", fmt(B - sent));
+        return [busy, warps];
+      }
+      function fill(n){ counts = []; for (var j = 0; j < n; j++) { counts[j % SMS] = (counts[j % SMS] || 0) + 1; } }
+      function done(){
+        var w = shown - 1, n = Math.min(per, B - w * per), r = draw(w, w * per + n), occ = pct(r[1], CAP), v;
+        el.classList.remove("live");
+        if (r[0] < SMS) { v = F("{0} of 142 SMs busy with {1} of 48 warps each: {2}% of the SMs sit idle, occupancy {3}%.", r[0], wpb * Math.ceil(n / SMS), pct(SMS - r[0], SMS), occ); }
+        else if (W > shown) {
+          v = F("{0} blocks per SM, {1} per wave, {2} waves: all 142 SMs stay full, occupancy {3}%.", bps, fmt(per), W, occ);
+          el.querySelector(".gd-q").innerHTML += "<br>" + F("waves {0} to {1} repeat this", shown + 1, W);
+        }
+        else { v = F("{0} waves of up to {1} blocks: the last wave holds only {2}, occupancy {3}%.", W, fmt(per), n, occ); }
+        el.querySelector(".gd-verdict").textContent = v;
+      }
+      if (calm) { fill(Math.min(per, B - (shown - 1) * per)); done(); return; }
+      el.classList.add("live");
+      (function wave(w){
+        var n = Math.min(per, B - w * per), steps = Math.min(n, 40), j = 0;
+        counts = []; draw(w, w * per);
+        (function tick(){
+          if (me !== gen) { return; }
+          var to = Math.round(n * ++j / steps);
+          fill(to); draw(w, w * per + to);
+          if (j < steps) { setTimeout(tick, 900 / steps); }
+          else if (w + 1 < shown) { setTimeout(function(){ if (me === gen) { wave(w + 1); } }, 800); }
+          else { setTimeout(function(){ if (me === gen) { done(); } }, 300); }
+        })();
+      })(0);
+    }
+    btns.forEach(function(b){ b.addEventListener("click", function(){ run(+b.dataset.i, CALM); }); });
+    run(+(el.getAttribute("preset") || 0), CALM);
+  }
+});

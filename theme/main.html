@@ -2,9 +2,9 @@
 {%- set lang = config.extra.lang or "en" %}
 {%- set up = "" if lang == "en" else "../" %}
 {%- set S = {
-  "en": {"skip": "Skip to content", "h1": 'Learn <span class="accent">CUDA</span> step by step', "lede": "Learn how a GPU works, then write CUDA code with short plain-English lessons and pictures you can play with.", "start": "Start learning →", "try": "try it · move the sliders", "lessons": "Lessons", "prev": "← previous", "next": "next →", "foot": "CUDA, step by step · by", "sup": "Supported by", "sponsor": "Sponsor", "src": "Source on GitHub", "mode": "Switch color mode", "lang": "Language"},
-  "tr": {"skip": "İçeriğe geç", "h1": '<span class="accent">CUDA</span> adım adım öğren', "lede": "Önce bir GPU'nun nasıl çalıştığını öğren, sonra CUDA kodu yaz. Kısa ve sade dersler, üzerinde oynayabileceğin resimlerle.", "start": "Öğrenmeye başla →", "try": "dene · kaydırıcıları oynat", "lessons": "Dersler", "prev": "← önceki", "next": "sonraki →", "foot": "CUDA, adım adım · hazırlayan", "sup": "Destekleyenler", "sponsor": "Sponsor ol", "src": "GitHub'da kaynak kod", "mode": "Renk modunu değiştir", "lang": "Dil"},
-  "zh": {"skip": "跳到正文", "h1": '一步一步学 <span class="accent">CUDA</span>', "lede": "先弄懂 GPU 是怎么工作的，再动手写 CUDA 代码。课程简短易懂，还有可以动手玩的交互图。", "start": "开始学习 →", "try": "试一试 · 拖动滑块", "lessons": "课程", "prev": "← 上一课", "next": "下一课 →", "foot": "CUDA，一步一步学 · 作者", "sup": "支持方", "sponsor": "赞助", "src": "GitHub 源码", "mode": "切换颜色模式", "lang": "语言"}
+  "en": {"skip": "Skip to content", "h1": 'Learn <span class="accent">CUDA</span> step by step', "lede": "Learn how a GPU works, then write CUDA code with short plain-English lessons and pictures you can play with.", "start": "Start learning →", "try": "NVIDIA L40S · how a kernel launch lands on the SMs · pick one", "lessons": "Lessons", "prev": "← previous", "next": "next →", "foot": "CUDA, step by step · by", "sup": "Supported by", "sponsor": "Sponsor", "src": "Source on GitHub", "mode": "Switch color mode", "lang": "Language"},
+  "tr": {"skip": "İçeriğe geç", "h1": '<span class="accent">CUDA</span> adım adım öğren', "lede": "Önce bir GPU'nun nasıl çalıştığını öğren, sonra CUDA kodu yaz. Kısa ve sade dersler, üzerinde oynayabileceğin resimlerle.", "start": "Öğrenmeye başla →", "try": "NVIDIA L40S · bir kernel launch'ı SM'lere nasıl dağılır · birini seç", "lessons": "Dersler", "prev": "← önceki", "next": "sonraki →", "foot": "CUDA, adım adım · hazırlayan", "sup": "Destekleyenler", "sponsor": "Sponsor ol", "src": "GitHub'da kaynak kod", "mode": "Renk modunu değiştir", "lang": "Dil"},
+  "zh": {"skip": "跳到正文", "h1": '一步一步学 <span class="accent">CUDA</span>', "lede": "先弄懂 GPU 是怎么工作的，再动手写 CUDA 代码。课程简短易懂，还有可以动手玩的交互图。", "start": "开始学习 →", "try": "NVIDIA L40S · 一次核函数启动如何分配到各个 SM · 选一个", "lessons": "课程", "prev": "← 上一课", "next": "下一课 →", "foot": "CUDA，一步一步学 · 作者", "sup": "支持方", "sponsor": "赞助", "src": "GitHub 源码", "mode": "切换颜色模式", "lang": "语言"}
 }[lang] %}
 <html lang="{{ "zh-CN" if lang == "zh" else lang }}">
 <head>
@@ -60,9 +60,9 @@
     <div class="cta">
       <a class="btn primary" href="{{ nav.items[1].children[0].url|url }}">{{ S.start }}</a>
     </div>
-    <div class="frame term">
+    <div class="frame term die">
       <div class="termbar"><i></i><i></i><i></i><span class="mono">{{ S.try }}</span></div>
-      <div class="termbody"><cuda-launch blocks="2" threads="96" fn="printIDs"></cuda-launch></div>
+      <div class="termbody"><gpu-die></gpu-die></div>
     </div>
   </div>
 </section>
