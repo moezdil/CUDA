@@ -1,4 +1,4 @@
-# Lesson 07: Warp IDs
+# 07 > Warp IDs
 
 [Lesson 01](../Lesson-01/notes.md) and [Lesson 02](../Lesson-02/notes.md) covered block and thread IDs. This lesson adds the warp, the group of 32 threads that the GPU (Graphics Processing Unit) really schedules, and shows how a thread works out its own warp ID and lane ID inside the kernel.
 

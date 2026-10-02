@@ -1,4 +1,4 @@
-# Lesson 04: Built-in Variables
+# 04 > Built-in Variables
 
 Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The GPU (Graphics Processing Unit) fills them in for each thread at launch, based on the launch configuration. This lesson prints all five from every thread, so you can see which ones change and which stay the same.
 

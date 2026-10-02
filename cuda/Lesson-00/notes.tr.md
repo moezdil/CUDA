@@ -1,4 +1,4 @@
-# Ders 00: Bir Block, Bir Thread
+# 00 > Bir Block, Bir Thread
 
 Bu ders, olabilecek en basit CUDA (Compute Unified Device Architecture) programını çalıştırır. Kernel'ı bir block ve bir thread kullanır, hiç paralellik yoktur. Böylece işler karmaşıklaşmadan ilk çıktıyı görebilirsin. Sonraki her ders bu programı biraz değiştirir.
 

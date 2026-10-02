@@ -1,4 +1,4 @@
-# 第 06 课：在 Linux 上编译 CUDA
+# 06 > 在 Linux 上编译 CUDA
 
 第 00 课到第 04 课都只用一条简短的命令来编译程序。这节课会一步一步讲清楚在 Linux 上构建和运行 CUDA（Compute Unified Device Architecture，统一计算设备架构）程序的全过程，还会加上 `-arch` 选项，用来指定你要为哪款 GPU（Graphics Processing Unit，图形处理器）编译。这节课也会说明，为什么缺少 `cudaDeviceSynchronize()` 时，核函数可能什么都不打印。
 

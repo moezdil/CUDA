@@ -1,4 +1,4 @@
-# Ders 03: Compute Capability
+# 03 > Compute Capability
 
 Compute capability (CC, hesaplama yeteneği), bir GPU (Graphics Processing Unit, grafik işlem birimi) neslinin sürüm numarasıdır. Ders 00 ile 02 arasında gördüğün özellikleri ve donanım sınırlarını belirler, örneğin 32'lik warp boyutunu ve 1024 thread'lik block sınırını. Her CUDA (Compute Unified Device Architecture) özelliği en düşük bir compute capability ister. Bu yüzden bu sayı, kodunun neleri kullanabileceğini söyler.
 

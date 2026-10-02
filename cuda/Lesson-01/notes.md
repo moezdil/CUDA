@@ -1,4 +1,4 @@
-# Lesson 01: One Block, Four Threads
+# 01 > One Block, Four Threads
 
 This lesson makes one change to [Lesson 00](../Lesson-00/notes.md). The thread count goes from 1 to 4, and the block count stays 1. Four threads run the same kernel at the same time, each with a different `threadIdx.x`.
 

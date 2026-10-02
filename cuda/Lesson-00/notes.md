@@ -1,4 +1,4 @@
-# Lesson 00: One Block, One Thread
+# 00 > One Block, One Thread
 
 This lesson runs the simplest possible CUDA (Compute Unified Device Architecture) program. Its kernel uses one block and one thread, with no parallelism, so you can see the first output before anything gets complex. Every later lesson changes this program a little.
 

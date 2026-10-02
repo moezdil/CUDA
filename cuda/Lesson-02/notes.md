@@ -1,4 +1,4 @@
-# Lesson 02: Two Blocks, 1024 Threads Each
+# 02 > Two Blocks, 1024 Threads Each
 
 A block can hold at most 1024 threads. To run more threads, you add more blocks. This lesson launches 2 blocks x 1024 threads = 2048 threads and shows how each thread gets an ID that is unique in the whole grid.
 

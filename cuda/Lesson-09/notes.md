@@ -1,4 +1,4 @@
-# Lesson 09: Many Blocks, Grid Size and Timing
+# 09 > Many Blocks, Grid Size and Timing
 
 [Lesson 08](../Lesson-08/notes.md) added two vectors of 1024 elements with one block. This lesson doubles the size to 2048 elements, which no single block can cover. You learn the index formula that almost every CUDA kernel uses, how to pick the grid size for any vector length, how many SMs (Streaming Multiprocessors) your launch really keeps busy, and how to time a kernel without fooling yourself.
 

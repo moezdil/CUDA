@@ -1,4 +1,4 @@
-# 第 05 课：CUDA 平台技术栈
+# 05 > CUDA 平台技术栈
 
 第 00 课到第 04 课只用到了 CUDA（Compute Unified Device Architecture，统一计算设备架构）的一小部分：用 C/C++ 写一个核函数，再用 `nvcc` 编译。这节课退后一步，看看 CUDA Toolkit 13 自带的整个平台。了解了这些层次，以后遇到新的工具或库，你就知道它属于哪一层。
 

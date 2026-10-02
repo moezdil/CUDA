@@ -1,4 +1,4 @@
-# Lesson 08: Vector Addition
+# 08 > Vector Addition
 
 Lessons 00 to 07 launched kernels that only printed their IDs. This lesson builds the first CUDA (Compute Unified Device Architecture) program that does real work on data: it adds two vectors of 1024 numbers on the GPU (Graphics Processing Unit). Along the way you meet the six steps that almost every CUDA program follows, from allocating memory to freeing it.
 

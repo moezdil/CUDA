@@ -1,4 +1,4 @@
-# Ders 02: İki Block, Her Birinde 1024 Thread
+# 02 > İki Block, Her Birinde 1024 Thread
 
 Bir block en fazla 1024 thread alabilir. Daha fazla thread çalıştırmak için daha fazla block eklersin. Bu ders 2 block x 1024 thread = 2048 thread başlatır ve her thread'in tüm grid'de benzersiz olan bir ID'yi nasıl aldığını gösterir.
 

@@ -1,4 +1,4 @@
-# Ders 08: Vektör Toplama
+# 08 > Vektör Toplama
 
 Ders 00 ile 07 arası, yalnızca kendi ID'lerini yazdıran kernel'lar başlattı. Bu ders, veri üzerinde gerçek iş yapan ilk CUDA (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) programını kuruyor: GPU'da (Graphics Processing Unit, grafik işlem birimi) 1024 sayılık iki vektörü topluyor. Bu yolda, bellek ayırmaktan belleği serbest bırakmaya kadar neredeyse her CUDA programının izlediği altı adımı tanıyacaksın.
 

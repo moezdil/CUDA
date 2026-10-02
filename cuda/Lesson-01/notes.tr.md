@@ -1,4 +1,4 @@
-# Ders 01: Bir Block, Dört Thread
+# 01 > Bir Block, Dört Thread
 
 Bu ders, [Ders 00](../Lesson-00/notes.md)'a tek bir değişiklik yapar. Thread sayısı 1'den 4'e çıkar, block sayısı 1 kalır. Dört thread aynı kernel'ı aynı anda çalıştırır ve her birinin `threadIdx.x` değeri farklıdır.
 

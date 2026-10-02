@@ -1,4 +1,4 @@
-# 第 03 课：计算能力
+# 03 > 计算能力
 
 计算能力（compute capability，CC）是 GPU（Graphics Processing Unit，图形处理器）某一代产品的版本号。它规定了你在第 00 课到第 02 课中见过的功能和硬件上限，比如线程束大小为 32，以及每个线程块最多 1024 个线程。每个 CUDA（Compute Unified Device Architecture，统一计算设备架构）功能都要求一个最低的计算能力，所以这个数字告诉你，你的代码能用哪些功能。
 

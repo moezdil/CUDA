@@ -1,4 +1,4 @@
-# Lesson 05: The CUDA Platform Stack
+# 05 > The CUDA Platform Stack
 
 Lessons 00 to 04 used one small part of CUDA (Compute Unified Device Architecture): a kernel written in C/C++ and compiled with `nvcc`. This lesson steps back and shows the whole platform as it ships with CUDA Toolkit 13. Knowing the layers helps you see where each new tool or library you meet later fits in.
 

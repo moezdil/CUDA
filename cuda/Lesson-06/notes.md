@@ -1,4 +1,4 @@
-# Lesson 06: Compiling CUDA on Linux
+# 06 > Compiling CUDA on Linux
 
 Lessons 00 to 04 compiled their programs with one short command. This lesson goes through every step of building and running a CUDA (Compute Unified Device Architecture) program on Linux, and adds the `-arch` flag that names the GPU (Graphics Processing Unit) you build for. It also shows why a kernel can print nothing when `cudaDeviceSynchronize()` is missing.
 

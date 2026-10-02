@@ -1,4 +1,4 @@
-# Ders 09: Çok Sayıda Block, Grid Boyutu ve Zaman Ölçümü
+# 09 > Çok Sayıda Block, Grid Boyutu ve Zaman Ölçümü
 
 [Ders 08](../Lesson-08/notes.md), 1024 elemanlı iki vektörü tek bir block ile topladı. Bu derste boyut iki katına, 2048 elemana çıkıyor ve bunu tek bir block karşılayamıyor. Neredeyse her CUDA kernel'ının kullandığı index formülünü, her vektör uzunluğu için grid boyutunu nasıl seçeceğini, başlattığın işin gerçekte kaç SM'yi (Streaming Multiprocessor, akış çoklu işlemcisi) meşgul ettiğini ve bir kernel'ın süresini kendini kandırmadan nasıl ölçeceğini öğreniyorsun.
 

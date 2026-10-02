@@ -1,4 +1,4 @@
-# Lesson 03: Compute Capability
+# 03 > Compute Capability
 
 Compute capability (CC) is a version number for a GPU (Graphics Processing Unit) generation. It sets the features and hardware limits you met in Lessons 00 to 02, such as the warp size of 32 and the 1024-thread block limit. Every CUDA (Compute Unified Device Architecture) feature needs a minimum compute capability, so this number tells you what your code may use.
 

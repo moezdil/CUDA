@@ -1,4 +1,4 @@
-# 第 04 课：内置变量
+# 04 > 内置变量
 
 每个核函数都有五个只读的内置变量：`gridDim`、`blockDim`、`blockIdx`、`threadIdx` 和 `warpSize`。你不需要传递或声明它们。启动时，GPU（Graphics Processing Unit，图形处理器）会根据启动配置，为每个线程填好这些值。这节课让每个线程把这五个变量全部打印出来，这样你就能看到哪些会变，哪些保持不变。
 

@@ -1,4 +1,4 @@
-# Ders 06: Linux'ta CUDA Derlemek
+# 06 > Linux'ta CUDA Derlemek
 
 Ders 00 ile 04 arası, programlarını tek bir kısa komutla derledi. Bu ders, Linux'ta bir CUDA (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) programını derleyip çalıştırmanın her adımından geçiyor. Ayrıca derlediğin GPU'yu (Graphics Processing Unit, grafik işlem birimi) belirten `-arch` flag'ini ekliyor. Son olarak `cudaDeviceSynchronize()` eksik olduğunda bir kernel'ın neden hiçbir şey yazdıramayabileceğini gösteriyor.
 

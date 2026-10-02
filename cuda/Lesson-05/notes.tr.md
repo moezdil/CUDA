@@ -1,4 +1,4 @@
-# Ders 05: CUDA Platform Katmanları
+# 05 > CUDA Platform Katmanları
 
 Ders 00 ile 04 arası, CUDA'nın (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) küçük bir parçasını kullandı: C/C++ ile yazılıp `nvcc` ile derlenen bir kernel. Bu ders bir adım geri çekilip, CUDA Toolkit 13 ile gelen platformun tamamını gösteriyor. Katmanları bilirsen, ileride karşına çıkan her yeni araç ya da kütüphanenin nereye oturduğunu kolayca görürsün.
 

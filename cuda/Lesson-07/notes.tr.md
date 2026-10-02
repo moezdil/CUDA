@@ -1,4 +1,4 @@
-# Ders 07: Warp ID'leri
+# 07 > Warp ID'leri
 
 [Ders 01](../Lesson-01/notes.md) ve [Ders 02](../Lesson-02/notes.md), block ve thread ID'lerini anlattı. Bu ders warp'u ekliyor. Warp, GPU'nun (Graphics Processing Unit, grafik işlem birimi) gerçekte zamanladığı 32 thread'lik gruptur. Ders ayrıca bir thread'in kernel içinde kendi warp ID'sini ve lane ID'sini nasıl hesapladığını gösteriyor.
 

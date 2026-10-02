@@ -1,4 +1,4 @@
-# Ders 04: Yerleşik Değişkenler
+# 04 > Yerleşik Değişkenler
 
 Her kernel'ın salt okunur beş yerleşik değişkeni vardır: `gridDim`, `blockDim`, `blockIdx`, `threadIdx` ve `warpSize`. Bunları ne parametre olarak verirsin ne de tanımlarsın. GPU (Graphics Processing Unit, grafik işlem birimi), başlatma anında başlatma ayarına göre her thread için bunları doldurur. Bu ders beşini de her thread'den yazdırır. Böylece hangilerinin değiştiğini, hangilerinin aynı kaldığını görebilirsin.
 
