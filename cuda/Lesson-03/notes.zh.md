@@ -1,17 +1,17 @@
 # 03 > 计算能力
 
-计算能力（compute capability，CC）是 GPU（Graphics Processing Unit，图形处理器）某一代产品的版本号。它规定了你在第 00 课到第 02 课中见过的功能和硬件上限，比如线程束大小为 32，以及每个线程块最多 1024 个线程。每个 CUDA（Compute Unified Device Architecture，统一计算设备架构）功能都要求一个最低的计算能力，所以这个数字告诉你，你的代码能用哪些功能。
+计算能力（compute capability，CC）是一代 GPU（Graphics Processing Unit，图形处理器）的版本号。第 00 课到第 02 课里见过的功能和硬件上限都由它规定，比如线程束大小是 32，每个线程块最多 1024 个线程。每个 CUDA（Compute Unified Device Architecture，统一计算设备架构）功能都要求一个最低的计算能力，所以看这个数字就知道你的代码能用哪些功能。
 
 ## 这个数字的含义
 
-格式是 major.minor（主版本号.次版本号），例如 Hopper 是 9.0，这些课使用的 L40S 是 8.9。主版本号变了，表示新一代架构和新的硬件。次版本号变了，表示同一代架构里的一次修订。
+它的格式是 major.minor（主版本号.次版本号），比如 Hopper 是 9.0，这些课使用的 L40S 是 8.9。主版本号变了，表示新一代架构和新的硬件；次版本号变了，表示同一代架构里的一次修订。
 
-为 CC 7.0 编译的代码，可以在任何 CC 7.0 或更高的 GPU 上运行。使用了 CC 9.0 功能的代码，不能在更旧的 GPU 上运行。例如，需要 CC 8.0 的程序可以在 L40S 上运行（8.9 高于 8.0），但需要 CC 9.0 的程序就不行。
+为 CC 7.0 编译的代码，可以在任何 CC 7.0 及以上的 GPU 上运行；用到 CC 9.0 功能的代码，则不能在更旧的 GPU 上运行。比如要求 CC 8.0 的程序可以在 L40S 上运行（8.9 高于 8.0），要求 CC 9.0 的程序就不行。
 
 <cc-explorer></cc-explorer>
 
 > [!TIP]
-> 想知道你自己 GPU 的计算能力，可以运行 `nvidia-smi --query-gpu=name,compute_cap --format=csv`。
+> 想知道你的 GPU 的计算能力，可以运行 `nvidia-smi --query-gpu=name,compute_cap --format=csv`。
 
 ## GPU 的各代产品
 
@@ -35,41 +35,41 @@
 
 SM 指 Streaming Multiprocessor（流式多处理器），也就是 GPU 内部运行线程块的处理器。FP32 指 32 位浮点数，KB 指千字节。
 
-H100 和 B100 每个 SM 的线程上限和内存上限是一样的。每个 SM 的寄存器数在这几代之间完全没有变化。
+H100 和 B100 每个 SM 的线程上限和内存上限完全相同。每个 SM 的寄存器数在这几代之间一直没变。
 
 <cc-progress></cc-progress>
 
 > [!NOTE]
-> Blackwell 仍然比 Hopper 快，原因是 SM 更多（B200 有 148 个，H100 SXM5 有 132 个）、第五代 Tensor Core、更快的 HBM3e（High Bandwidth Memory，高带宽内存），以及 NVLink 5.0，也就是 NVIDIA 用于连接多块 GPU 的互联技术。
+> Blackwell 仍然比 Hopper 快，原因在于更多的 SM（B200 有 148 个，H100 SXM5 有 132 个）、第五代 Tensor Core、更快的 HBM3e（High Bandwidth Memory，高带宽内存），以及 NVLink 5.0（NVIDIA 用来连接多块 GPU 的互联技术）。
 
 ## 每个线程束的线程数
 
-线程束是 GPU 一起运行的 32 个线程（[第 01 课](../Lesson-01/notes.md)）。32 这个数字由硬件固定，是计算能力规范的一部分。GPU 从来不会调度单个线程。它总是以 32 个线程组成的完整线程束为单位进行调度。
+线程束是 GPU 一起运行的 32 个线程（[第 01 课](../Lesson-01/notes.md)）。32 这个数由硬件固定，是计算能力规范的一部分。GPU 从不调度单个线程，而是始终以 32 个线程组成的完整线程束为单位来调度。
 
-从最早的 CUDA GPU（CC 1.0）开始，线程束大小 32 就一直没有变过。
+从最早支持 CUDA 的 GPU（CC 1.0）开始，线程束大小就一直是 32。
 
 ## 每个 SM 的线程束数和线程数
 
-SM 是运行线程块的物理处理器（[第 02 课](../Lesson-02/notes.md)）。表中的数据中心 GPU 每个 SM 最多容纳 64 个活跃线程束，也就是 64 x 32 = 2048 个线程。L40S 不一样：CC 8.9 每个 SM 只允许 48 个线程束，也就是 48 x 32 = 1536 个线程。
+SM 是运行线程块的物理处理器（[第 02 课](../Lesson-02/notes.md)）。表中的数据中心 GPU 每个 SM 最多容纳 64 个活跃线程束，也就是 64 x 32 = 2048 个线程。L40S 则不同：CC 8.9 每个 SM 只允许 48 个线程束，也就是 48 x 32 = 1536 个线程。
 
-当一些线程束在等待内存时，线程束调度器可以挑选其他线程束来运行。活跃的线程束越多，执行单元就越忙，因为更容易找到一个已经准备好运行的线程束。
+一些线程束在等待内存时，线程束调度器可以挑别的线程束来运行。活跃线程束越多，越容易找到一个已经准备就绪的线程束，执行单元也就越忙。
 
 > [!WARNING]
-> “每个 SM 64 个线程束”并不适用于所有 GPU。CC 8.6、8.9 和 12.0 只允许 48 个。在按这个数字做规划之前，先查一下你自己 GPU 的数值。
+> “每个 SM 64 个线程束”并不适用于所有 GPU，CC 8.6、8.9 和 12.0 只允许 48 个。按这个数做规划之前，先查一下你自己 GPU 的数值。
 
 ## 线程块大小上限
 
-在[第 02 课](../Lesson-02/notes.md)里，`<<<1, 2048>>>` 能编译，却什么都没启动。原因就是线程块最多只能有 1024 个线程。这是计算能力规范里的固定规则，表中每一列都是同样的 1024。
+在[第 02 课](../Lesson-02/notes.md)里，`<<<1, 2048>>>` 能通过编译，却什么都没启动，原因就是一个线程块最多只能有 1024 个线程。这是计算能力规范里的硬性规则，表中每一列都是 1024。
 
-这个上限针对的是每个线程块，而不是每个 SM。一个 SM 能容纳的线程数，可以超过一个线程块允许的线程数，只要这些线程来自多个线程块。在 L40S 上，一个 SM 能放下 1536 个线程，例如 3 个线程块，每块 512 个线程。在 A100 上，能放下 2048 个线程，例如 2 个线程块，每块 1024 个线程。
+这个上限针对的是每个线程块，而不是每个 SM。只要线程来自多个线程块，一个 SM 能容纳的线程数就可以超过单个线程块的上限。在 L40S 上，一个 SM 能放下 1536 个线程，比如 3 个线程块、每块 512 个线程；在 A100 上能放下 2048 个线程，比如 2 个线程块、每块 1024 个线程。
 
 ## 每个 SM 的 FP32 核心
 
-FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Ampere 数据中心 GPU 每个 SM 有 64 个 FP32 核心。Ada Lovelace（L40S）、Hopper 和 Blackwell 有 128 个。FP32 核心越多，每个 SM 在每个时钟周期里能完成的浮点运算就越多。
+FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Ampere 数据中心 GPU 每个 SM 有 64 个 FP32 核心，Ada Lovelace（L40S）、Hopper 和 Blackwell 有 128 个。FP32 核心越多，每个 SM 在一个时钟周期里能完成的浮点运算就越多。
 
 ## 每个 SM 的共享内存
 
-共享内存是每个 SM 内部的高速内存。同一个线程块里的所有线程都能使用它。它随着各代产品不断变大：
+共享内存是每个 SM 内部的高速内存，同一个线程块里的所有线程都能使用。它的容量一代比一代大：
 
 - Pascal：64 KB
 - Volta：最多 96 KB
@@ -77,25 +77,25 @@ FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Amp
 - Ada Lovelace（L40S）：最多 100 KB
 - Hopper 和 Blackwell：最多 228 KB
 
-共享内存越多，核函数就能把更多数据留在芯片上，而不用去访问全局内存。
+共享内存越大，核函数就能把越多的数据留在芯片上，不必去访问全局内存。
 
 ## 术语表
 
-- 计算能力（compute capability，CC）：一个版本号（major.minor）。它说明一块 GPU 支持哪些 CUDA 功能，以及它的硬件上限是多少。
-- SM（Streaming Multiprocessor，流式多处理器）：GPU 内部的物理处理器。所有线程都在 SM 上运行。
+- 计算能力（compute capability，CC）：一个版本号（major.minor），说明一块 GPU 支持哪些 CUDA 功能、硬件上限是多少。
+- SM（Streaming Multiprocessor，流式多处理器）：GPU 内部的物理处理器，所有线程都在 SM 上运行。
 - 线程束（warp）：GPU 一起调度、一起运行的 32 个线程。
-- 活跃线程束（active warps per SM）：一个 SM 同时能容纳多少个线程束。大多数数据中心 GPU 是 64，CC 8.6、8.9 和 12.0 是 48。
+- 活跃线程束（active warps per SM）：一个 SM 能同时容纳的线程束数。大多数数据中心 GPU 是 64，CC 8.6、8.9 和 12.0 是 48。
 - FP32（32-bit floating point，32 位浮点）核心：每个时钟周期完成一次 32 位浮点运算的硬件单元。
-- 共享内存（shared memory）：每个 SM 内部的高速片上内存，由同一个线程块里的所有线程共享。比全局（设备端）内存快得多。
+- 共享内存（shared memory）：每个 SM 内部的高速片上内存，由同一个线程块里的所有线程共享，比全局内存（设备端内存）快得多。
 - 寄存器（register）：SM 寄存器堆里的一个高速存储位置，存放线程的一个局部变量。一个 SM 有 65536 个 32 位寄存器，一个线程最多能用 255 个。
 - KB（kilobyte，千字节）：1024 字节。
-- HBM（High Bandwidth Memory，高带宽内存）：数据中心 GPU 上使用的高速堆叠式内存。
+- HBM（High Bandwidth Memory，高带宽内存）：数据中心 GPU 使用的高速堆叠式显存。
 - 主版本号（major version）：CC 的第一个数，比如 8.9 里的 8。主版本号变了，表示新一代架构。
-- 次版本号（minor version）：CC 的第二个数，比如 8.9 里的 9。它表示同一代架构里的一次修订。
-- 架构（architecture）：一代 GPU 的设计。NVIDIA 用科学家的名字来命名它们：Pascal、Volta、Ampere、Ada Lovelace、Hopper、Blackwell。
-- `nvidia-smi`：随驱动程序一起安装的 NVIDIA 命令行工具。它会列出你的 GPU，加上 `--query-gpu=compute_cap` 还会打印它们的计算能力。
-- 线程束大小（warp size）：一个线程束里的线程数，到目前为止每款 NVIDIA GPU 上都是 32。核函数可以通过 `warpSize` 读取它。
-- 线程束调度器（warp scheduler）：每个 SM 里挑选一个准备好的线程束来运行的单元。一个线程束在等待内存时，它就换另一个线程束。
+- 次版本号（minor version）：CC 的第二个数，比如 8.9 里的 9，表示同一代架构里的一次修订。
+- 架构（architecture）：一代 GPU 的设计。NVIDIA 用科学家的名字给它们命名：Pascal、Volta、Ampere、Ada Lovelace、Hopper、Blackwell。
+- `nvidia-smi`：随驱动程序一起安装的 NVIDIA 命令行工具。它会列出你的 GPU，加上 `--query-gpu=compute_cap` 还会打印出它们的计算能力。
+- 线程束大小（warp size）：一个线程束里的线程数，到目前为止每款 NVIDIA GPU 上都是 32。核函数可以通过 `warpSize` 读到它。
+- 线程束调度器（warp scheduler）：每个 SM 里负责挑出一个就绪的线程束来运行的单元。一个线程束在等待内存时，它就换另一个线程束上来。
 - 线程块大小（thread block size）：一个线程块里的线程数，也就是 `<<<blocks, threads>>>` 里的第二个数。表中每款 GPU 上最多都是 1024。
 - 时钟周期（clock cycle）：处理器时钟的一次跳动。2 GHz 的时钟每秒有 20 亿个周期。
-- 全局内存（global memory）：GPU 的大容量主内存，L40S 上是 GDDR6，H100 上是 HBM。每个线程都能访问它，但它比共享内存慢得多。
+- 全局内存（global memory）：GPU 上容量很大的主显存，L40S 上是 GDDR6，H100 上是 HBM。每个线程都能访问它，但它比共享内存慢得多。
