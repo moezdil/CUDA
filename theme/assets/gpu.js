@@ -71,8 +71,8 @@ var ARCHS = [
   { n: "Volta", y: "2017", era: T("AI becomes central"), cc: "7.0", tc: 1, chip: "GV100", tr: 21.1, t: T("Tensor Cores arrive. GPUs turn toward AI.") },
   { n: "Ampere", y: "2020", era: T("AI becomes central"), cc: "8.x", tc: 3, chip: "GA100", tr: 54.2, t: T("Stronger Tensor Cores and more memory speed.") },
   { n: "Hopper", y: "2022", era: T("AI becomes central"), cc: "9.0", tc: 4, chip: "GH100", tr: 80, t: T("Built for large AI models. Adds FP8.") },
-  { n: "Blackwell", y: "2024", era: T("AI becomes central"), cc: "10.0 · 12.0", tc: 5, chip: "B200", tr: 208, t: T("Adds NVFP4, an even smaller number format for AI.") },
-  { n: "Rubin", y: "2026", era: T("next"), cc: "·", t: T("Now arriving. New Tensor Cores and HBM4 memory.") },
+  { n: "Blackwell", y: "2024", era: T("AI becomes central"), cc: "10.0 · 10.3 · 12.0", tc: 5, chip: "B200", tr: 208, t: T("Adds NVFP4, an even smaller number format for AI.") },
+  { n: "Rubin", y: "2026", era: T("next"), cc: "10.7", t: T("Now arriving. New Tensor Cores and HBM4 memory.") },
   { n: "Rubin Ultra", y: "2027", era: T("next"), cc: "·", t: T("Planned. A bigger Rubin.") },
   { n: "Feynman", y: "2028", era: T("next"), cc: "·", t: T("Planned. Still more AI.") }
 ];
@@ -503,7 +503,7 @@ def("install-steps", function(el){
   var steps = [
     [T("GPU is visible"), "nvidia-smi", T("If this fails, stop and fix the driver first. CUDA cannot work without it.")],
     [T("Add NVIDIA's WSL repository"), "wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb\nsudo dpkg -i cuda-keyring_1.1-1_all.deb", T("Not apt install nvidia-cuda-toolkit: that package is outdated.")],
-    [T("Install the toolkit"), "sudo apt-get update\nsudo apt-get -y install cuda-toolkit-13-2", T("Installs nvcc, the runtime and core libraries. Not a driver.")],
+    [T("Install the toolkit"), "sudo apt-get update\nsudo apt-get -y install cuda-toolkit-13-3", T("Installs nvcc, the runtime and core libraries. Not a driver.")],
     [T("Check the compiler"), "nvcc --version", T("Should report CUDA 13.x.")],
     [T("Fix PATH if nvcc is missing"), "export PATH=/usr/local/cuda/bin:$PATH", T("Add the line to .bashrc or .zshrc to keep it.")]
   ];

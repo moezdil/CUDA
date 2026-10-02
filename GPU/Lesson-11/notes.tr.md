@@ -1,6 +1,6 @@
-# Volta White Paper'ını Okumak
+# 11 > Volta White Paper'ını Okumak
 
-Bu derste V100 white paper'ını adım adım inceleyeceğiz. Volta'nın neyi değiştirdiğini ve bunun bugünün GPU'ları için neden önemli olduğunu göreceksin.
+Bu derste V100 white paper'ını adım adım inceleyeceğiz. Volta'nın neyi değiştirdiğini ve bunun bugünün GPU'ları (Graphics Processing Unit, grafik işlem birimi) için neden önemli olduğunu göreceksin.
 
 ## Neden Gerçek Bir White Paper Okumalı
 
@@ -10,19 +10,19 @@ White paper (teknik rapor), donanım tasarımını basitleştirmeden gösterir. 
 
 Hemen diyagramlara ya da sayılara dalma; "Key Features" (Temel Özellikler) bölümüyle başla. Kısadır ve mimarinin ne yapmaya çalıştığını gösterir.
 
-Volta'da odak çok net: mimari yapay zekâ için tasarlanmış. Bu, önceki nesle göre sadece bir iyileştirme değil, amaçta bir değişim.
+Volta'da odak çok net: mimari yapay zekâ (AI, artificial intelligence) için tasarlanmış. Bu, önceki nesle göre sadece bir iyileştirme değil, amaçta bir değişim.
 
 ## Tensor Core'lar
 
 Volta'daki en önemli değişiklik Tensor Core'lardır.
 
-Volta'dan önce GPU'lar matris işlemlerini genel amaçlı CUDA core'larında çalıştırıyordu. Bu işe yarıyordu ama verimli değildi. Volta, matris işlemlerine kendilerine ayrılmış donanım veriyor.
+Volta'dan önce GPU'lar matris işlemlerini genel amaçlı CUDA core'larında çalıştırıyordu. Bu işe yarıyordu ama verimli değildi. Volta, matris işlemlerine kendilerine ayrılmış donanım veriyor: V100'de, 80 SM'nin her birinde 8 tane olmak üzere 640 Tensor Core var.
 
 Bu noktadan sonra GPU artık sadece genel bir hesaplama cihazı değil; en baştan yapay zekâ iş yükleri düşünülerek tasarlanıyor.
 
 ## Streaming Multiprocessor (SM)
 
-Streaming Multiprocessor (SM), GPU'nun temel yapı taşıdır. Volta'da SM yeniden tasarlandı.
+Streaming Multiprocessor (SM), GPU'nun temel yapı taşıdır. Volta'da SM yeniden tasarlandı ve her biri kendi warp zamanlayıcısına sahip dört işlem bloğuna bölündü.
 
 Önemli bir iyileştirme, farklı türdeki işlemlerin aynı anda çalışabilmesi. Pascal'da tam sayı ve kayan noktalı sayı işlemleri tek bir yürütme yolunu paylaşıyor ve sırayla çalışmak zorunda kalıyordu; Volta'da paralel çalışıyorlar.
 
@@ -38,7 +38,7 @@ Volta'da birçok komut Pascal'dakinden daha az döngüde (cycle) tamamlanır. Am
 
 ## Bellek
 
-Volta, HBM2 bellek kullanır ve bellek bant genişliği önceki nesillerden daha yüksektir.
+Volta, HBM2 (High Bandwidth Memory 2) bellek kullanır: V100'de 16 ya da 32 GB, 900 GB/s hızla. Bu, önceki nesillerden daha yüksek bir bellek bant genişliğidir.
 
 Modern GPU iş yükleri çoğu zaman sadece verinin ne kadar hızlı işlendiğiyle değil, ne kadar hızlı taşındığıyla da sınırlıdır. Daha yüksek bant genişliği, hesaplama birimlerine beklemeden daha fazla veri ulaştırır.
 
@@ -46,7 +46,7 @@ Modern GPU iş yükleri çoğu zaman sadece verinin ne kadar hızlı işlendiği
 
 Volta, NVLink'in ikinci neslini getiriyor. NVLink, GPU'ları birbirine yüksek hızda bağlar.
 
-Volta hem bağlantı sayısını hem de bağlantı hızını artırıyor; bu da çoklu GPU sistemlerini çok daha verimli hâle getiriyor.
+Volta hem bağlantı sayısını hem de bağlantı hızını artırıyor: V100'de toplam 300 GB/s taşıyan altı NVLink bağlantısı var; bu da çoklu GPU sistemlerini çok daha verimli hâle getiriyor.
 
 > [!NOTE]
 > 2026'da Hopper ve Blackwell tabanlı büyük yapay zekâ sistemleri bu fikre daha da fazla dayanıyor. Volta bu yöndeki ilk adımlardan biriydi.
@@ -56,7 +56,7 @@ Volta hem bağlantı sayısını hem de bağlantı hızını artırıyor; bu da 
 Transistör sayısı, bir GPU'nun içinde ne kadar donanım olduğunu gösterir. V100'de yaklaşık 21 milyar transistör var.
 
 > [!NOTE]
-> Hopper yaklaşık 80 milyar transistöre ulaşıyor. Blackwell daha karmaşık tasarımlarla daha da ileri gidiyor.
+> Hopper, H100'de yaklaşık 80 milyar transistöre ulaşıyor. Blackwell daha da ileri gidiyor: B200, tek bir GPU gibi çalışan iki kalıpta 208 milyar transistör barındırıyor.
 
 Bu büyüme sadece boyutla ilgili değil; yeni birimleri, yeni bellek sistemlerini ve daha gelişmiş yürütme modellerini yansıtıyor.
 
@@ -102,8 +102,11 @@ V100 white paper'ını okumak, GPU'ların bugün neden böyle göründüğünü 
 - döngü (cycle): GPU saatinin bir tıkı; 1,5 GHz'de saniyede 1,5 milyar döngü olur.
 - verimli (efficient): aynı donanımla, aynı sürede ya da aynı güçle daha fazla iş çıkaran.
 - Ampere / Hopper / Blackwell: Volta'dan sonra gelen Nvidia mimarileri (2020, 2022, 2024); hepsi onun Tensor Core'ları üzerine kurulur.
-- HBM2: Volta'nın kullandığı bellek; bant genişliği önceki nesillerden daha yüksektir.
+- HBM2 (High Bandwidth Memory 2): Volta'nın kullandığı bellek; V100'de 900 GB/s, önceki nesillerden daha yüksek.
+- GB/s: saniyede gigabayt; bellek ve bağlantı hızının birimi.
+- warp zamanlayıcısı (warp scheduler): sıradaki 32 thread'lik grubu seçen birim; her Volta SM'sinde dört tane var.
+- GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
 - bellek bant genişliği (memory bandwidth): verinin hesaplama birimlerine ne kadar hızlı taşındığı; daha yüksek bant genişliği daha az bekleme demektir.
 - NVLink: GPU'ları birbirine bağlayan yüksek hızlı bağlantı; Volta'da ikinci nesli var.
 - çoklu GPU (multi-GPU): aynı makinede tek bir iş üzerinde çalışan ve sürekli veri alışverişi yapan birkaç GPU.
-- transistör sayısı (transistor count): bir GPU'nun içinde ne kadar donanım olduğu; V100'de yaklaşık 21 milyar transistör var.
+- transistör sayısı (transistor count): bir GPU'nun içinde ne kadar donanım olduğu; V100'de yaklaşık 21 milyar, B200'de 208 milyar transistör var.

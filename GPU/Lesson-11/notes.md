@@ -1,6 +1,6 @@
-# Reading the Volta White Paper
+# 11 > Reading the Volta White Paper
 
-This lesson walks through the V100 white paper. It shows what Volta changed and why it matters for GPUs today.
+This lesson walks through the V100 white paper. It shows what Volta changed and why it matters for GPUs (Graphics Processing Units) today.
 
 ## Why Read a Real White Paper
 
@@ -10,19 +10,19 @@ A white paper shows the hardware design directly, without simplification. Volta 
 
 Do not jump straight into diagrams or numbers. Start with the "Key Features" section. It is short and shows what the architecture is trying to do.
 
-For Volta, the focus is clear. The architecture is built for artificial intelligence. This is a change in purpose, not just an improvement over the previous generation.
+For Volta, the focus is clear. The architecture is built for AI (artificial intelligence). This is a change in purpose, not just an improvement over the previous generation.
 
 ## Tensor Cores
 
 The most important change in Volta is Tensor Cores.
 
-Before Volta, GPUs ran matrix operations on general CUDA cores. That worked, but it was not efficient. Volta gives matrix operations their own dedicated hardware.
+Before Volta, GPUs ran matrix operations on general CUDA cores. That worked, but it was not efficient. Volta gives matrix operations their own dedicated hardware: the V100 has 640 Tensor Cores, 8 in each of its 80 SMs.
 
 From here, the GPU is no longer just a general compute device. It is designed for AI workloads from the ground up.
 
 ## The Streaming Multiprocessor (SM)
 
-The Streaming Multiprocessor (SM) is the core building block of the GPU. Volta has a redesigned SM.
+The Streaming Multiprocessor (SM) is the core building block of the GPU. Volta has a redesigned SM, split into four processing blocks, each with its own warp scheduler.
 
 A key improvement is that different types of operations can run at the same time. In Pascal, integer and floating point operations shared one execution path and had to take turns. In Volta, they run in parallel.
 
@@ -38,7 +38,7 @@ In Volta, many instructions finish in fewer cycles than in Pascal. Ampere and Ho
 
 ## Memory
 
-Volta uses HBM2 memory. It has higher memory bandwidth than earlier generations.
+Volta uses HBM2 (High Bandwidth Memory 2) memory: 16 or 32 GB at 900 GB/s on the V100. That is higher memory bandwidth than earlier generations.
 
 Modern GPU workloads are often limited by how fast data moves, not only by how fast it is processed. Higher bandwidth feeds more data to the compute units without waiting.
 
@@ -46,7 +46,7 @@ Modern GPU workloads are often limited by how fast data moves, not only by how f
 
 Volta introduces the second generation of NVLink. NVLink connects GPUs to each other at high speed.
 
-Volta increases both the number of links and their speed. This makes multi-GPU systems much more efficient.
+Volta increases both the number of links and their speed: the V100 has six NVLink links with 300 GB/s in total. This makes multi-GPU systems much more efficient.
 
 > [!NOTE]
 > In 2026, large AI systems based on Hopper and Blackwell depend on this idea even more. Volta was one of the first steps in that direction.
@@ -56,7 +56,7 @@ Volta increases both the number of links and their speed. This makes multi-GPU s
 The transistor count shows how much hardware is inside a GPU. The V100 has around 21 billion transistors.
 
 > [!NOTE]
-> Hopper reaches around 80 billion transistors. Blackwell goes further with more complex designs.
+> Hopper reaches around 80 billion transistors in the H100. Blackwell goes further: the B200 puts 208 billion transistors on two dies that work as one GPU.
 
 This growth is not only about size. It reflects new units, new memory systems and more advanced execution models.
 
@@ -102,8 +102,11 @@ Reading the V100 white paper helps you understand why GPUs look the way they do 
 - cycle: one tick of the GPU clock; at 1.5 GHz there are 1.5 billion cycles every second.
 - efficiency: getting more work done with the same hardware, time or power.
 - Ampere / Hopper / Blackwell: the Nvidia architectures after Volta (2020, 2022, 2024), each building on its Tensor Cores.
-- HBM2: the memory Volta uses. It has higher memory bandwidth than earlier generations.
+- HBM2 (High Bandwidth Memory 2): the memory Volta uses, 900 GB/s on the V100, higher than earlier generations.
+- GB/s: gigabytes per second, the unit of memory and link speed.
+- warp scheduler: the unit that picks which group of 32 threads runs next; each Volta SM has four.
+- GPU (Graphics Processing Unit): a processor built to run many simple tasks in parallel.
 - memory bandwidth: how fast data moves to the compute units. Higher bandwidth means less waiting.
 - NVLink: a high-speed link that connects GPUs to each other. Volta has its second generation.
 - multi-GPU: several GPUs in one machine working on one job and constantly exchanging data.
-- transistor count: how much hardware is inside a GPU. The V100 has around 21 billion transistors.
+- transistor count: how much hardware is inside a GPU. The V100 has around 21 billion transistors, the B200 208 billion.

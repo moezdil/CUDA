@@ -1,69 +1,87 @@
-# Compute Capability
+# 09 > Compute Capability
 
-Bu derste compute capability'yi (hesaplama yeteneği), numaralarının nasıl okunduğunu ve hangi özellikleri ve CUDA toolkit sürümlerini kullanabileceğini nasıl belirlediğini göreceksin.
+Bu derste compute capability'nin ne olduğunu, numaralarının nasıl işlediğini ve hangi özellikleri, hangi CUDA (Compute Unified Device Architecture) araç seti sürümlerini kullanabileceğini nasıl belirlediğini göreceksin. Dersin sonunda herhangi bir GPU'ya (Graphics Processing Unit, grafik işlem birimi) bakıp neyi desteklediğini söyleyebileceksin.
 
 ## Compute Capability Nedir
 
-Compute capability (CC), NVIDIA'nın bir GPU'nun özelliklerini ve işlem gücünü tarif ettiği sistemdir. Bazen sürüm numarası olarak da anılır.
+Compute capability (CC), NVIDIA'nın bir GPU'nun özelliklerini tanımlamak için kullandığı sistemdir. Yazılımın değil, donanımın sürüm numarasıdır.
 
-Bir pazarlama puanı ya da benchmark sonucu değildir; bir GPU mimarisinin tam olarak neyi yapıp neyi yapamadığını söyler. Onu tek bir sayıya sığdırılmış bir özellik sayfası gibi düşün.
+Bir pazarlama puanı ya da benchmark değildir. Bir GPU mimarisinin tam olarak neyi yapıp neyi yapamadığını söyler. Onu tek bir sayıya sığmış bir özellik tablosu gibi düşün.
 
 ## Numaralandırma Nasıl Çalışır
 
-Compute capability, 3.0, 5.1 ya da 7.5 gibi bir sürüm numarasıdır. Kural bütün nesiller için aynıdır:
+Compute capability, 7.5, 8.9 ya da 12.0 gibi bir sürüm numarasıdır. Kural bütün nesiller için aynıdır:
 
-- Noktadan önceki sayı büyük bir mimari değişikliğini gösterir
+- Noktadan önceki sayı büyük bir mimari değişikliği gösterir
 - Noktadan sonraki sayı küçük iyileştirmeleri ya da eklemeleri gösterir
 
-Yani 7.x'ten 8.x'e geçmek küçük bir hız artışı değil; yeni donanım birimleri ve yeni yetenekleri olan farklı bir mimari demektir.
+Yani 7.x'ten 8.x'e geçmek sadece bir hız artışı değildir. Yeni donanım birimleri ve yeni yetenekleri olan farklı bir mimari demektir. Somut bir örnek: RTX 4090 CC 8.9, A100 ise CC 8.0'dır. İkisi de 8.x ailesindendir, yani temel tasarımı paylaşırlar; ama 8.9, A100'de olmayan özellikler ekler, örneğin FP8 Tensor Core'ları.
+
+> [!TIP]
+> Makinendeki GPU'nun CC değerini görmek için `nvidia-smi --query-gpu=name,compute_cap --format=csv` komutunu çalıştır. NVIDIA'nın "CUDA GPUs" web sayfası her kartın CC değerini listeler.
 
 ## Mimariler
 
-### Volta → CC 7.x
+### Volta → CC 7.0
 
-Volta, Tensor Core'ları getirdi. Bunlar, yapay zekâda ve derin öğrenmede kullanılan matris işlemlerini hızlandıran özel birimlerdir. Volta'dan önce bu işlemler genel amaçlı CUDA core'larında çalışıyordu; Volta'dan sonra kendilerine ayrılmış donanıma kavuştular.
+Volta, Tensor Core'ları getirdi. Bunlar yapay zekâda (AI, artificial intelligence) ve derin öğrenmede kullanılan matris işlemlerini hızlandıran özel birimlerdir. Volta'dan önce bu işlemler genel amaçlı CUDA çekirdeklerinde çalışıyordu. Volta'dan sonra kendilerine ayrılmış bir donanımları oldu.
 
-### Ampere → CC 8.x
+### Turing ve Ampere → CC 7.5 ve 8.x
 
-Ampere daha güçlü ve daha verimli Tensor Core'lar, daha yüksek bellek bant genişliği ve daha iyi enerji verimliliği getirdi; Volta'daki fikirleri geliştirip genişletti.
+Turing (CC 7.5, RTX 20 serisi), Tensor Core'ları tüketici kartlarına taşıdı. Ampere (A100 için CC 8.0, RTX 30 serisi için 8.6) daha güçlü ve verimli Tensor Core'lar, daha yüksek bellek bant genişliği ve daha iyi enerji verimliliği getirdi. Ada Lovelace (CC 8.9, RTX 40 serisi ve L40S) ise FP8 (8 bit kayan noktalı sayı) desteği ekledi.
 
-### Hopper → CC 9.x
+### Hopper → CC 9.0
 
-Hopper bir başka büyük adımdı: yeni yürütme modelleri getirdi ve yapay zekâ performansını ileri taşıdı.
+Hopper (H100 ve H200) bir başka büyük adımdı. Çok büyük yapay zekâ modelleri için yeni yürütme modelleri getirdi ve yapay zekâ performansını ileri taşıdı.
 
-> [!WARNING]
-> Hopper için CUDA toolkit 11.8 ya da üstü gerekir. Daha eski bir sürüm uyumluluk hatası verir.
+### Blackwell → CC 10.x, 11.0 ve 12.x
 
-### Blackwell → CC 10.0 (B200/GB200) ve 12.0 (RTX PRO / RTX 50 serisi)
+Blackwell, 2026'da sevkiyatı yapılan ana nesildir. 5. nesil Tensor Core'lara ve NVFP4 (NVIDIA 4 bit kayan noktalı sayı) adlı yeni bir duyarlık biçimine sahiptir. NVFP4, büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkarır. FP4 hızlandırması önceki mimarilerde yoktur.
 
-2026 itibarıyla güncel nesil Blackwell. 5. nesil Tensor Core'larla ve NVFP4 adında yeni bir duyarlılık (precision) formatıyla geliyor. NVFP4, büyük model çıkarımında (inference) FP8'e göre throughput'u iki katına çıkarır; daha eski mimarilerde FP4 hızlandırması yoktur. Blackwell için doğrudan (native) derleme yapmak istiyorsan CUDA Toolkit 12.8 gerekir.
+Blackwell, her çip ailesi için bir tane olmak üzere birkaç farklı compute capability ile gelir:
+
+| CC | Ürünler |
+|---|---|
+| 10.0 | B200, GB200 (veri merkezi) |
+| 10.3 | B300, GB300 (Blackwell Ultra, veri merkezi) |
+| 11.0 | Jetson Thor (robotik) |
+| 12.0 | GeForce RTX 50 serisi, RTX PRO Blackwell |
+| 12.1 | GB10 (DGX Spark masaüstü) |
+
+> [!NOTE]
+> Bir sonraki mimari olan Rubin, CC 10.7'dir. B200 ve B300 ile aynı 10.x ailesine aittir. İlk Vera Rubin NVL72 rack'lerinin sevkiyatı Eylül 2026'da başladı.
 
 ## Özellik Desteği
 
-Resmî CUDA belgelerinde, özellikleri compute capability sürümleriyle eşleştiren tablolar var. Bu tablolarda net örüntüler görülür:
+Resmî CUDA dokümantasyonunda özellikleri compute capability sürümleriyle eşleştiren tablolar vardır. Bu tablolarda net örüntüler görülür:
 
 - CC 5.0'daki GPU'lar yarım duyarlıklı (FP16) işlemleri desteklemez
-- Tensor Core'lar ancak CC 7.x ve sonrasında ortaya çıkar
-- FP8 Tensor Core'lar CC 8.9 (Ada Lovelace) ve 9.0 (Hopper) ile geldi
-- NVFP4 için CC 10.0 ya da üstü gerekir
+- Tensor Core'lar sadece CC 7.0'dan itibaren vardır
+- FP8 Tensor Core'lar CC 8.9 (Ada Lovelace) ve 9.0 (Hopper) ile gelir
+- NVFP4, CC 10.0 ya da üstünü gerektirir
 
-Eksik bir özellik tamamen eksiktir, çünkü özellikler donanım birimleridir. GPU'nda Tensor Core yoksa onları kullanamazsın; yazılımla bir çözüm yolu da emülasyon da yoktur. Donanımda o birim ya vardır ya yoktur.
+Eksik bir donanım özelliği sonradan eklenemez. GPU'nda Tensor Core yoksa onları kullanamazsın. Yazılım bazen eksik bir birimi taklit edebilir (emülasyon), ama bu çok daha yavaştır ve çoğu Tensor Core özelliği için böyle bir yol yoktur. Donanımda ya o birim vardır ya da yoktur.
 
-Yani performansa duyarlı CUDA kodu yazmadan önce kendine "GPU'm ihtiyacım olanı destekliyor mu?" diye sor. Bu soru, "GPU'm yeterince hızlı mı?" sorusundan önce gelir.
+Bu yüzden performansa duyarlı CUDA kodu yazmadan önce "GPU'm ihtiyacım olanı destekliyor mu?" diye sor. Bu soru, "GPU'm yeterince hızlı mı?" sorusundan önce gelir.
 
 ## Yazılım Uyumluluğu
 
-Compute capability, hangi CUDA toolkit sürümlerini kullanabileceğini de belirler. Daha yüksek compute capability daha yeni toolkit'leri kullanmana izin verir; daha yeni toolkit'ler de daha fazla özellik ve daha iyi optimizasyon getirir.
+Compute capability, hangi CUDA araç seti sürümlerini kullanabileceğini de belirler. Yeni bir mimari, onu tanıyan bir araç setine ihtiyaç duyar; eski mimariler de birkaç yıl sonra yeni araç setlerinden çıkarılır.
 
 Bazı örnekler:
 
-- Maxwell (CC 5.x): CUDA 6.5 ya da üstü gerekir
-- Hopper (CC 9.x): CUDA 11.8 ya da üstü gerekir
-- Blackwell (CC 10.0): doğrudan cubin desteği için CUDA 12.8 gerekir
+- Hopper (CC 9.0): CUDA 11.8 ya da üstünü gerektirir
+- Blackwell (CC 10.0 ve 12.0): yerel cubin desteği için CUDA 12.8 ya da üstünü gerektirir
+- Blackwell Ultra (CC 10.3): CUDA 12.9 ya da üstünü gerektirir
+- Rubin (CC 10.7): CUDA 13.4'te destekleniyor
+- Maxwell, Pascal ve Volta (CC 5.x ile 7.0 arası): CUDA 13 bunları hiç desteklemez; onlar için son araç setleri CUDA 12.x'tir
 
-Mimarinin gerektirdiği en düşük sürümün altındaki bir toolkit kesin olarak hata verir: kod ya derlenmez ya da çalışırken hata verir.
+> [!WARNING]
+> CUDA 13 (güncel ana sürüm, Eylül 2026 itibarıyla 13.4) sadece CC 7.5 (Turing) ve üstünü destekler. GTX 1080 (CC 6.1) gibi bir Pascal kartında CUDA 12.x'te kalman gerekir.
 
-İş akışı her zaman aynıdır:
+Mimarin için gereken en düşük sürümün altındaki ya da mimarini artık desteklemeyen bir araç seti kesin bir hata verir. Kod ya derlenmez ya da çalışma zamanında hata verir.
+
+İş akışı hep aynıdır:
 
 1. GPU'nun compute capability değerini bul.
 2. CUDA sürümünü seç.
@@ -73,46 +91,54 @@ Mimarinin gerektirdiği en düşük sürümün altındaki bir toolkit kesin olar
 
 ## Alt Seviye Katman (PTX)
 
-CUDA kodu GPU üzerinde doğrudan çalışmaz; önce PTX'e derlenir. PTX, NVIDIA GPU'ları için bir assembly diline benzeyen, alt seviye bir ara dildir.
+CUDA kodu doğrudan GPU'da çalışmaz. Önce PTX'e (Parallel Thread Execution) derlenir. PTX, NVIDIA GPU'ları için bir assembly dili gibi düşük seviyeli bir ara dildir.
 
-Bazı PTX komutları, ancak belirli bir compute capability'den itibaren bulunan donanım birimlerine ihtiyaç duyar. Warp shuffle fonksiyonları buna bir örnektir.
+Bazı PTX komutları, sadece belirli bir compute capability'den itibaren var olan donanım birimlerine ihtiyaç duyar. Warp shuffle fonksiyonları buna bir örnektir.
 
 > [!NOTE]
-> Warp shuffle fonksiyonları, bir warp'taki thread'lerin paylaşımlı ya da global bellek kullanmadan veri paylaşmasını sağlar. Warp shuffle, CC 3.0'dan (Kepler) beri var.
+> Warp shuffle fonksiyonları, bir warp'taki thread'lerin paylaşımlı bellek ya da global bellek kullanmadan veri paylaşmasını sağlar. Warp shuffle, CC 3.0'dan (Kepler) beri vardır.
 
-GPU'n gereken en düşük seviyenin altındaysa bu komutlar çalışamaz, çünkü onlar için gereken donanım çipte yoktur.
+GPU'n en düşük sürümün altındaysa bu komutlar çalışamaz. Onlar için gereken donanım çipte yoktur.
 
 ## Özet
 
-Aynı kural makine öğrenmesi hatlarında (pipeline), fizik simülasyonlarında ve kendi yazdığın CUDA kernel'larında da geçerlidir. GPU'nun compute capability değeri, donanımın ile kodun arasındaki sözleşmedir.
+Aynı kural makine öğrenmesi hatlarında, fizik simülasyonlarında ve özel CUDA kernel'larında da geçerlidir. GPU'nun compute capability değeri, donanımın ile kodun arasındaki sözleşmedir.
 
-CC numaranı öğren, onu CUDA belgeleriyle karşılaştır, doğru toolkit sürümünü seç ve sonra geliştirmeye başla. Performans ayarı, optimizasyon ve özellik seçimi hep buradan başlar.
+CC numaranı bil. Onu CUDA dokümantasyonuyla karşılaştır. Doğru araç seti sürümünü seç. Sonra derle. Performans ayarı, optimizasyon ve özellik seçimi hep buradan başlar.
 
-> Compute capability sadece bir sürüm numarası değildir; GPU'nun gerçekte neler yapabildiğinin tanımıdır.
+> Compute capability sadece bir sürüm numarası değildir. GPU'nun gerçekte neler yapabildiğinin tanımıdır.
 
 ## Sözlük
 
 - compute capability (CC): NVIDIA'nın, bir GPU mimarisinin neyi yapıp neyi yapamadığını söyleyen sürüm numarası.
+- GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
 - benchmark: hızı ölçen bir test programı; compute capability bir hız puanı değildir.
-- mimari (architecture): bir GPU ailesinin donanım tasarımı; her mimarinin kendi büyük CC numarası vardır.
-- noktadan önceki sayı (major number): büyük bir mimari değişikliğini gösterir, örneğin Ampere için 8, Hopper için 9.
-- noktadan sonraki sayı (minor number): küçük iyileştirmeleri ya da eklemeleri gösterir, örneğin 8.x ailesinde 8.6 ya da 8.9.
-- Tensor Core'lar: yapay zekâ için matris işlemlerini hızlandıran özel birimler; CC 7.x ve sonrasında bulunur.
-- CUDA core: bir NVIDIA GPU'sundaki genel amaçlı aritmetik birimler; çekirdek sayısında sayılanlar bunlardır.
-- toolkit (CUDA Toolkit): NVIDIA'nın nvcc derleyicisini, kütüphaneleri ve araçları içeren paketi; her sürüm belli bir compute capability aralığını destekler.
-- Hopper: Nvidia'nın 2022 veri merkezi mimarisi (H100); CC 9.0.
-- Blackwell: Nvidia'nın güncel mimarisi; B200 gibi veri merkezi çiplerinde CC 10.0, RTX 50 serisi kartlarda 12.0.
-- NVFP4: büyük model çıkarımında FP8'e göre throughput'u iki katına çıkaran bir Blackwell duyarlılık formatı.
-- FP8: 8 bitlik kayan noktalı sayı formatı; FP16'dan daha az hassas ama onu destekleyen Tensor Core'larda iki kat hızlı.
-- çıkarım (inference): eğitilmiş bir yapay zekâ modelini eğitmek yerine ondan cevap almak için çalıştırmak.
+- mimari: bir GPU ailesinin donanım tasarımı; her mimari kendi ana CC numarasını alır.
+- noktadan önceki sayı (ana numara): büyük bir mimari değişikliği gösterir; Ampere için 8, Hopper için 9 gibi.
+- noktadan sonraki sayı (alt numara): küçük iyileştirmeleri ya da eklemeleri gösterir; 8.x ailesinde 8.6 ya da 8.9 gibi.
+- `nvidia-smi`: NVIDIA'nın komut satırı aracı; `--query-gpu=compute_cap` ile her GPU'nun CC değerini yazdırır.
+- Tensor Core: yapay zekâ için matris işlemlerini hızlandıran özel birimler; CC 7.0'dan itibaren vardır.
+- CUDA çekirdekleri: bir NVIDIA GPU'sunun genel amaçlı aritmetik birimleri; çekirdek sayısında sayılanlar bunlardır.
+- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitilmesi büyük ölçüde dev matris hesabıdır.
+- Turing: NVIDIA'nın 2018 mimarisi (RTX 20 serisi), CC 7.5; CUDA 13'ün desteklediği en eski mimari.
+- Ada Lovelace: NVIDIA'nın 2022 mimarisi (RTX 40 serisi, L40S), CC 8.9.
+- Hopper: NVIDIA'nın 2022 veri merkezi mimarisi (H100, H200), CC 9.0.
+- Blackwell: NVIDIA'nın 2026'daki ana mimarisi; farklı çipleri için CC 10.0, 10.3, 11.0, 12.0 ve 12.1.
+- Blackwell Ultra: B300 ve GB300; veri merkezleri için geliştirilmiş Blackwell, CC 10.3.
+- Rubin: Blackwell'den sonraki mimari, CC 10.7; Eylül 2026'dan beri veri merkezi rack'lerinde sevk ediliyor.
+- NVFP4 (NVIDIA 4 bit kayan noktalı sayı): büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkaran Blackwell duyarlık biçimi.
+- FP8 (8 bit kayan noktalı sayı): FP16'dan daha az hassas, ama onu destekleyen Tensor Core'larda iki kat hızlı bir sayı biçimi.
+- çıkarım (inference): eğitilmiş bir yapay zekâ modelini cevap almak için çalıştırmak; model eğitiminin tersi.
 - FP16: yarım duyarlıklı işlemler; CC 5.0'daki GPU'lar bunları desteklemez.
-- emülasyon (emulation): eksik donanımı yazılımla taklit etmek; genelde çok daha yavaştır ya da hiç mümkün değildir.
-- Maxwell: Nvidia'nın 2014 mimarisi; CC 5.x.
-- cubin: belirli bir compute capability için derlenmiş GPU ikili dosyası; PTX ise daha yeni GPU'lar için yeniden derlenebilir.
-- çalışırken (runtime): programın çalıştığı an; derleme zamanının karşıtı.
-- PTX: alt seviye bir ara dil, NVIDIA GPU'ları için assembly gibi; CUDA kodu önce buna derlenir.
-- assembly dili (assembly language): işlemcinin çalıştırdığı temel komutların okunabilir hâli; her satırda bir komut.
+- emülasyon: eksik donanımı yazılımla taklit etmek; genelde çok daha yavaştır ya da hiç mümkün değildir.
+- araç seti (CUDA Toolkit): nvcc derleyicisini, kütüphaneleri ve araçları içeren NVIDIA paketi; her sürüm belirli bir compute capability aralığını destekler.
+- CUDA 13: güncel ana CUDA sürümü; sadece CC 7.5 ve üstünü destekler.
+- Maxwell / Pascal / Volta: CUDA 13'ün artık desteklemediği 2014, 2016 ve 2017 NVIDIA mimarileri (CC 5.x ile 7.0 arası).
+- cubin: tek bir compute capability için derlenmiş GPU ikili dosyası; daha yeni GPU'lar için yeniden derlenebilen PTX'in aksine.
+- çalışma zamanı (runtime): programın çalıştığı an; derleme zamanının tersi.
+- PTX (Parallel Thread Execution): NVIDIA GPU'ları için assembly gibi düşük seviyeli bir ara dil; CUDA kodu önce buna derlenir.
+- assembly dili: bir işlemcinin çalıştırdığı temel komutların insanın okuyabileceği biçimi; her komut bir satır.
 - warp shuffle: bir warp'taki thread'lerin paylaşımlı ya da global belleği kullanmadan veri paylaşmasını sağlayan fonksiyonlar.
 - warp: aynı komutu birlikte çalıştıran 32 thread'lik grup.
-- global bellek (global memory): GPU'nun ana belleği (VRAM); her thread erişebilir ama paylaşımlı bellekten çok daha yavaştır.
-- kernel: GPU üzerinde çalışan, CPU'daki koddan başlatılan fonksiyon.
+- global bellek: GPU'nun ana belleği (VRAM); her thread görür, ama paylaşımlı bellekten çok daha yavaştır.
+- kernel: GPU'da çalışan, CPU'daki koddan başlatılan fonksiyon.

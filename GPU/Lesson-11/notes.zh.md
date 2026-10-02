@@ -1,6 +1,6 @@
-# 阅读 Volta 白皮书
+# 11 > 阅读 Volta 白皮书
 
-这一课带你通读 V100 白皮书，看看 Volta 改变了什么，以及这些改变为什么对今天的 GPU 依然重要。
+这一课带你通读 V100 白皮书，看看 Volta 改变了什么，以及这些改变为什么对今天的 GPU（Graphics Processing Unit，图形处理器）依然重要。
 
 ## 为什么要读一份真实的白皮书
 
@@ -10,19 +10,19 @@
 
 不要一上来就钻进图表或数字里。先看“Key Features”（关键特性）这一部分。它很短，能告诉你这个架构想做什么。
 
-Volta 的重点很明确：这个架构是为人工智能打造的。这是用途上的转变，而不只是比上一代有所改进。
+Volta 的重点很明确：这个架构是为人工智能（AI，artificial intelligence）打造的。这是用途上的转变，而不只是比上一代有所改进。
 
 ## Tensor Core
 
 Volta 最重要的变化就是 Tensor Core。
 
-在 Volta 之前，GPU 用通用的 CUDA 核心来执行矩阵运算。这样可行，但效率不高。Volta 为矩阵运算配备了专用硬件。
+在 Volta 之前，GPU 用通用的 CUDA 核心来执行矩阵运算。这样可行，但效率不高。Volta 为矩阵运算配备了专用硬件：V100 有 640 个 Tensor Core，80 个 SM 中每个各 8 个。
 
 从这时起，GPU 不再只是通用计算设备，而是从底层开始就为 AI 工作负载而设计。
 
 ## 流式多处理器（SM）
 
-流式多处理器（Streaming Multiprocessor，SM）是 GPU 的核心组成单元。Volta 重新设计了 SM。
+流式多处理器（Streaming Multiprocessor，SM）是 GPU 的核心组成单元。Volta 重新设计了 SM，把它分成四个处理块，每块都有自己的线程束调度器。
 
 一项关键改进是，不同类型的运算可以同时执行。在 Pascal 中，整数运算和浮点运算共用一条执行通路，只能轮流进行；在 Volta 中，它们可以并行执行。
 
@@ -38,7 +38,7 @@ Volta 最重要的变化就是 Tensor Core。
 
 ## 显存
 
-Volta 使用 HBM2 显存，它的显存带宽比前几代更高。
+Volta 使用 HBM2（High Bandwidth Memory 2）显存：V100 有 16 或 32 GB，显存带宽 900 GB/s，比前几代更高。
 
 现代 GPU 工作负载的瓶颈常常在于数据搬运的速度，而不只是处理的速度。带宽越高，就能给计算单元送去更多数据，让它们不必等待。
 
@@ -46,7 +46,7 @@ Volta 使用 HBM2 显存，它的显存带宽比前几代更高。
 
 Volta 引入了第二代 NVLink。NVLink 让 GPU 之间高速互联。
 
-Volta 同时提高了链路的数量和速度，让多 GPU 系统的效率大大提升。
+Volta 同时提高了链路的数量和速度：V100 有六条 NVLink 链路，总带宽 300 GB/s，让多 GPU 系统的效率大大提升。
 
 > [!NOTE]
 > 到了 2026 年，基于 Hopper 和 Blackwell 的大型 AI 系统更加依赖这一思路。Volta 是朝这个方向迈出的最早几步之一。
@@ -56,7 +56,7 @@ Volta 同时提高了链路的数量和速度，让多 GPU 系统的效率大大
 晶体管数量能说明一块 GPU 里有多少硬件。V100 大约有 210 亿个晶体管。
 
 > [!NOTE]
-> Hopper 达到了大约 800 亿个晶体管。Blackwell 的设计更复杂，走得更远。
+> Hopper 的 H100 达到了大约 800 亿个晶体管。Blackwell 走得更远：B200 在两个协同工作、如同一块 GPU 的裸片上集成了 2080 亿个晶体管。
 
 这种增长不只是尺寸变大，它反映的是新的单元、新的显存系统和更先进的执行模型。
 
@@ -102,8 +102,11 @@ Volta 同时提高了链路的数量和速度，让多 GPU 系统的效率大大
 - 周期（cycle）：GPU 时钟的一次跳动；在 1.5 GHz 下，每秒有 15 亿个周期。
 - 效率（efficiency）：用同样的硬件、时间或功耗完成更多工作。
 - Ampere / Hopper / Blackwell：Volta 之后的 Nvidia 架构（2020、2022、2024），都在它的 Tensor Core 基础上继续发展。
-- HBM2：Volta 使用的显存，显存带宽比前几代更高。
+- HBM2（High Bandwidth Memory 2）：Volta 使用的显存，V100 上为 900 GB/s，比前几代更高。
+- GB/s：每秒千兆字节，显存和链路速度的单位。
+- 线程束调度器（warp scheduler）：挑选下一个运行的 32 线程组的单元；每个 Volta SM 有四个。
+- GPU（Graphics Processing Unit）：为并行运行大量简单任务而设计的处理器。
 - 显存带宽（memory bandwidth）：数据送到计算单元的速度。带宽越高，等待越少。
 - NVLink：让 GPU 之间互联的高速链路。Volta 用的是第二代。
 - 多 GPU（multi-GPU）：一台机器里的几个 GPU 一起处理同一个任务，并不断交换数据。
-- 晶体管数量（transistor count）：一块 GPU 里有多少硬件。V100 大约有 210 亿个晶体管。
+- 晶体管数量（transistor count）：一块 GPU 里有多少硬件。V100 大约有 210 亿个晶体管，B200 有 2080 亿个。

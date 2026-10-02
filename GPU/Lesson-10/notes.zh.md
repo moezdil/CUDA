@@ -1,6 +1,6 @@
-# 阅读 GPU 白皮书
+# 10 > 阅读 GPU 白皮书
 
-这一课讲什么是 GPU 白皮书、怎样找到白皮书，以及怎样读懂它。
+这一课讲什么是 GPU（Graphics Processing Unit，图形处理器）白皮书、怎样找到白皮书，以及怎样读懂它。想知道新一代 GPU 到底改变了什么，白皮书是最好的资料。
 
 ## 什么是白皮书
 
@@ -8,7 +8,7 @@
 
 ## 找到白皮书
 
-用芯片名称加上“white paper”搜索，例如：`GA100 white paper` 或 `H100 white paper`
+用芯片名称加上“white paper”搜索，例如：`GA100 white paper` 或 `H100 white paper`。对于最新的架构，NVIDIA 常把这份文档叫作技术简报（technical brief），比如“NVIDIA Blackwell Architecture Technical Brief”，所以也要搜这个名字。
 
 > [!TIP]
 > 并非每个搜索结果都有用。博客文章、总结和对比能帮上一些忙，但还不够。一定要找官方的 PDF。
@@ -24,10 +24,12 @@ NVIDIA 的白皮书结构很统一。每个新架构通常都会拿上一代架�
 截至 2026 年，GPU 架构的发展方向已经很清晰：
 
 - Pascal 基本上还是一个通用计算架构。
-- Volta 引入了 Tensor Core。GPU 开始明确地针对 AI 工作负载做优化。
+- Volta 引入了 Tensor Core。GPU 开始明确地针对人工智能（AI，artificial intelligence）工作负载做优化。
 - Ampere 在此基础上进一步扩展，带来更高的吞吐量、更好的能效，以及稀疏性支持等功能。
-- Hopper 为大规模 AI 系统加入了 FP8 和新的执行模型。
-- Blackwell 加入了 NVFP4 这样的新格式，把超低精度直接做进硬件。这改变了大模型部署和扩展的方式。
+- Hopper 为大规模 AI 系统加入了 FP8（8 位浮点）和新的执行模型。
+- Blackwell 加入了 NVFP4（NVIDIA 4 位浮点）这样的新格式，把超低精度直接做进硬件。这改变了大模型部署和扩展的方式。
+- Blackwell Ultra（B300，2025 年）带来更大的显存，每块 GPU 288 GB HBM3e（High Bandwidth Memory），以及更高的 NVFP4 吞吐量。
+- 接下来是 Rubin。搭载 Rubin GPU 和 HBM4 显存的首批机架已于 2026 年 9 月开始出货。
 
 GPU 不再只是计算设备，而是 AI 系统的基础设施。
 
@@ -72,6 +74,7 @@ GPU 不再只是计算设备，而是 AI 系统的基础设施。
 ## 术语表
 
 - 白皮书（white paper）：官方技术文档，展示 GPU 实际上是怎么构建的，没有营销内容。
+- GPU（Graphics Processing Unit）：为并行运行大量简单任务而设计的处理器。
 - 架构（architecture）：一个 GPU 系列的硬件设计，比如 Ampere 或 Hopper；每种架构都有自己的白皮书。
 - 芯片名称（chip name）：GPU 里那块硅片的名字，也就是你要搜索的名字，比如 GA100。
 - GA100：A100 里的 Ampere 芯片。
@@ -80,8 +83,13 @@ GPU 不再只是计算设备，而是 AI 系统的基础设施。
 - Tensor Core：Volta 引入的硬件单元，让 GPU 开始明确地针对 AI 工作负载做优化。
 - 吞吐量（throughput）：GPU 在一定时间内能完成多少工作。
 - 稀疏性支持（sparsity support）：Ampere 的一项功能，按固定的“4 个里 2 个”模式跳过零值，让这类数据的 Tensor Core 吞吐量翻倍。
-- FP8：Hopper 为大规模 AI 系统加入的一种 8 位浮点格式。
-- NVFP4：Blackwell 的一种格式，把超低精度直接做进硬件。
+- FP8（8 位浮点）：Hopper 为大规模 AI 系统加入的一种数字格式。
+- NVFP4（NVIDIA 4 位浮点）：Blackwell 的一种格式，把超低精度直接做进硬件。
+- Blackwell Ultra：B300 和 GB300，每块 GPU 配 288 GB HBM3e 的升级版 Blackwell。
+- HBM3e（High Bandwidth Memory）：堆叠在数据中心 GPU 芯片旁边的超高速显存。
+- Rubin：Blackwell 之后的架构，自 2026 年 9 月起随数据中心机架出货。
+- 技术简报（technical brief）：NVIDIA 为 Blackwell 等最新 GPU 的架构文档使用的名称。
+- 人工智能（AI，artificial intelligence）：从数据中学习的软件；训练它主要是海量的矩阵运算。
 - 精度（precision）：每个数字用多少位来存；位数越少，运算越快、越省显存，但越不精确。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 的核心，把 CUDA 核心、Tensor Core、调度和显存访问集中在一起。
 - CUDA 核心（CUDA cores）：每个 SM 里的通用算术单元。
