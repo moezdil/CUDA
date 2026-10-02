@@ -22,7 +22,7 @@ CLion sits on top of the toolkit. It does not replace or hide it. It gives you a
 
 <toolchain-stack></toolchain-stack>
 
-CMake knows CUDA as a language. A minimal `CMakeLists.txt` for one CUDA file looks like this:
+CMake knows CUDA as a language. A minimal `CMakeLists.txt` for one CUDA file looks like this.
 
 ```cmake
 cmake_minimum_required(VERSION 3.24)
@@ -31,7 +31,7 @@ set(CMAKE_CUDA_ARCHITECTURES 89)
 add_executable(hello hello.cu)
 ```
 
-`CMAKE_CUDA_ARCHITECTURES 89` is the same target as `nvcc -arch=sm_89`: compute capability 8.9, the L40S used in these lessons. For a Hopper H100 you would write `90`, for a Blackwell B200 `100`.
+`CMAKE_CUDA_ARCHITECTURES 89` is the same target as `nvcc -arch=sm_89`, which is compute capability 8.9, the L40S used in these lessons. For a Hopper H100 you would write `90`, for a Blackwell B200 `100`.
 
 ## Visual Studio on Windows
 
@@ -51,7 +51,7 @@ Each CUDA release has a driver branch. A driver from branch 580 or newer runs pr
 
 ## The workflow
 
-With everything in place, the workflow is simple:
+With everything in place, the workflow is simple.
 
 - You open CLion and write your code.
 - You build with CMake.
@@ -70,7 +70,7 @@ CUDA development is not about choosing an editor. It is about understanding the 
 - CLion: a JetBrains IDE for C, C++ and CUDA. It sits on top of the CUDA Toolkit and is free for non-commercial use.
 - IDE (Integrated Development Environment): one app that combines an editor, build tools and a debugger.
 - GPU (Graphics Processing Unit): the processor with thousands of small cores that CUDA programs run on.
-- architecture: the hardware design of a GPU family, such as Hopper or Blackwell; newer ones need newer toolkits and drivers.
+- architecture: the hardware design of a GPU family, such as Hopper or Blackwell. Newer ones need newer toolkits and drivers.
 - Linux: the operating system that most GPU servers run, and the best supported platform for CUDA.
 - remote GPU: a GPU in another machine, such as a cloud server, that you use over the network.
 - CMake (Cross-platform Make): a tool that describes how to build a project. It is not tied to one environment.
@@ -78,17 +78,17 @@ CUDA development is not about choosing an editor. It is about understanding the 
 - `CMAKE_CUDA_ARCHITECTURES`: the CMake setting for the compute capability to compile for, such as 89 for `sm_89`.
 - compute capability: the version number of a GPU architecture, such as 8.9 for the L40S or 9.0 for the H100.
 - build: turning source files into a program you can run, by compiling and linking them.
-- compiler: a program that turns source code into code a processor can run; for CUDA it is `nvcc`.
+- compiler: a program that turns source code into code a processor can run. For CUDA it is `nvcc`.
 - toolkit (CUDA Toolkit): the base layer with the compiler, the runtime and the libraries that talk to the GPU.
 - runtime: the CUDA library your program calls while it runs, to manage GPU memory and launch work on the GPU.
 - libraries: ready-made, tested code that ships with the toolkit, such as cuBLAS for matrix math.
 - Hopper / Blackwell: NVIDIA's architectures from 2022 and 2024, which need recent CUDA versions for their new features.
 - precision: how many bits each number uses, such as FP32, FP16 or FP8.
-- CUDA version: the release number of the toolkit, such as 13.4; it decides which GPUs and features you can target.
+- CUDA version: the release number of the toolkit, such as 13.4. It decides which GPUs and features you can target.
 - toolchain: the chain of tools that builds your code. CLion calls CMake, and CMake calls the CUDA compiler.
-- Visual Studio: Microsoft's IDE for Windows; CUDA needs it installed because of its C++ compiler.
-- MSVC (Microsoft Visual C++): the C++ compiler from Visual Studio; on Windows, `nvcc` hands the CPU (Central Processing Unit) part of your code to it.
+- Visual Studio: Microsoft's IDE for Windows. CUDA needs it installed because of its C++ compiler.
+- MSVC (Microsoft Visual C++): the C++ compiler from Visual Studio. On Windows, `nvcc` hands the CPU (Central Processing Unit) part of your code to it.
 - dependency: something another program needs to have installed in order to work.
-- driver (GPU driver): the software that lets the operating system talk to the GPU; installed separately from the toolkit.
-- driver branch: a driver release line such as 580 or 615; each CUDA release needs a minimum branch.
+- driver (GPU driver): the software that lets the operating system talk to the GPU, installed separately from the toolkit.
+- driver branch: a driver release line such as 580 or 615. Each CUDA release needs a minimum branch.
 - production: the real environment where finished software runs for its users.

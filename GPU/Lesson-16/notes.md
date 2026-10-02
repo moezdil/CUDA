@@ -12,7 +12,7 @@ WSL runs a real Linux environment inside Windows. It is not an emulation layer l
 
 ## Install WSL
 
-Open a terminal on Windows, such as PowerShell, and run:
+Open a terminal on Windows, such as PowerShell, and run this command.
 
 ```bash
 wsl --install
@@ -22,7 +22,7 @@ wsl --update
 - `wsl --install` turns on WSL and installs Ubuntu, the default distribution.
 - `wsl --update` brings the WSL kernel to the newest version.
 
-Always use WSL2. WSL1 has lower compatibility and no GPU support at all. New installs use WSL2 by default. To check, run `wsl -l -v`: the VERSION column must show 2 for your distribution.
+Always use WSL2. WSL1 has lower compatibility and no GPU support at all. New installs use WSL2 by default. To check, run `wsl -l -v`. The VERSION column must show 2 for your distribution.
 
 ## First start
 
@@ -45,7 +45,7 @@ Inside WSL, you install the Linux version of the CUDA Toolkit, not the Windows o
 
 ## Limits of WSL
 
-WSL is a serious development environment. Still, a few things work differently from native Linux:
+WSL is a serious development environment. Still, a few things work differently from native Linux.
 
 - GPU support needs a GeForce or RTX card in WDDM mode, the normal mode for a desktop card. Data center GPUs are not supported.
 - Unified memory is limited. The CPU and the GPU cannot access the same managed memory at the same time.
@@ -54,7 +54,7 @@ WSL is a serious development environment. Still, a few things work differently f
 Also check that your GPU fits CUDA 13. WSL itself works with Pascal and newer, but CUDA 13 needs compute capability 7.5 or higher. A GeForce GTX 1080 is compute capability 6.1, and 6.1 is below 7.5, so CUDA 13 cannot build code for it. A GeForce RTX 2060 is compute capability 7.5, so it works.
 
 > [!TIP]
-> When something breaks, check the layers from the bottom up: the Windows driver, then WSL itself (`wsl --update`), then the Linux distribution, then the CUDA Toolkit.
+> When something breaks, check the layers from the bottom up. Start with the Windows driver, then WSL itself (`wsl --update`), then the Linux distribution, then the CUDA Toolkit.
 
 ## Summary
 
@@ -65,33 +65,33 @@ WSL is a practical bridge. You stay in Windows and use Linux-based GPU tools in 
 
 ## Glossary
 
-- Linux: a free, open-source operating system; most GPU servers and CUDA tools are built around it.
+- Linux: a free, open-source operating system. Most GPU servers and CUDA tools are built around it.
 - GPU (Graphics Processing Unit): the processor with thousands of small cores that CUDA programs run on.
 - ecosystem: all the tools, libraries, docs and drivers that grow around a platform such as the GPU.
-- AI (Artificial Intelligence): software that learns from data, such as language models; most of it is trained on GPUs.
+- AI (Artificial Intelligence): software that learns from data, such as language models. Most of it is trained on GPUs.
 - HPC (High-Performance Computing): many powerful processors working together on big problems, such as weather or physics simulations.
 - WSL (Windows Subsystem for Linux): runs a real Linux environment inside Windows.
 - emulation: software that imitates another system instead of running it for real, which is usually slower and less compatible.
 - WSL2 (Windows Subsystem for Linux 2): the WSL version that runs a real Linux kernel. It is the base for CUDA on Windows.
-- Linux kernel: the core of the Linux operating system that manages memory, processes and hardware; not the same as a CUDA kernel.
+- Linux kernel: the core of the Linux operating system that manages memory, processes and hardware. It is not the same as a CUDA kernel.
 - virtual machine: a complete computer simulated in software, with its own operating system, running on a real machine.
 - terminal: a text window where you type commands, such as PowerShell or Windows Terminal.
 - `wsl --install`: the command you run in a Windows terminal to install WSL and Ubuntu.
 - `wsl --update`: updates the WSL kernel to the newest version.
 - WSL1 (Windows Subsystem for Linux 1): the older WSL version with lower compatibility and no GPU support.
-- Linux distribution: a separate Linux environment with its own users, file system and package manager; Ubuntu is the usual choice for CUDA.
-- file system: the way an operating system stores and organizes files; a WSL distribution has its own, separate from the Windows drives.
+- Linux distribution: a separate Linux environment with its own users, file system and package manager. Ubuntu is the usual choice for CUDA.
+- file system: the way an operating system stores and organizes files. A WSL distribution has its own, separate from the Windows drives.
 - package manager: a tool that installs and updates software from online lists, such as apt on Ubuntu.
-- driver (GPU driver): the software that lets the operating system talk to the GPU; for WSL it is installed only on the Windows side.
+- driver (GPU driver): the software that lets the operating system talk to the GPU. For WSL it is installed only on the Windows side.
 - native Linux: Linux installed directly on the machine, not running inside another system.
 - host: the Windows system WSL runs on. WSL uses its GPU driver and needs no NVIDIA driver of its own.
-- `libcuda.so`: the CUDA driver library; inside WSL it is mapped in from the Windows driver.
-- CUDA Toolkit: NVIDIA's compiler, libraries and tools; inside WSL you install the Linux version from the WSL-Ubuntu repository.
-- WSL-Ubuntu repository: NVIDIA's package source for CUDA in WSL; its packages hold the toolkit without a driver.
-- WDDM (Windows Display Driver Model): the normal Windows driver mode for desktop graphics cards; WSL GPU support needs it.
-- unified memory: memory that the CPU and the GPU share through one pointer; only partly supported in WSL.
+- `libcuda.so`: the CUDA driver library. Inside WSL it is mapped in from the Windows driver.
+- CUDA Toolkit: NVIDIA's compiler, libraries and tools. Inside WSL you install the Linux version from the WSL-Ubuntu repository.
+- WSL-Ubuntu repository: NVIDIA's package source for CUDA in WSL. Its packages hold the toolkit without a driver.
+- WDDM (Windows Display Driver Model): the normal Windows driver mode for desktop graphics cards. WSL GPU support needs it.
+- unified memory: memory that the CPU and the GPU share through one pointer, only partly supported in WSL.
 - CPU (Central Processing Unit): the main processor of the computer.
 - `nvidia-smi`: NVIDIA's command line tool that shows the GPU, the driver and the memory use.
-- compute capability: the version number of a GPU architecture, such as 7.5 for Turing; CUDA 13 needs 7.5 or higher.
-- Pascal: NVIDIA's 2016 architecture, such as the GTX 1080; WSL runs it, CUDA 13 cannot build for it.
+- compute capability: the version number of a GPU architecture, such as 7.5 for Turing. CUDA 13 needs 7.5 or higher.
+- Pascal: NVIDIA's 2016 architecture, such as the GTX 1080. WSL runs it, but CUDA 13 cannot build for it.
 - production: the real systems where finished software runs for its users.

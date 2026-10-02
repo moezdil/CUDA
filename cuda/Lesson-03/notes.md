@@ -50,7 +50,7 @@ The warp size of 32 has not changed since the first CUDA GPUs (CC 1.0).
 
 ## Warps and Threads per SM
 
-An SM is the physical processor that blocks run on ([Lesson 02](../Lesson-02/notes.md)). The data center GPUs in the table hold up to 64 active warps per SM, which is 64 x 32 = 2048 threads. The L40S is different: CC 8.9 allows 48 warps per SM, which is 48 x 32 = 1536 threads.
+An SM is the physical processor that blocks run on ([Lesson 02](../Lesson-02/notes.md)). The data center GPUs in the table hold up to 64 active warps per SM, which is 64 x 32 = 2048 threads. The L40S is different. CC 8.9 allows 48 warps per SM, which is 48 x 32 = 1536 threads.
 
 When some warps wait for memory, the warp scheduler can pick other warps. More active warps keep the execution units busy, because there is more often a warp that is ready to run.
 
@@ -69,13 +69,13 @@ FP32 is the usual `float` type. Pascal, Volta, and Ampere data center GPUs have 
 
 ## Shared Memory per SM
 
-Shared memory is fast memory inside each SM. All threads in a block can use it. It grew over the generations:
+Shared memory is fast memory inside each SM. All threads in a block can use it. It grew over the generations.
 
-- Pascal: 64 KB
-- Volta: up to 96 KB
-- Ampere (A100): up to 164 KB
-- Ada Lovelace (L40S): up to 100 KB
-- Hopper and Blackwell: up to 228 KB
+- 64 KB on Pascal
+- up to 96 KB on Volta
+- up to 164 KB on Ampere (A100)
+- up to 100 KB on Ada Lovelace (L40S)
+- up to 228 KB on Hopper and Blackwell
 
 More shared memory lets a kernel keep more data on-chip instead of going to global memory.
 
@@ -92,7 +92,7 @@ More shared memory lets a kernel keep more data on-chip instead of going to glob
 - HBM3e (High Bandwidth Memory 3e): a newer generation of HBM, the fast stacked memory on data center GPUs such as the B200.
 - major version: the first number of the CC, such as 8 in 8.9. A new major version means a new architecture generation.
 - minor version: the second number of the CC, such as 9 in 8.9. It marks a revision inside the same generation.
-- architecture: the design of one GPU generation. NVIDIA names them after scientists: Pascal, Volta, Ampere, Ada Lovelace, Hopper, Blackwell.
+- architecture: the design of one GPU generation. NVIDIA names them after scientists, for example Pascal, Volta, Ampere, Ada Lovelace, Hopper, Blackwell.
 - `nvidia-smi`: NVIDIA's command-line tool that comes with the driver. It lists your GPUs, and with `--query-gpu=compute_cap` it prints their compute capability.
 - warp size: the number of threads in a warp, 32 on every NVIDIA GPU so far. A kernel can read it as `warpSize`.
 - warp scheduler: the unit in each SM that picks a ready warp to run. While one warp waits for memory, it switches to another.

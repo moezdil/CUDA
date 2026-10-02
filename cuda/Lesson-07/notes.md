@@ -7,31 +7,31 @@
 
 ## The CUDA Hierarchy
 
-The levels in CUDA are the grid, the blocks inside it, the warps inside each block, and the threads inside each warp:
+The levels in CUDA are the grid, the blocks inside it, the warps inside each block, and the threads inside each warp.
 
 <cuda-hierarchy warps></cuda-hierarchy>
 
 You choose the number of blocks and threads per block with `<<<num_blocks, threads_per_block>>>` (see [Lesson 01](../Lesson-01/notes.md) and [Lesson 02](../Lesson-02/notes.md)). The warp size is always 32 on NVIDIA GPUs. It is fixed in the hardware and cannot be changed. The warp is the real scheduling unit on the GPU. The GPU does not run threads one by one. It runs them in groups of 32.
 
 > [!NOTE]
-> Warp limits depend on the hardware. These values were measured on the L40S with `cudaGetDeviceProperties`:
+> Warp limits depend on the hardware. These values were measured on the L40S with `cudaGetDeviceProperties`.
 >
-> - Max warps per block: 32 (max 1024 threads / 32, applies to all GPUs)
-> - Max concurrent warps per SM: 48, which is 48 × 32 = 1536 threads
-> - SM count: 142
-> - Max concurrent warps across the entire GPU: 142 × 48 = 6,816
+> - A block holds at most 32 warps (max 1024 threads / 32, applies to all GPUs)
+> - An SM runs at most 48 warps at the same time, which is 48 × 32 = 1536 threads
+> - The GPU has 142 SMs
+> - The entire GPU runs at most 142 × 48 = 6,816 warps at the same time
 >
 > The L40S has compute capability 8.9. GPUs with CC 8.6, 8.9 and 12.0 hold 48 warps per SM. Data center GPUs such as the A100 (CC 8.0) and H100 (CC 9.0) hold 64 warps, which is 2048 threads, per SM ([Lesson 03](../Lesson-03/notes.md)).
 
 ## `warp_id` Is Not a Built-in Variable
 
-`blockIdx.x` and `threadIdx.x` are filled in by the GPU for each thread. You only read them. There is no such variable for the warp ID. You calculate it yourself inside the kernel:
+`blockIdx.x` and `threadIdx.x` are filled in by the GPU for each thread. You only read them. There is no such variable for the warp ID. You calculate it yourself inside the kernel.
 
 ```c
 int warp_id = threadIdx.x / 32;
 ```
 
-Both sides are whole numbers, so `/` is integer division and the remainder is dropped. That is why every group of 32 threads gets the same result. In a block of 128 threads:
+Both sides are whole numbers, so `/` is integer division and the remainder is dropped. That is why every group of 32 threads gets the same result. A block of 128 threads splits like this.
 
 - threads 0-31 → warp 0
 - threads 32-63 → warp 1
@@ -42,7 +42,7 @@ That is 128 / 32 = 4 warps.
 
 ## What Happens with 1024 Threads
 
-With 1 block of 1024 threads (`<<<1, 1024>>>`), warp IDs go from 0 to 31. This is correct, because 1024 / 32 = 32 warps. Each warp ID has exactly 32 threads. The program printed this (shortened):
+With 1 block of 1024 threads (`<<<1, 1024>>>`), warp IDs go from 0 to 31. This is correct, because 1024 / 32 = 32 warps. Each warp ID has exactly 32 threads. The program printed this, shortened.
 
 ```
 Block ID: 0 --- Thread ID:    0 --- Warp ID:  0
@@ -58,7 +58,7 @@ Block ID: 0 --- Thread ID: 1023 --- Warp ID: 31
 
 Each `...` stands for lines that were left out. The block ID is always 0 because there is only one block. The warp ID changes from 0 to 1 between thread 31 and thread 32, because 32 / 32 = 1. The last warp starts at thread 992, because 992 / 32 = 31. Thread 1023 is the last thread, and 1023 / 32 is still 31.
 
-Checked on the machine: warps 0-31, exactly 32 threads each, 1024 lines in total. This count of output lines per warp ID shows it:
+Checked on the machine, warps 0-31 have exactly 32 threads each, 1024 lines in total. This count of output lines per warp ID shows it.
 
 ```
 32 warp 0
@@ -78,7 +78,7 @@ The warp ID starts at zero in every block. With `<<<2, 64>>>`, each block has 64
 
 ## Lane ID
 
-Each warp has 32 threads. A thread's position inside its warp, from 0 to 31, is its lane ID. You get it with the modulo operator, `threadIdx.x % 32`, which gives the remainder of the division. Division gives the warp, the remainder gives the place inside it:
+Each warp has 32 threads. A thread's position inside its warp, from 0 to 31, is its lane ID. You get it with the modulo operator, `threadIdx.x % 32`, which gives the remainder of the division. Division gives the warp, the remainder gives the place inside it.
 
 | `threadIdx.x` | warp ID (`/ 32`) | lane ID (`% 32`) |
 |---|---|---|
@@ -89,9 +89,9 @@ Each warp has 32 threads. A thread's position inside its warp, from 0 to 31, is 
 | 70 | 2 | 6 |
 | 127 | 3 | 31 |
 
-For thread 70: 70 / 32 = 2 with remainder 6, because 2 × 32 + 6 = 70. Threads 0, 32 and 64 are in different warps but all have lane ID 0. So modulo does not give the warp ID. For the warp ID you need division (`/`).
+For thread 70, 70 / 32 = 2 with remainder 6, because 2 × 32 + 6 = 70. Threads 0, 32 and 64 are in different warps but all have lane ID 0. So modulo does not give the warp ID. For the warp ID you need division (`/`).
 
-Move the slider to change the block size, and hover a thread to see both numbers:
+Move the slider to change the block size, and hover a thread to see both numbers.
 
 <warp-lane></warp-lane>
 
@@ -122,14 +122,14 @@ int main()
 }
 ```
 
-- `#include "cuda_runtime.h"`: header for CUDA functions.
-- `#include "device_launch_parameters.h"`: defines GPU built-in variables like `blockIdx` and `threadIdx`.
-- `#include <stdio.h>`: standard C header for `printf`.
-- `__global__`: marks the function as a kernel. The CPU calls it and the GPU runs it.
-- `int warp_id = threadIdx.x / 32;`: each thread computes its own warp ID. Threads 0-31 → 0, threads 32-63 → 1, and so on.
-- `printf(...)`: each thread prints its block ID, thread ID, and warp ID.
-- `test01<<<1, 128>>>();`: launches the kernel with 1 block of 128 threads.
-- `cudaDeviceSynchronize();`: makes the CPU wait until all GPU threads finish and the output is written.
+- `#include "cuda_runtime.h"` is the header for CUDA functions.
+- `#include "device_launch_parameters.h"` defines GPU built-in variables like `blockIdx` and `threadIdx`.
+- `#include <stdio.h>` is the standard C header for `printf`.
+- `__global__` marks the function as a kernel. The CPU calls it and the GPU runs it.
+- With `int warp_id = threadIdx.x / 32;` each thread computes its own warp ID. Threads 0-31 → 0, threads 32-63 → 1, and so on.
+- With `printf(...)` each thread prints its block ID, thread ID, and warp ID.
+- `test01<<<1, 128>>>();` launches the kernel with 1 block of 128 threads.
+- `cudaDeviceSynchronize();` makes the CPU wait until all GPU threads finish and the output is written.
 
 #### Code Walkthrough
 
@@ -139,10 +139,10 @@ Step through `warp_ids.cu` in the order you would write it.
 
 1. `1-3 cpu` **Headers.** The CUDA runtime, the built-in variables, and `stdio.h` for `printf`. Computing a warp ID needs no extra header.
 2. `5-6,10 gpu` **The empty kernel.** Write `__global__ void test01()` and its braces. The kernel needs no arguments, because it computes everything from `threadIdx.x`.
-3. `7 gpu` **The warp ID.** There is no built-in warp ID, so compute it: `int warp_id = threadIdx.x / 32;`. Integer division groups the threads by 32. A common mistake is `%` instead of `/`: `threadIdx.x % 32` gives the lane ID, not the warp ID.
+3. `7 gpu` **The warp ID.** There is no built-in warp ID, so compute it with `int warp_id = threadIdx.x / 32;`. Integer division groups the threads by 32. A common mistake is `%` instead of `/`, but `threadIdx.x % 32` gives the lane ID, not the warp ID.
 4. `8-9 gpu` **The print.** Print the block ID, the thread ID and the warp ID. Always print the block ID with the warp ID, because the warp ID restarts in every block.
 5. `12-13,17-18 cpu` **The main function.** Write `main` with `return 0;` at the end. The launch and the wait go in between.
-6. `14-15 cpu` **The launch.** First write the plan as a comment: 128 threads / 32 = 4 warps. Then the launch `<<<1, 128>>>`. A block size that is a multiple of 32 fills every warp.
+6. `14-15 cpu` **The launch.** First write the plan as a comment, 128 threads / 32 = 4 warps. Then the launch `<<<1, 128>>>`. A block size that is a multiple of 32 fills every warp.
 7. `16 cpu` **Wait for the GPU.** Add `cudaDeviceSynchronize();` after the launch. It keeps the program alive until all 128 lines are printed.
 
 </div>
@@ -172,7 +172,7 @@ int main()
 }
 ```
 
-- `test01<<<2, 64>>>();`: launches the kernel with 2 blocks of 64 threads. That is 128 threads and 4 warps in total, split across 2 blocks.
+- `test01<<<2, 64>>>();` launches the kernel with 2 blocks of 64 threads. That is 128 threads and 4 warps in total, split across 2 blocks.
 - All other lines are the same as in `warp_ids.cu`.
 
 #### Code Walkthrough
@@ -190,7 +190,7 @@ int main()
 
 ## Compile and Run
 
-Both files are in the `code/` directory. Compile each one into its own program and run it, so you can compare the two launch configs:
+Both files are in the `code/` directory. Compile each one into its own program and run it, so you can compare the two launch configs.
 
 ```bash
 # 1 block, 128 threads -> 4 warps
@@ -264,7 +264,7 @@ The thread ID only goes up to 63 because each block has 64 threads. Block 1 show
 
 ## Try It
 
-- Launch `test01<<<1, 100>>>()`. 100 is not a multiple of 32, so the last warp is only partly full: warps 0, 1 and 2 have 32 threads each, and warp 3 has only threads 96 to 99. The GPU still schedules a full warp of 32 for it, and 28 lanes stay idle.
+- Launch `test01<<<1, 100>>>()`. 100 is not a multiple of 32, so the last warp is only partly full. Warps 0, 1 and 2 have 32 threads each, and warp 3 has only threads 96 to 99. The GPU still schedules a full warp of 32 for it, and 28 lanes stay idle.
 - Add `int lane_id = threadIdx.x % 32;` to the kernel and print it. Thread 70 should print lane ID 6.
 
 ## Write It Yourself
@@ -319,7 +319,7 @@ int main()
     }
     ```
 
-    Compile and run it with `nvcc -arch=sm_89 -o warp_starts warp_starts.cu` and `./warp_starts`. You should see 6 lines in any order: in each of the 2 blocks, warp 0 starts at thread 0, warp 1 at thread 32 and warp 2 at thread 64.
+    Compile and run it with `nvcc -arch=sm_89 -o warp_starts warp_starts.cu` and `./warp_starts`. You should see 6 lines in any order. In each of the 2 blocks, warp 0 starts at thread 0, warp 1 at thread 32 and warp 2 at thread 64.
 
 ## Glossary
 

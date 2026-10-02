@@ -1,6 +1,6 @@
 # 04 > Built-in Variables
 
-Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The GPU fills them in for each thread at launch, based on the launch configuration. This lesson prints all five from every thread, so you can see which ones change and which stay the same.
+Every kernel has five read-only built-in variables, `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The GPU fills them in for each thread at launch, based on the launch configuration. This lesson prints all five from every thread, so you can see which ones change and which stay the same.
 
 > [!NOTE]
 > All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
@@ -13,7 +13,7 @@ Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `bloc
 
 `blockDim` holds the number of threads per block in each direction. With `<<<2, 4>>>`, `blockDim.x` is 4, and `blockDim.y` and `blockDim.z` are 1. Every thread sees the same `blockDim`.
 
-The global ID formula from [Lesson 02](../Lesson-02/notes.md) uses it: `blockIdx.x * blockDim.x + threadIdx.x`. With `<<<2, 4>>>`, thread 3 in block 1 gets 1 * 4 + 3 = 7, the last of the 8 threads.
+The global ID formula from [Lesson 02](../Lesson-02/notes.md), `blockIdx.x * blockDim.x + threadIdx.x`, uses it. With `<<<2, 4>>>`, thread 3 in block 1 gets 1 * 4 + 3 = 7, the last of the 8 threads.
 
 <global-id></global-id>
 
@@ -36,7 +36,7 @@ The global ID formula from [Lesson 02](../Lesson-02/notes.md) uses it: `blockIdx
 
 ## Hardware Limits
 
-Before running a kernel, the CUDA runtime checks the launch configuration against hardware limits. If any value is too large, the kernel does not launch. These are the limits for compute capability 3.0 and later, from Kepler to Blackwell:
+Before running a kernel, the CUDA runtime checks the launch configuration against hardware limits. If any value is too large, the kernel does not launch. These are the limits for compute capability 3.0 and later, from Kepler to Blackwell.
 
 | Variable      | Dimension    | Max value |
 |---------------|--------------|-----------|
@@ -48,15 +48,15 @@ Before running a kernel, the CUDA runtime checks the launch configuration agains
 | `blockDim.z`  | threads in z | 64        |
 | threads/block | total        | 1024      |
 
-`blockDim.x * blockDim.y * blockDim.z` must not be more than 1024, even if each single value is within its limit. This is the same 1024 threads-per-block limit from [Lesson 02](../Lesson-02/notes.md). Two examples:
+`blockDim.x * blockDim.y * blockDim.z` must not be more than 1024, even if each single value is within its limit. This is the same 1024 threads-per-block limit from [Lesson 02](../Lesson-02/notes.md). Here are two examples.
 
-- `dim3(16, 16, 4)`: every value is within its limit, and 16 x 16 x 4 = 1024 threads. Valid.
-- `dim3(32, 32, 2)`: every value is within its limit, but 32 x 32 x 2 = 2048 threads. Invalid, the kernel does not run.
+- `dim3(16, 16, 4)` has every value within its limit, and 16 x 16 x 4 = 1024 threads. Valid.
+- `dim3(32, 32, 2)` has every value within its limit, but 32 x 32 x 2 = 2048 threads. Invalid, the kernel does not run.
 
 > [!WARNING]
 > A launch that breaks a limit compiles and runs without any message, but the kernel never starts. Check `cudaGetLastError()` after the launch, as [Lesson 08](../Lesson-08/notes.md) does.
 
-Enter your own block and grid sizes to see if the launch is valid:
+Enter your own block and grid sizes to see if the launch is valid.
 
 <block-limits></block-limits>
 
@@ -97,14 +97,14 @@ int main()
 
 ## Code Walkthrough
 
-Step through the program in the order you would write it. The work is in the long `printf`: one format string, then one value for each `%d`.
+Step through the program in the order you would write it. The work is in the long `printf`, which takes one format string and then one value for each `%d`.
 
 <div class="code-walk" markdown>
 
 1. `1-3 cpu` **Headers.** The same three `#include` lines as in the earlier lessons. The built-in variables need no header with `nvcc`, but `device_launch_parameters.h` lets some editors know them too.
 2. `5-6,13 gpu` **The empty kernel.** Write `__global__ void printBuiltins()` and its braces. The kernel takes no arguments, because everything it prints is a built-in variable that the GPU fills in for each thread.
-3. `7 gpu` **The format string.** Write the text with 13 `%d` placeholders: 3 for each of the four variables with `.x`, `.y` and `.z`, and 1 for `warpSize`. Start with `\n` so each thread's output goes on its own line. End the line with a comma, because the values follow.
-4. `8-12 gpu` **The values.** List the 13 values in the same order as the placeholders, one variable per line so the order is easy to check. The rule: one value per `%d`, in order. A missing value can still compile, and then `printf` prints wrong numbers, so count both sides.
+3. `7 gpu` **The format string.** Write the text with 13 `%d` placeholders, 3 for each of the four variables with `.x`, `.y` and `.z`, and 1 for `warpSize`. Start with `\n` so each thread's output goes on its own line. End the line with a comma, because the values follow.
+4. `8-12 gpu` **The values.** List the 13 values in the same order as the placeholders, one variable per line so the order is easy to check. The rule is one value per `%d`, in order. A missing value can still compile, and then `printf` prints wrong numbers, so count both sides.
 5. `15-16,19-20 cpu` **The main function.** Write `main` with `return 0;` at the end. It is the same frame as in the earlier lessons.
 6. `17 cpu` **The launch.** `<<<2, 4>>>` sets `gridDim.x` to 2 and `blockDim.x` to 4. Plain numbers leave the `.y` and `.z` sizes at 1.
 7. `18 cpu` **Wait for the GPU.** `cudaDeviceSynchronize();` keeps the program alive until all 8 lines are printed. Without it, `main` can end before the GPU output appears.
@@ -127,7 +127,7 @@ nvcc -o first_kernel first_kernel.cu
 
 ## Output
 
-The program prints 8 lines, one per thread:
+The program prints 8 lines, one per thread.
 
 ```
 gridDim=(2,1,1)  blockDim=(4,1,1)  blockIdx=(1,0,0)  threadIdx=(0,0,0)  warpSize=32
@@ -175,7 +175,7 @@ int main()
 ```
 
 ??? tip "Hint"
-    Check `blockIdx.x == 0 && threadIdx.x == 0`. The total thread count is `gridDim.x * blockDim.x`. A `dim3` goes into the launch like a number: `<<<grid, block>>>`.
+    Check `blockIdx.x == 0 && threadIdx.x == 0`. The total thread count is `gridDim.x * blockDim.x`. A `dim3` goes into the launch like a number, as in `<<<grid, block>>>`.
 
 ??? note "Solution"
     ```c
@@ -200,7 +200,7 @@ int main()
     }
     ```
 
-    Compile and run it with `nvcc -o launch_size launch_size.cu` and `./launch_size`. You should see one line: `blocks: 3, threads per block: 64, total threads: 192, warp size: 32`.
+    Compile and run it with `nvcc -o launch_size launch_size.cu` and `./launch_size`. You should see one line, `blocks: 3, threads per block: 64, total threads: 192, warp size: 32`.
 
 ## Glossary
 

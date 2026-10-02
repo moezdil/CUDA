@@ -1,6 +1,6 @@
 # 01 > Bir Block, Dört Thread
 
-Bu ders [Ders 00](../Lesson-00/notes.md)'daki programda tek bir şeyi değiştiriyor: thread sayısı 1'den 4'e çıkıyor, block sayısı 1 kalıyor. Dört thread aynı kernel'ı aynı anda çalıştırır ve her birinin `threadIdx.x` değeri farklıdır.
+Bu ders [Ders 00](../Lesson-00/notes.md)'daki programda tek bir şeyi değiştiriyor. Thread sayısı 1'den 4'e çıkıyor, block sayısı 1 kalıyor. Dört thread aynı kernel'ı aynı anda çalıştırır ve her birinin `threadIdx.x` değeri farklıdır.
 
 > [!NOTE]
 > Bu sayfadaki tüm çıktılar, Ubuntu 24 üzerinde CUDA 13.0 ile çalışan bir NVIDIA L40S'ten alındı.
@@ -13,7 +13,7 @@ printIDs<<<1, 4>>>();
 //  blocks -+  +- threads per block (was 1, now 4)
 ```
 
-GPU, `printIDs`'in 4 kopyasını aynı anda çalıştırır. Her kopya kendi `threadIdx.x` değerini alır: 0, 1, 2 ya da 3. `blockIdx.x` hepsi için 0'dır, çünkü hâlâ tek bir block var.
+GPU, `printIDs`'in 4 kopyasını aynı anda çalıştırır. Her kopya kendi `threadIdx.x` değerini alır, yani 0, 1, 2 ya da 3. `blockIdx.x` hepsi için 0'dır, çünkü hâlâ tek bir block var.
 
 <cuda-launch blocks="1" threads="4" fn="printIDs"></cuda-launch>
 
@@ -23,12 +23,12 @@ GPU, `printIDs`'in 4 kopyasını aynı anda çalıştırır. Her kopya kendi `th
 
 ## Warp'lar
 
-GPU, thread'leri warp adı verilen 32'lik gruplar hâlinde çalıştırır. Donanım tek tek thread'leri değil, warp'ları zamanlar. 4 thread başlattığında GPU 32 lane'li bir warp oluşturur ama bunların yalnızca 4'ünü kullanır; diğer 28 lane boşta kalır.
+GPU, thread'leri warp adı verilen 32'lik gruplar hâlinde çalıştırır. Donanım tek tek thread'leri değil, warp'ları zamanlar. 4 thread başlattığında GPU 32 lane'li bir warp oluşturur ama bunların yalnızca 4'ünü kullanır. Diğer 28 lane boşta kalır.
 
-Bir block'taki warp sayısı, thread sayısını 32'ye bölüp yukarı yuvarlayarak bulunur. Örneğin 100 thread'li bir block 4 warp'a ihtiyaç duyar: 32'şerlik üç tam warp (96 thread) ve yalnızca 4 aktif thread'i olan bir warp.
+Bir block'taki warp sayısı, thread sayısını 32'ye bölüp yukarı yuvarlayarak bulunur. Örneğin 100 thread'li bir block 4 warp'a ihtiyaç duyar. Bunların üçü 32'şerlik tam warp'tır (96 thread), biri de yalnızca 4 aktif thread'i olan bir warp'tır.
 
 > [!TIP]
-> 128 ya da 256 gibi 32'nin katı olan bir block boyutu seç; o zaman hiçbir warp'ta boşta lane kalmaz.
+> 128 ya da 256 gibi 32'nin katı olan bir block boyutu seç. O zaman hiçbir warp'ta boşta lane kalmaz.
 
 > [!NOTE]
 > Bir warp'taki thread'ler bir if/else'in farklı dallarına giderse GPU bu yolları art arda çalıştırır. Buna warp divergence denir. Bu derste olmaz, çünkü 4 thread'in hepsi aynı satırı çalıştırır.
@@ -59,7 +59,7 @@ int main()
 }
 ```
 
-Bu, Ders 00'daki kodun tek bir değişiklikle aynısı: başlatma satırı artık `printIDs<<<1, 4>>>();`, yani kernel'ı dört thread çalıştırır.
+Bu, Ders 00'daki kodun tek bir değişiklikle aynısı. Başlatma satırı artık `printIDs<<<1, 4>>>();`, yani kernel'ı dört thread çalıştırır.
 
 ## Kod Gezintisi
 
@@ -68,10 +68,10 @@ Programı yazacağın sırayla adım adım geç. Çoğu [Ders 00](../Lesson-00/n
 <div class="code-walk" markdown>
 
 1. `1-3 cpu` **Header'lar.** Ders 00'daki üç `#include` satırının aynısı. Çıkaramayacağın satır `stdio.h`'dir, çünkü kernel `printf`'i çağırır.
-2. `5-8 gpu` **Kernel.** Kernel'ı tam olarak önceki gibi yaz. Daha fazla thread elde etmek için onu değiştirmen gerekmez: her thread aynı kodu çalıştırır ve kendi `threadIdx.x` değerini okur. Kural: kodu tek bir thread için yazarsın, kaç kopyanın çalışacağına başlatma karar verir.
+2. `5-8 gpu` **Kernel.** Kernel'ı tam olarak önceki gibi yaz. Daha fazla thread elde etmek için onu değiştirmen gerekmez, çünkü her thread aynı kodu çalıştırır ve kendi `threadIdx.x` değerini okur. Kural basit. Kodu tek bir thread için yazarsın, kaç kopyanın çalışacağına başlatma karar verir.
 3. `10-11,14-15 cpu` **main fonksiyonu.** Ders 00'daki gibi `main`'i, sonunda `return 0;` olacak şekilde yaz. Ortadaki iki satır, GPU ile konuşan tek host kodudur.
-4. `12 cpu` **4 thread ile başlatma.** `<<<1, 4>>>` içindeki ikinci sayı block başına thread sayısıdır, yani 4 thread çalışır. Sık yapılan bir hata sayıların yerini karıştırmaktır: `<<<4, 1>>>` de 4 thread başlatır, ama 1 thread'li 4 block olarak; bu yüzden her `threadIdx.x` 0 olur.
-5. `13 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();` CPU'yu bekletir; printf buffer'ı da bu anda ekrana yazılır. 4 satır sabit olmayan bir sırayla çıkar.
+4. `12 cpu` **4 thread ile başlatma.** `<<<1, 4>>>` içindeki ikinci sayı block başına thread sayısıdır, yani 4 thread çalışır. Sık yapılan bir hata sayıların yerini karıştırmaktır. `<<<4, 1>>>` de 4 thread başlatır, ama 1 thread'li 4 block olarak, bu yüzden her `threadIdx.x` 0 olur.
+5. `13 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();` CPU'yu bekletir ve printf buffer'ı da bu anda ekrana yazılır. 4 satır sabit olmayan bir sırayla çıkar.
 
 </div>
 
@@ -91,7 +91,7 @@ nvcc -o first_kernel first_kernel.cu
 
 ## Çıktı
 
-Program, her thread için bir satır olmak üzere 4 satır yazdırır:
+Program, her thread için bir satır olmak üzere 4 satır yazdırır.
 
 ```
 Block ID: 0  ===  Thread ID: 2
@@ -114,7 +114,7 @@ Block ID: 0  ===  Thread ID: 1
 Her thread'in kendi `threadIdx.x` değerini kullanarak farklı bir sonuç hesapladığı bir kernel yaz.
 
 1. Aşağıdaki iskeletle `square.cu` oluştur.
-2. Kernel'da `threadIdx.x`'i bir `i` değişkenine ata; `i` ve `i * i` değerlerini yazdır.
+2. Kernel'da `threadIdx.x`'i bir `i` değişkenine ata, sonra `i` ve `i * i` değerlerini yazdır.
 3. 5 thread'li 1 block başlat.
 
 ```c
@@ -136,7 +136,7 @@ int main()
 ```
 
 ??? tip "İpucu"
-    `int i = threadIdx.x;` her thread'e kendi `i` değerini verir. Block başına thread sayısı ikinci sayıdır: `<<<1, 5>>>`.
+    `int i = threadIdx.x;` her thread'e kendi `i` değerini verir. Block başına thread sayısı ikinci sayıdır, örneğin `<<<1, 5>>>`.
 
 ??? note "Çözüm"
     ```c
@@ -165,16 +165,16 @@ int main()
 - CPU (Central Processing Unit, merkezi işlem birimi): `main()`'i çalıştıran ana işlemci.
 - warp: GPU'nun tek bir birim olarak birlikte çalıştırdığı 32 thread'lik grup. GPU tek tek thread'leri değil, warp'ları zamanlar.
 - lane: bir warp'taki 32 yuvadan biri. Her aktif lane bir thread çalıştırır.
-- SIMT (Single Instruction, Multiple Threads, tek komut çoklu thread): bir warp'taki her aktif thread aynı komutu çalıştırır; her thread'in kendi verisi ve kendi ID'si vardır.
+- SIMT (Single Instruction, Multiple Threads, tek komut çoklu thread): bir warp'taki her aktif thread aynı komutu çalıştırır. Her thread'in kendi verisi ve kendi ID'si vardır.
 - warp divergence (warp ayrışması): bir warp'taki thread'ler farklı yollara gider. Örneğin thread 0 bir if dalına girer, thread 1 girmez. GPU o zaman iki yolu art arda çalıştırır, bu da daha yavaştır.
 - printf buffer'ı (tampon): GPU'daki `printf` doğrudan ekrana yazmaz, GPU belleğindeki bir buffer'a yazar. Buffer, CPU GPU'yu beklediğinde, örneğin `cudaDeviceSynchronize()`'da, ekrana gelir.
 - kernel: `__global__` ile işaretlenmiş, GPU'da çalışan fonksiyon. Bir başlatma, her thread için onun bir kopyasını çalıştırır.
 - thread: kernel'ın çalışan bir kopyası. Kendi `threadIdx.x` değeri ve kendi değişkenleri vardır.
 - block: birlikte başlatılan bir grup thread. `<<<1, 4>>>`, 4 thread'lik 1 block oluşturur.
-- `threadIdx.x`: thread'in kendi block'u içindeki indeksi; 0'dan (block başına thread - 1)'e kadar, burada 0 ile 3 arası.
+- `threadIdx.x`: thread'in kendi block'u içindeki indeksi. 0'dan (block başına thread - 1)'e kadar gider, burada 0 ile 3 arası.
 - `blockIdx.x`: thread'in bulunduğu block'un indeksi. Tek block varken her thread için 0'dır.
 - başlatma (launch): bir kernel'ı GPU'da başlatan `name<<<blocks, threads>>>();` satırı. İlk sayı block sayısı, ikincisi block başına thread sayısıdır.
 - `cudaDeviceSynchronize()`: GPU işini bitirene kadar CPU'yu bekletir. printf buffer'ı da bu anda ekrana gelir.
 - CUDA (Compute Unified Device Architecture): NVIDIA'nın, kendi kodunu GPU'da çalıştırmanı sağlayan platformu.
-- `nvcc`: CUDA derleyicisi; bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
+- `nvcc`: CUDA derleyicisi. Bir `.cu` dosyasının CPU ve GPU kısımlarını tek bir programa derler.
 - `-o`: çıkan programın adını belirler. O olmadan ad `a.out` olur.

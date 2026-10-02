@@ -25,7 +25,7 @@ All 4 threads run the same instructions, but each one has its own ID and its own
 
 The GPU runs threads in groups of 32 called warps. The hardware schedules warps, not single threads. When you launch 4 threads, the GPU makes one warp of 32 lanes but uses only 4 of them. The other 28 lanes stay idle.
 
-The warp count of a block is the thread count divided by 32, rounded up. For example, a block of 100 threads needs 4 warps: three full warps of 32 (96 threads) and one warp with only 4 active threads.
+The warp count of a block is the thread count divided by 32, rounded up. For example, a block of 100 threads needs 4 warps. Three are full warps of 32 (96 threads), and one warp has only 4 active threads.
 
 > [!TIP]
 > Pick a block size that is a multiple of 32, such as 128 or 256. Then no warp has idle lanes.
@@ -68,9 +68,9 @@ Step through the program in the order you would write it. Most of it is the [Les
 <div class="code-walk" markdown>
 
 1. `1-3 cpu` **Headers.** The same three `#include` lines as in Lesson 00. `stdio.h` is the one you cannot drop, because the kernel calls `printf`.
-2. `5-8 gpu` **The kernel.** Write the kernel exactly as before. You do not change it to get more threads: every thread runs this same code, and each reads its own `threadIdx.x`. The rule: you write the code for one thread, and the launch decides how many copies run.
+2. `5-8 gpu` **The kernel.** Write the kernel exactly as before. You do not change it to get more threads, because every thread runs this same code and each reads its own `threadIdx.x`. The rule is simple. You write the code for one thread, and the launch decides how many copies run.
 3. `10-11,14-15 cpu` **The main function.** Write `main` with `return 0;` at the end, as in Lesson 00. The two lines in the middle are the only host code that talks to the GPU.
-4. `12 cpu` **The launch with 4 threads.** The second number in `<<<1, 4>>>` is the threads per block, so 4 threads run. A common mistake is to swap the numbers: `<<<4, 1>>>` also starts 4 threads, but as 4 blocks of 1 thread, so every `threadIdx.x` is 0.
+4. `12 cpu` **The launch with 4 threads.** The second number in `<<<1, 4>>>` is the threads per block, so 4 threads run. A common mistake is to swap the numbers. `<<<4, 1>>>` also starts 4 threads, but as 4 blocks of 1 thread, so every `threadIdx.x` is 0.
 5. `13 cpu` **Wait for the GPU.** `cudaDeviceSynchronize();` makes the CPU wait, and this is also when the printf buffer is written to the screen. The 4 lines come out in no fixed order.
 
 </div>
@@ -91,7 +91,7 @@ nvcc -o first_kernel first_kernel.cu
 
 ## Output
 
-The program prints 4 lines, one per thread:
+The program prints 4 lines, one per thread.
 
 ```
 Block ID: 0  ===  Thread ID: 2
@@ -136,7 +136,7 @@ int main()
 ```
 
 ??? tip "Hint"
-    `int i = threadIdx.x;` gives each thread its own `i`. The threads per block is the second number: `<<<1, 5>>>`.
+    `int i = threadIdx.x;` gives each thread its own `i`. The threads per block is the second number, as in `<<<1, 5>>>`.
 
 ??? note "Solution"
     ```c

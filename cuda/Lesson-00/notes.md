@@ -7,7 +7,7 @@ This lesson runs the simplest possible CUDA program. Its kernel uses one block a
 
 ## GPU vs CPU
 
-On the CPU, a function runs once on one core. On the GPU, a kernel runs many times in parallel. A kernel is a function that runs on the GPU. Each running copy of it is called a thread. Two numbers set how many threads run: the number of blocks and the number of threads per block.
+On the CPU, a function runs once on one core. On the GPU, a kernel runs many times in parallel. A kernel is a function that runs on the GPU. Each running copy of it is called a thread. Two numbers set how many threads run. One is the number of blocks, the other is the number of threads per block.
 
 For example, 2 blocks of 3 threads each start 2 x 3 = 6 threads. All 6 run the same kernel code.
 
@@ -36,11 +36,11 @@ The `<<<...>>>` syntax is the execution configuration. It goes between the funct
 
 ## Thread, Block, Grid
 
-Every kernel launch creates three levels:
+Every kernel launch creates three levels.
 
-- thread: the smallest unit. One thread runs one copy of the kernel.
-- block: a group of threads that runs on one SM. An SM is one of the many small processors inside a GPU. The threads of a block can share memory.
-- grid: all blocks of one kernel launch. One launch, one grid.
+- A thread is the smallest unit. One thread runs one copy of the kernel.
+- A block is a group of threads that runs on one SM. An SM is one of the many small processors inside a GPU. The threads of a block can share memory.
+- A grid is all blocks of one kernel launch. One launch, one grid.
 
 <cuda-hierarchy></cuda-hierarchy>
 
@@ -57,9 +57,9 @@ printf("Block ID: %d  Thread ID: %d", blockIdx.x, threadIdx.x);
 
 ## Header Files
 
-- `cuda_runtime.h`: the CUDA runtime API. It declares `cudaDeviceSynchronize()` and the error-checking functions.
-- `stdio.h`: standard C, needed for `printf`.
-- `device_launch_parameters.h`: makes `blockIdx`, `threadIdx`, `blockDim` and `gridDim` known to the editor when you use MSVC or certain IDEs. `nvcc` does not need it, but it does no harm.
+- `cuda_runtime.h` is the CUDA runtime API. It declares `cudaDeviceSynchronize()` and the error-checking functions.
+- `stdio.h` is standard C, needed for `printf`.
+- `device_launch_parameters.h` makes `blockIdx`, `threadIdx`, `blockDim` and `gridDim` known to the editor when you use MSVC or certain IDEs. `nvcc` does not need it, but it does no harm.
 
 ## `cudaDeviceSynchronize()`
 
@@ -102,11 +102,11 @@ Step through the program in the order you would write it from an empty file.
 <div class="code-walk" markdown>
 
 1. `1-3 cpu` **Headers.** Type the three `#include` lines first, because everything below uses names they declare. `cuda_runtime.h` brings in `cudaDeviceSynchronize()` and `stdio.h` brings in `printf`. Without `stdio.h`, the `printf` call in the kernel fails to compile.
-2. `5-6,8 gpu` **The empty kernel.** Write the kernel's outline before its body: `__global__`, the return type `void`, a name and an empty pair of braces. A kernel must return `void`, because it has no caller waiting for a value. If you leave out `__global__`, the compiler builds a normal CPU function and the launch line later fails to compile.
+2. `5-6,8 gpu` **The empty kernel.** Write the kernel's outline before its body, with `__global__`, the return type `void`, a name and an empty pair of braces. A kernel must return `void`, because it has no caller waiting for a value. If you leave out `__global__`, the compiler builds a normal CPU function and the launch line later fails to compile.
 3. `7 gpu` **The kernel body.** Add one `printf` that prints `blockIdx.x` and `threadIdx.x`. This line runs once in every thread, on the GPU. Each `%d` is filled by the value listed after the string, in the same order.
 4. `10-11,14-15 cpu` **The main function.** Write `main` with its braces and `return 0;` now, then fill the middle. This is normal C code that runs on the CPU.
-5. `12 cpu` **The launch.** Call the kernel by its name, then `<<<1, 1>>>`, then the argument list `()`. The rule: blocks first, threads per block second. The empty `()` is still needed, even though `printIDs` takes no arguments.
-6. `13 cpu` **Wait for the GPU.** The launch returns at once, so add `cudaDeviceSynchronize();` right after it. This is the most common first mistake: without it the program compiles, runs and prints nothing.
+5. `12 cpu` **The launch.** Call the kernel by its name, then `<<<1, 1>>>`, then the argument list `()`. The rule is blocks first, threads per block second. The empty `()` is still needed, even though `printIDs` takes no arguments.
+6. `13 cpu` **Wait for the GPU.** The launch returns at once, so add `cudaDeviceSynchronize();` right after it. This is the most common first mistake. Without it the program compiles, runs and prints nothing.
 
 </div>
 
@@ -177,7 +177,7 @@ int main()
     }
     ```
 
-    Compile and run it with `nvcc -o hello hello.cu` and `./hello`. You should see one line: `Hello from block 0, thread 0`.
+    Compile and run it with `nvcc -o hello hello.cu` and `./hello`. You should see the line `Hello from block 0, thread 0`.
 
 ## Glossary
 

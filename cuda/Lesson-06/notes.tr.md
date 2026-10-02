@@ -7,7 +7,7 @@ Ders 00 ile 04 arasındaki programları tek bir kısa komutla derledin. Bu derst
 
 ## Kod
 
-Program `code/project001.cu` dosyasında:
+Program `code/project001.cu` dosyasında.
 
 ```c
 #include "cuda_runtime.h"
@@ -35,9 +35,9 @@ int main()
 
 Başlatmada 64'er thread'li 2 block kullanılıyor, yani toplam 2 × 64 = 128 thread. Her block'ta 64 / 32 = 2 warp var.
 
-- Üç `#include` satırı şunları getirir: CUDA runtime fonksiyonlarını, `blockIdx` ve `threadIdx` gibi yerleşik değişkenleri ve `printf`'i.
+- Üç `#include` satırı CUDA runtime fonksiyonlarını, `blockIdx` ve `threadIdx` gibi yerleşik değişkenleri ve `printf`'i getirir.
 - `__global__`, `test01`'i bir kernel olarak işaretler. CPU onu başlatır, GPU çalıştırır.
-- `threadIdx.x / 32` warp ID'sini verir, çünkü bir warp 32 thread'dir. İki taraf da tam sayı olduğu için kalan atılır: örneğin thread 45, 45 / 32 = 1 alır. 0-31 arası thread'ler 0, 32-63 arası thread'ler 1 alır.
+- `threadIdx.x / 32` warp ID'sini verir, çünkü bir warp 32 thread'dir. İki taraf da tam sayı olduğu için kalan atılır, örneğin thread 45, 45 / 32 = 1 alır. 0-31 arası thread'ler 0, 32-63 arası thread'ler 1 alır.
 - `test01 <<<2, 64>>> ();`, kernel'ı 64 thread'lik 2 block ile başlatır.
 - `cudaDeviceSynchronize();`, CPU'nun GPU'yu beklemesini sağlar. Bu satırın neden önemli olduğunu aşağıdaki senkronizasyon bölümünde göreceksin.
 
@@ -49,18 +49,18 @@ Programı yazacağın sırayla adım adım geç. Yeni olan kısım, kernel'ın `
 
 1. `1-3 cpu` **Header'lar.** CUDA runtime, yerleşik değişkenler ve `printf` için `stdio.h`. Bu derslerdeki her program bu üç satırla başlar.
 2. `5-6,13 gpu` **Boş kernel.** Önce `__global__ void test01()` ve süslü parantezlerini yaz. Sonra gövdeyi satır satır doldur.
-3. `7-8 gpu` **Yorumlarla bir plan.** Koddan önce kernel'ın ne yaptığını ve dayandığı sayıları yaz: warp başına 32 thread, yani block başına 64 thread 2 warp eder. Yorumların çalışma anında hiçbir maliyeti yoktur ve sonraki satırı kontrol etmeyi kolaylaştırır.
-4. `9-10 gpu` **Warp ID'si.** `warp_ID_Value`'yu tanımla, sonra ona `threadIdx.x / 32` ata. İki taraf da tam sayı olduğu için bölme kalanı atar: thread 45, 1 alır. Her satırı `;` ile bitir; eksik bir `;`'ün ne yaptığını aşağıdaki Derleme Hataları bölümünde göreceksin.
-5. `11-12 gpu` **Yazdırma.** Üç `%d` içeren tek bir `printf`; sırasıyla block ID'si, thread ID'si ve warp ID'siyle doldurulur. Uzun bir çağrı iki satıra yayılabilir, çünkü derleyici `;`'e kadar olan her şeyi tek bir ifade olarak okur.
+3. `7-8 gpu` **Yorumlarla bir plan.** Koddan önce kernel'ın ne yaptığını ve dayandığı sayıları yaz. Warp başına 32 thread var, yani block başına 64 thread 2 warp eder. Yorumların çalışma anında hiçbir maliyeti yoktur ve sonraki satırı kontrol etmeyi kolaylaştırır.
+4. `9-10 gpu` **Warp ID'si.** `warp_ID_Value`'yu tanımla, sonra ona `threadIdx.x / 32` ata. İki taraf da tam sayı olduğu için bölme kalanı atar, yani thread 45, 1 alır. Her satırı `;` ile bitir. Eksik bir `;`'ün ne yaptığını aşağıdaki Derleme Hataları bölümünde göreceksin.
+5. `11-12 gpu` **Yazdırma.** Üç `%d` içeren tek bir `printf`, sırasıyla block ID'si, thread ID'si ve warp ID'siyle doldurulur. Uzun bir çağrı iki satıra yayılabilir, çünkü derleyici `;`'e kadar olan her şeyi tek bir ifade olarak okur.
 6. `15-16,20-21 cpu` **main fonksiyonu.** `main`'i, sonunda `return 0;` olacak şekilde yaz. İçindeki her şey CPU'da çalışır.
-7. `17-18 cpu` **Başlatma.** Yorum `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>` kalıbını hatırlatır, sonraki satır da onu 64 thread'li 2 block ile doldurur. `<<<2, 64>>>` etrafındaki boşluklar serbesttir; derleyici onları yok sayar.
+7. `17-18 cpu` **Başlatma.** Yorum `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>` kalıbını hatırlatır, sonraki satır da onu 64 thread'li 2 block ile doldurur. `<<<2, 64>>>` etrafındaki boşluklar serbesttir, derleyici onları yok sayar.
 8. `19 cpu` **GPU'yu bekle.** `cudaDeviceSynchronize();`, bu derste bilerek kaldıracağımız satırdır. Bu makinede program o satır olmadan hiçbir şey yazdırmadı.
 
 </div>
 
 ## Derle ve Çalıştır
 
-### Adım 1: nvcc'yi kontrol et
+### Adım 1, nvcc'yi kontrol et
 
 Önce CUDA derleyicisinin kurulu olduğunu kontrol et ve sürümüne bak. Bu komut başarısız olursa bu dersteki hiçbir şey çalışmaz.
 
@@ -69,9 +69,9 @@ nvcc --version
 ```
 
 - `nvcc`, CUDA derleyicisidir.
-- `--version`, derleyicinin sürümünü yazdırır ve çıkar; hiçbir şey derlemez.
+- `--version`, derleyicinin sürümünü yazdırır ve çıkar, hiçbir şey derlemez.
 
-Bu makinedeki çıktı:
+Bu makinedeki çıktı şöyle.
 
 ```
 nvcc: NVIDIA (R) Cuda compiler driver
@@ -81,24 +81,24 @@ Cuda compilation tools, release 13.0, V13.0.88
 Build cuda_13.0.r13.0/compiler.36424714_0
 ```
 
-Önemli olan satır `release 13.0, V13.0.88`; sürümün CUDA 13.0 olduğunu söylüyor. Diğer satırlar aracın adı, telif hakkı ve derleyicinin derlenme tarihiyle ID'si.
+Önemli olan satır `release 13.0, V13.0.88`, sürümün CUDA 13.0 olduğunu söylüyor. Diğer satırlar aracın adı, telif hakkı ve derleyicinin derlenme tarihiyle ID'si.
 
-### Adım 2: derle
+### Adım 2, derle
 
-Şimdi kaynak dosyayı makinenin çalıştırabileceği bir programa dönüştür. Bu, Ders 00 ile 05 arasında kullandığımız komutun aynısı:
+Şimdi kaynak dosyayı makinenin çalıştırabileceği bir programa dönüştür. Bu, Ders 00 ile 05 arasında kullandığımız komutun aynısı.
 
 ```bash
 nvcc -o project001 project001.cu
 ```
 
 - `nvcc`, `.cu` dosyasındaki hem CPU hem GPU kodunu derler.
-- `-o project001`, çıkan programın adını belirler. `-o` olmazsa ad `a.out` olur; her zaman `-o` kullanmak karışıklığı önler.
+- `-o project001`, çıkan programın adını belirler. `-o` olmazsa ad `a.out` olur. Her zaman `-o` kullanmak karışıklığı önler.
 - `project001.cu`, kaynak dosyadır.
 
 > [!WARNING]
 > `project001` adında bir dosya zaten varsa `-o project001` onu sormadan üzerine yazar.
 
-Program dosyasının oluştuğunu kontrol et:
+Program dosyasının oluştuğunu kontrol et.
 
 ```bash
 ls -lh project001
@@ -114,20 +114,20 @@ ls -lh project001
 
 Satır `-` ile başlıyor, yani bu normal bir dosya. `rwxrwxr-x` içindeki `x` harfleri dosyanın çalıştırılabildiğini gösterir. `ubuntu ubuntu` sahip ve grup, `966K` ise programın boyutu, yaklaşık 966 KB. Ardından derlendiği tarih, saat ve dosyanın adı geliyor. Derleme başarısız olsaydı `ls`, dosyanın bulunmadığını söylerdi.
 
-### Adım 3: GPU mimarisini belirt
+### Adım 3, GPU mimarisini belirt
 
-`-arch` olmadan `nvcc`, güvenli ve genel bir varsayılan hedef seçer. Hangi GPU için derlediğini açıkça belirtmek daha iyidir. L40S'in compute capability'si 8.9'dur (bkz. [Ders 03](../Lesson-03/notes.md)) ve mimari adı `sm_89`:
+`-arch` olmadan `nvcc`, güvenli ve genel bir varsayılan hedef seçer. Hangi GPU için derlediğini açıkça belirtmek daha iyidir. L40S'in compute capability'si 8.9'dur (bkz. [Ders 03](../Lesson-03/notes.md)) ve mimari adı `sm_89`.
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
 ```
 
-- `-arch=sm_89`, compute capability 8.9 için, yani L40S için derler. Sayı, CC'nin noktasız hâlidir: 8.9, `89` olur.
+- `-arch=sm_89`, compute capability 8.9 için, yani L40S için derler. Sayı, CC'nin noktasız hâlidir, yani 8.9, `89` olur.
 - `-o project001` ve `project001.cu` öncekiyle aynı.
 
 Bundan sonraki her ders `-arch=sm_89` ile derliyor. Başka bir GPU'da onun kendi CC'sini yaz, örneğin CC 8.0 için `-arch=sm_80`. Derleyicinin bu hedef için ne ürettiğini [Ders 05](../Lesson-05/notes.md)'te görmüştün.
 
-Bu toolkit'in sm_89'u desteklediğini kontrol et:
+Bu toolkit'in sm_89'u desteklediğini kontrol et.
 
 ```bash
 nvcc --help | grep sm_89
@@ -144,7 +144,7 @@ nvcc --help | grep sm_89
 
 Her satır, yardım metnindeki izin verilen değerler listesinin bir parçası. `grep` eşleşen her satırı yazdırır, bu yüzden `sm_89` iki kez görünüyor. Tek bir eşleşme bile bu toolkit'in L40S için derleyebildiği anlamına gelir. Hiç çıktı olmasaydı `-arch=sm_89` bu `nvcc` ile çalışmazdı.
 
-### Adım 4: çalıştır
+### Adım 4, çalıştır
 
 Az önce derlediğin programı çalıştır.
 
@@ -159,7 +159,7 @@ Az önce derlediğin programı çalıştır.
 
 Kernel başlatma satırında CPU, kernel'ı GPU'ya gönderir ve beklemeden doğrudan bir sonraki satıra geçer. O satır `return 0` ise program, GPU bir şey yazdıramadan biter.
 
-Bunu görmek için `cudaDeviceSynchronize();` satırını sil, yeniden derle ve programı üç kez çalıştır. Bu makinede program bir kez bile bir şey yazdırmadı:
+Bunu görmek için `cudaDeviceSynchronize();` satırını sil, yeniden derle ve programı üç kez çalıştır. Bu makinede program bir kez bile bir şey yazdırmadı.
 
 ```bash
 $ ./project001
@@ -173,11 +173,11 @@ $
 `$`, shell'in komut istemidir ve komutun parçası değildir. Her `./project001` satırından sonra boş bir istem geliyor, yani üç çalıştırmanın hiçbiri bir şey yazdırmadı. Kernel GPU'da gerçekten çalıştı, ama program, GPU'nun yazdırma tamponu terminale boşaltılmadan bitti.
 
 > [!WARNING]
-> Çıktının kaybolması zamanlamaya bağlıdır. Bu makinede hiç görünmedi, ama başka bir makinede, driver'da ya da OS'te bazı çalıştırmalarda satırların bir kısmını ya da tamamını görebilirsin. Buna asla güvenme: `cudaDeviceSynchronize()` olmadan CPU, GPU'yu beklemez.
+> Çıktının kaybolması zamanlamaya bağlıdır. Bu makinede hiç görünmedi, ama başka bir makinede, driver'da ya da OS'te bazı çalıştırmalarda satırların bir kısmını ya da tamamını görebilirsin. Buna asla güvenme. `cudaDeviceSynchronize()` olmadan CPU, GPU'yu beklemez.
 
 `cudaDeviceSynchronize()`, bütün GPU thread'leri bitene kadar CPU'yu o satırda bekletir. Fonksiyon döndüğünde yazdırma tamponu boşaltılmış ve bütün çıktı terminale yazılmış olur. Artık her çalıştırma tam çıktıyı verir.
 
-Satırı geri koy, sonra yeniden derle ve çalıştır:
+Satırı geri koy, sonra yeniden derle ve çalıştır.
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
@@ -324,17 +324,17 @@ The block ID is 1 --- The thread ID is 62 --- The warp ID 1
 The block ID is 1 --- The thread ID is 63 --- The warp ID 1
 ```
 
-Nasıl okunur:
+Çıktıyı şöyle okuyabilirsin.
 
 - 128 satır var, çünkü 2 block × 64 thread = 128 thread ve her thread `printf`'i bir kez çağırıyor.
-- Thread ID'si block 0'da 0'dan 63'e gidiyor, sonra block 1'de yeniden 0'dan başlıyor; çünkü `threadIdx.x` bütün başlatma boyunca değil, bir block'un içinde sayar.
+- Thread ID'si block 0'da 0'dan 63'e gidiyor, sonra block 1'de yeniden 0'dan başlıyor, çünkü `threadIdx.x` bütün başlatma boyunca değil, bir block'un içinde sayar.
 - Warp ID'si 0-31 arası thread'ler için 0, 32-63 arası thread'ler için 1, çünkü `threadIdx.x / 32` tam sayı bölmesidir. Thread ID'si her block'ta yeniden başladığı için warp ID'si de yeniden başlar.
 
-Bu makinede iki çalıştırmada da block 0, block 1'den önce yazdırdı; ikinci çalıştırma aynı 128 satırı aynı sırayla verdi. Yine de block sırası başka çalıştırmalarda ya da makinelerde garanti değildir.
+Bu makinede iki çalıştırmada da block 0, block 1'den önce yazdırdı ve ikinci çalıştırma aynı 128 satırı aynı sırayla verdi. Yine de block sırası başka çalıştırmalarda ya da makinelerde garanti değildir.
 
 ## Derleme Hataları
 
-Derleyicinin hataları nasıl bildirdiğini görmek için `warp_ID_Value = threadIdx.x / 32` satırının (satır 10) sonundaki `;` işaretini sil ve yeniden derle:
+Derleyicinin hataları nasıl bildirdiğini görmek için `warp_ID_Value = threadIdx.x / 32` satırının (satır 10) sonundaki `;` işaretini sil ve yeniden derle.
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
@@ -342,7 +342,7 @@ nvcc -arch=sm_89 -o project001 project001.cu
 
 Bu, öncekiyle aynı derleme komutu. Bu sefer başarısız olur, bu yüzden yeni bir program oluşmaz.
 
-Bu makinedeki çıktı:
+Bu makinedeki çıktı şöyle.
 
 ```
 project001.cu(9): error: expected a ";"
@@ -352,11 +352,11 @@ project001.cu(9): error: expected a ";"
 1 error detected in the compilation of "project001.cu".
 ```
 
-Nasıl okunur:
+Çıktıyı şöyle okuyabilirsin.
 
 - `project001.cu(9)`, dosya adı ve parantez içinde satır numarası.
 - `error: expected a ";"`, derleyicinin ne beklediğini söylüyor.
-- Sonraki satır kaynak satırı tekrarlıyor; `^` ise derleyicinin sorunu fark ettiği yeri gösteriyor.
+- Sonraki satır kaynak satırı tekrarlıyor, `^` ise derleyicinin sorunu fark ettiği yeri gösteriyor.
 - Son satır dosyadaki hataları sayıyor.
 
 Hata, noktalı virgülün eksik olduğu satırı değil, `printf` satırını gösteriyor. Çünkü derleyici sorunu ancak bir sonraki kelimeye geldiğinde fark eder ve o kelime `printf` satırındadır.
@@ -378,7 +378,7 @@ Noktalı virgülü geri koy, yeniden derle ve derlemenin hatasız olduğunu kont
 | OS | doğrudan Ubuntu 24 |
 | Erişim | başka bir bilgisayardan SSH |
 
-Bu dersteki komutlar diğer Linux makinelerinde de aynı şekilde çalışır; GPU'ya göre yalnızca `-arch` değeri değişir.
+Bu dersteki komutlar diğer Linux makinelerinde de aynı şekilde çalışır. GPU'ya göre yalnızca `-arch` değeri değişir.
 
 ## Özet
 
@@ -442,29 +442,29 @@ int main()
     }
     ```
 
-    `nvcc -arch=sm_89 -o warps warps.cu` ve `./warps` ile derle ve çalıştır. Herhangi bir sırayla 3 satır görmelisin: `block 0 has 3 warps`, `block 1 has 3 warps` ve `block 2 has 3 warps`, çünkü 96 / 32 = 3.
+    `nvcc -arch=sm_89 -o warps warps.cu` ve `./warps` ile derle ve çalıştır. Herhangi bir sırayla `block 0 has 3 warps`, `block 1 has 3 warps` ve `block 2 has 3 warps` olmak üzere 3 satır görmelisin, çünkü 96 / 32 = 3.
 
 ## Sözlük
 
 - CUDA (Compute Unified Device Architecture): GPU'da çalışan programlar yazmak için NVIDIA'nın platformu ve dil eklentileri.
 - GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran, binlerce küçük çekirdekli işlemci.
-- CPU (Central Processing Unit, merkezi işlem birimi): ana işlemci; host kodunu çalıştırır ve kernel'ları başlatır.
+- CPU (Central Processing Unit, merkezi işlem birimi): ana işlemci. Host kodunu çalıştırır ve kernel'ları başlatır.
 - KB (kilobyte, kilobayt): yaklaşık bin bayt.
-- `nvcc` (NVIDIA CUDA Compiler): CUDA derleyici sürücüsü (compiler driver); aynı `.cu` dosyasındaki host ve device kodunu birlikte işler.
-- `-o`: çıkan programın adını belirler; varsayılan ad `a.out`.
+- `nvcc` (NVIDIA CUDA Compiler): CUDA derleyici sürücüsü (compiler driver). Aynı `.cu` dosyasındaki host ve device kodunu birlikte işler.
+- `-o`: çıkan programın adını belirler. Varsayılan ad `a.out`.
 - `-arch=sm_89`: compute capability 8.9 için, yani L40S (Ada Lovelace) için derler.
-- compute capability (CC, hesaplama yeteneği): 8.9 gibi, bir GPU neslinin sürüm numarası; bkz. [Ders 03](../Lesson-03/notes.md).
+- compute capability (CC, hesaplama yeteneği): 8.9 gibi, bir GPU neslinin sürüm numarası, bkz. [Ders 03](../Lesson-03/notes.md).
 - `cudaDeviceSynchronize()`: o ana kadar başlatılan bütün GPU işleri bitene kadar CPU'yu bekletir.
-- warp ID: bir thread'in kendi block'u içinde ait olduğu warp; değeri `threadIdx.x / 32`.
+- warp ID: bir thread'in kendi block'u içinde ait olduğu warp. Değeri `threadIdx.x / 32`.
 - SSH (Secure Shell, güvenli kabuk): ağ üzerinden başka bir bilgisayara girip orada komut çalıştırmanın bir yolu.
-- CUDA runtime: `cudaDeviceSynchronize()` gibi çağrıların arkasındaki kütüphane; fonksiyonlarını `cuda_runtime.h` başlık dosyası tanımlar.
-- `__global__`: bir fonksiyonu kernel olarak işaretler; CPU onu başlatır, GPU çalıştırır.
-- warp: GPU'nun birlikte çalıştırdığı 32 thread'lik grup; block başına 64 thread, 2 warp eder.
+- CUDA runtime: `cudaDeviceSynchronize()` gibi çağrıların arkasındaki kütüphane. Fonksiyonlarını `cuda_runtime.h` başlık dosyası tanımlar.
+- `__global__`: bir fonksiyonu kernel olarak işaretler. CPU onu başlatır, GPU çalıştırır.
+- warp: GPU'nun birlikte çalıştırdığı 32 thread'lik grup. Block başına 64 thread, 2 warp eder.
 - tam sayı bölmesi (integer division): iki tam sayının kalanı atan bölmesi. 45 / 32 = 1 ve 63 / 32 = 1, ama 64 / 32 = 2.
-- `printf`: C'nin yazdırma fonksiyonu; kernel'da her thread onu çalıştırır ve satırlar önce yazdırma tamponuna gider.
-- yazdırma tamponu (print buffer): kernel'daki `printf` satırlarının beklediği GPU belleği; `cudaDeviceSynchronize()` anında terminale boşaltılır.
-- komut istemi (shell prompt): shell'in bir komut beklerken gösterdiği, genellikle `$` ile biten metin; onu sen yazmazsın.
-- OS (operating system, işletim sistemi): bir bilgisayarın temel yazılımı; burada bir Linux sistemi olan Ubuntu 24.
-- noktalı virgül (semicolon): her C ve C++ ifadesini bitiren `;`; biri eksikse derleyici hatayı bir sonraki ifadenin başında bildirir.
-- L40S: bu derslerde kullanılan NVIDIA veri merkezi GPU'su; Ada Lovelace mimarisi, CC 8.9 ve 142 SM.
+- `printf`: C'nin yazdırma fonksiyonu. Kernel'da her thread onu çalıştırır ve satırlar önce yazdırma tamponuna gider.
+- yazdırma tamponu (print buffer): kernel'daki `printf` satırlarının beklediği GPU belleği. `cudaDeviceSynchronize()` anında terminale boşaltılır.
+- komut istemi (shell prompt): shell'in bir komut beklerken gösterdiği, genellikle `$` ile biten metin. Onu sen yazmazsın.
+- OS (operating system, işletim sistemi): bir bilgisayarın temel yazılımı, burada bir Linux sistemi olan Ubuntu 24.
+- noktalı virgül (semicolon): her C ve C++ ifadesini bitiren `;`. Biri eksikse derleyici hatayı bir sonraki ifadenin başında bildirir.
+- L40S: bu derslerde kullanılan NVIDIA veri merkezi GPU'su, Ada Lovelace mimarisi, CC 8.9 ve 142 SM.
 - Ada Lovelace: NVIDIA'nın 2022'de çıkan, CC 8.9'lu GPU mimarisi. L40S'te ve GeForce RTX 40 serisinde kullanılır.

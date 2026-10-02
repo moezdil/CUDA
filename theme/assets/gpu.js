@@ -171,8 +171,8 @@ def("arch-matrix", function(el){
     el.querySelectorAll(".dg-mx tr")[ij[0] + 1].querySelectorAll("td").forEach(function(c){ c.classList.add("row"); });
     el.querySelectorAll(".dg-mx tr").forEach(function(tr, i){ if (i) { tr.children[ij[1] + 1].classList.add("col"); } });
     var mates = r[1].filter(function(g){ return g && g !== name; });
-    info.innerHTML = F("<b>{0}</b>: architecture <em>{1}</em> (how it is built). Generation <em>{2}</em> (where it is used).", name, r[0], cols[ij[1]][0]) +
-      (mates.length ? "<br>" + F("Same design, other uses: {0}.", mates.join(", ")) : "<br>" + F("{0} is only made for this use.", r[0]));
+    info.innerHTML = F("<b>{0}</b> has architecture <em>{1}</em> (how it is built) and generation <em>{2}</em> (where it is used).", name, r[0], cols[ij[1]][0]) +
+      (mates.length ? "<br>" + F("The same design is also used as {0}.", mates.join(", ")) : "<br>" + F("{0} is only made for this use.", r[0]));
   });
   el.querySelector('[data-k="0,1"]').click();
 });
@@ -210,7 +210,7 @@ def("chip-vs-gpu", function(el){
     });
     el.querySelector(".dg-info").innerHTML = step === 0
       ? T("<b>The chip alone.</b> The silicon that does the math. No memory, no power, no cooling.")
-      : F("<b>The GPU:</b> {0}.", [T("the chip"), "VRAM", T("power delivery"), T("outputs"), T("cooling")].slice(0, step + 1).join(" + ")) +
+      : F("<b>The GPU</b> = {0}.", [T("the chip"), "VRAM", T("power delivery"), T("outputs"), T("cooling")].slice(0, step + 1).join(" + ")) +
         (kind === 1 && step >= 3 ? " " + T("A data center module has no fans and no screen outputs. The server cools it.") : "");
   }
   onTabs(tb[0], function(i){ kind = i; draw(); });
@@ -388,7 +388,7 @@ def("cc-explorer", function(el){
     '<div class="dg-ccnum"></div><div class="dg-feats"></div><p class="dg-note">* ' + T("Only CC 5.3 has FP16 here. If the hardware is missing, software cannot add it.") + "</p>";
   function draw(i){
     var c = cc[i], v = c[1].split(" ")[0].split(".");
-    el.querySelector(".dg-ccnum").innerHTML = "<span><b>" + v[0] + "</b><small>" + T("major: the architecture") + "</small></span><span class='dot'>.</span><span><b>" + v[1] + "</b><small>" + T("minor: a revision of it") + "</small></span>" +
+    el.querySelector(".dg-ccnum").innerHTML = "<span><b>" + v[0] + "</b><small>" + T("major, the architecture") + "</small></span><span class='dot'>.</span><span><b>" + v[1] + "</b><small>" + T("minor, a revision of it") + "</small></span>" +
       "<span class='need'>" + T("needs CUDA") + "<b>≥ " + c[3] + "</b></span>";
     el.querySelector(".dg-feats").innerHTML = feats.map(function(f, k){
       var ok = c[2][k].indexOf("no") !== 0;
@@ -406,7 +406,7 @@ def("whitepaper-map", function(el){
     [T("Performance"), T("How much faster it is than the last one.")],
     [T("Specifications"), T("The number tables. They look the same in every paper, so they are easy to compare.")]
   ];
-  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("How every NVIDIA white paper is laid out") + '</span><span class="dg-note">' + T('search: chip name + "white paper", open the official PDF') + '</span></div>' +
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("How every NVIDIA white paper is laid out") + '</span><span class="dg-note">' + T('search for the chip name + "white paper" and open the official PDF') + '</span></div>' +
     '<div class="dg-steps">' + parts.map(function(p, i){ return '<button type="button" data-k="' + i + '"><span>' + (i + 1) + "</span>" + p[0] + (i === 1 ? " ★" : "") + "</button>"; }).join("") +
     '</div><div class="dg-info"></div>';
   var info = el.querySelector(".dg-info");
@@ -450,7 +450,7 @@ def("nvcc-pipeline", function(el){
     '<div class="dg-flow"><div class="st src">app.cu<small>' + T("host + device code") + '</small></div><div class="st">nvcc<small>' + T("splits the file") + '</small></div>' +
     '<div class="fork"><div class="path"><div class="st">' + T("host code") + '</div><div class="st">g++ / MSVC</div><div class="st">' + T("CPU machine code") + '</div></div>' +
     '<div class="path"><div class="st">' + T("device code") + '</div><div class="st ptx">PTX<small>' + T("virtual ISA, kept in the binary") + '</small></div><div class="st sass">SASS sm_89<small>' + T("real instructions") + '</small></div></div></div>' +
-    '<div class="st">' + T("executable") + '<small>' + T("fatbinary: SASS + PTX") + '</small></div><div class="st drv">' + T("driver") + '<small></small></div><div class="st gpu">GPU</div></div><div class="dg-info"></div>';
+    '<div class="st">' + T("executable") + '<small>' + T("fatbinary with SASS + PTX") + '</small></div><div class="st drv">' + T("driver") + '<small></small></div><div class="st gpu">GPU</div></div><div class="dg-info"></div>';
   function draw(i){
     var f = el.querySelector(".dg-flow");
     f.classList.toggle("jit", i === 1);
@@ -502,7 +502,7 @@ def("wsl-layers", function(el){
 def("install-steps", function(el){
   var steps = [
     [T("GPU is visible"), "nvidia-smi", T("If this fails, stop and fix the driver first. CUDA cannot work without it.")],
-    [T("Add NVIDIA's WSL repository"), "wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb\nsudo dpkg -i cuda-keyring_1.1-1_all.deb", T("Not apt install nvidia-cuda-toolkit: that package is outdated.")],
+    [T("Add NVIDIA's WSL repository"), "wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb\nsudo dpkg -i cuda-keyring_1.1-1_all.deb", T("Not apt install nvidia-cuda-toolkit, because that package is outdated.")],
     [T("Install the toolkit"), "sudo apt-get update\nsudo apt-get -y install cuda-toolkit-13-3", T("Installs nvcc, the runtime and core libraries. Not a driver.")],
     [T("Check the compiler"), "nvcc --version", T("Should report CUDA 13.x.")],
     [T("Fix PATH if nvcc is missing"), "export PATH=/usr/local/cuda/bin:$PATH", T("Add the line to .bashrc or .zshrc to keep it.")]
@@ -531,8 +531,8 @@ def("data-path", function(el){
   ];
   var notes = {
     pcie: T("Peak for pinned host memory. From pageable memory the driver first copies the data into a pinned staging buffer, so the copy is slower."),
-    c2c: T("Coherent link: the GPU can also read ordinary pageable CPU memory directly, without a staging copy."),
-    vram: T("No link involved: this is how fast the L40S reads data that is already on the GPU.")
+    c2c: T("Coherent link, so the GPU can also read ordinary pageable CPU memory directly, without a staging copy."),
+    vram: T("No link involved. This is how fast the L40S reads data that is already on the GPU.")
   };
   var CALM = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches), on = 0;
   el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Moving data to the GPU") + '</span>' + tabs(links.map(function(l){ return l.n; }), 0) + "</div>" +
@@ -570,7 +570,7 @@ def("latency-hiding", function(el){
   var ISSUE = 2, WAIT = 8, CYC = 30, MAX = 8, timer = 0;
   el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("One warp scheduler, many warps") + '</span><div class="dg-ctl"><label>' + F("resident warps {0}", '<b class="n"></b>') +
     ' <input type="range" min="1" max="' + MAX + '" value="1" aria-label="' + T("resident warps") + '"></label><button class="dg-btn" type="button">' + T("play") + '</button></div></div>' +
-    '<p class="dg-note">' + F("Simplified model: each warp issues for {0} cycles, then waits {1} cycles for memory.", ISSUE, WAIT) + '</p>' +
+    '<p class="dg-note">' + F("In this simplified model each warp issues for {0} cycles, then waits {1} cycles for memory.", ISSUE, WAIT) + '</p>' +
     '<div class="lh-grid"></div><div class="dg-legend"><span><i class="C"></i>' + T("issuing") + '</span><span><i class="W"></i>' + T("waiting for memory") + '</span><span><i class="lh-r"></i>' + T("ready, waiting its turn") + '</span><span><i class="lh-idle"></i>' + T("scheduler idle") + '</span></div>' +
     '<div class="lh-meter"><span>' + T("scheduler busy") + '</span><div><i></i></div><b></b></div><div class="dg-info"></div>';
   var input = el.querySelector("input");
@@ -599,8 +599,8 @@ def("latency-hiding", function(el){
     el.querySelector(".lh-meter i").style.width = pct + "%";
     el.querySelector(".lh-meter b").textContent = pct + "%";
     el.querySelector(".dg-info").innerHTML = F("The scheduler issued on <b>{0} of {1}</b> cycles.", busy, CYC) + " " +
-      (N < need ? F("Too few warps: when all of them wait for memory, nobody can issue. About {0} warps hide this wait.", need)
-        : N === need ? T("Just enough warps: while some wait, another one is always ready.")
+      (N < need ? F("Too few warps. When all of them wait for memory, nobody can issue. About {0} warps hide this wait.", need)
+        : N === need ? T("Just enough warps. While some wait, another one is always ready.")
         : T("Already full. Extra warps only wait their turn, they do not make the scheduler faster."));
   }
   el.querySelector(".dg-btn").addEventListener("click", function(){
@@ -629,12 +629,12 @@ def("mem-hierarchy", function(el){
       size: [T("128 KB per SM, up to 100 KB of it as shared memory"), T("256 KB per SM, up to 228 KB of it as shared memory")], wait: [30, 29], wait2: [43, 41] },
     { k: "l2", n: T("L2 cache"), w: 74, c: "--cool", scope: 2, where: T("on the GPU chip, outside the SMs"),
       size: ["96 MB", "50 MB"], wait: [273, 263] },
-    { k: "gmem", n: T("Global memory"), w: 100, c: "--accent", scope: 2, where: T("memory chips beside the GPU chip: GDDR6 on the L40S, HBM3 stacks in the package on the H100"),
+    { k: "gmem", n: T("Global memory"), w: 100, c: "--accent", scope: 2, where: T("memory chips beside the GPU chip, GDDR6 on the L40S and HBM3 stacks in the package on the H100"),
       size: [T("48 GB of GDDR6 at 864 GB/s"), T("80 GB of HBM3 at 3.35 TB/s")], wait: [542, 479] }
   ];
   var S = [
     { k: "const", n: T("Constant memory"), c: "--warp", scope: 2, where: T("a read-only corner of global memory, cached in each SM"),
-      size: [T("64 KB, with an 8 KB cache in each SM"), T("64 KB, with an 8 KB cache in each SM")], say: T("Fast when every thread of a warp reads the same address; one read is broadcast to all of them.") },
+      size: [T("64 KB, with an 8 KB cache in each SM"), T("64 KB, with an 8 KB cache in each SM")], say: T("Fast when every thread of a warp reads the same address, because one read is broadcast to all of them.") },
     { k: "local", n: T("Local memory"), c: "--red", scope: 0, where: T("in global memory, cached in L1 and L2"),
       size: [T("up to 512 KB per thread"), T("up to 512 KB per thread")], say: T("Private to one thread, but it lives off-chip. A miss in the caches costs as much as a global memory read.") }
   ];
@@ -651,16 +651,16 @@ def("mem-hierarchy", function(el){
   function draw(){
     var l = find(cur), g = GPUS[gpu], max = L[3].wait[gpu], wait;
     if (l.say) { wait = l.say; }
-    else if (!l.wait[gpu]) { wait = T("No wait: the core reads registers as part of the instruction itself."); }
+    else if (!l.wait[gpu]) { wait = T("No wait, because the core reads registers as part of the instruction itself."); }
     else {
-      wait = F("about <em>{0} cycles</em> to load", l.wait[gpu]) + (l.wait2 ? " " + F("(L1 hit: about {0})", l.wait2[gpu]) : "") +
+      wait = F("about <em>{0} cycles</em> to load", l.wait[gpu]) + (l.wait2 ? " " + F("(about {0} on an L1 hit)", l.wait2[gpu]) : "") +
         '<div class="dg-track mh-bar"><i style="width:' + Math.round(l.wait[gpu] / max * 100) + '%"></i><span>' + F("{0}% of a global memory load", Math.round(l.wait[gpu] / max * 100)) + "</span></div>";
     }
     info.innerHTML = "<b>" + l.n + "</b> · " + l.where +
       '<div class="dg-facts mh-scope">' + [T("one thread"), T("one block"), T("whole GPU")].map(function(s, i){
         return "<span" + (i === l.scope ? ' class="on"' : "") + ">" + s + "</span>";
       }).join("") + "</div>" +
-      "<div>" + F("Size on the {0}: <b>{1}</b>", g, l.size[gpu]) + "</div><div>" + wait + "</div>" +
+      "<div>" + F("Size on the {0} is <b>{1}</b>", g, l.size[gpu]) + "</div><div>" + wait + "</div>" +
       (l.say ? "" : '<small class="mh-src">' + (gpu ? T("Cycles measured on an H800, a Hopper GPU like the H100.") : T("Cycles measured on an RTX 4090, which uses the same AD102 chip as the L40S.")) + "</small>");
   }
   pick(el.querySelector(".mh-pyr"), function(k){ cur = k; draw(); });
@@ -675,7 +675,7 @@ def("multi-gpu", function(el){
   var levels = [
     { tab: T("one GPU"), link: "PCIe 4.0 x16", bar: "PCIe 4.0", kind: "pcie", n: "1", spec: "64 GB/s", way: 32, ex: "L40S",
       draw: '<div class="mg-one"><div class="mg-box host">CPU</div><div class="mg-link pcie v"><span>PCIe</span></div><div class="mg-box gpu">GPU<small>L40S</small></div></div>',
-      info: T("<b>One GPU.</b> Its only link goes to the CPU over PCIe: 64 GB/s for both directions, 32 GB/s each way. The L40S has no NVLink, so a second L40S could only be reached over PCIe too.") },
+      info: T("<b>One GPU.</b> Its only link goes to the CPU over PCIe, 64 GB/s for both directions and 32 GB/s each way. The L40S has no NVLink, so a second L40S could only be reached over PCIe too.") },
     { tab: T("8-GPU server"), link: "NVLink 4 · NVSwitch", bar: "NVLink 4 (H100)", kind: "nvl", n: "8", spec: "900 GB/s", way: 450, ex: "DGX H100",
       draw: '<div class="mg-srv"><div class="mg-row">' + gpus(4, "up") + '</div><div class="mg-sw">' + F("{0} NVSwitch chips", 4) + '</div><div class="mg-row">' + gpus(4, "dn") + "</div></div>",
       info: T("<b>8 GPUs, one board.</b> Every H100 connects to the NVSwitch chips with 18 NVLink links, 900 GB/s in total. Any GPU reaches any other at full speed, all at the same time.") },
@@ -711,15 +711,15 @@ def("num-formats", function(el){
     ["FP64", 11, 52, "ieee", T("science and simulation, where every digit counts")],
     ["FP32", 8, 23, "ieee", T("the default for CUDA cores and general GPU math")],
     ["TF32", 8, 10, "ieee", T("FP32 matrix math on Tensor Cores (Ampere and later), kept in 32-bit registers")],
-    ["FP16", 5, 10, "ieee", T("training and inference; small range, so training needs loss scaling")],
-    ["BF16", 8, 7, "ieee", T("the standard for training: FP32 range, less precision")],
+    ["FP16", 5, 10, "ieee", T("training and inference, but small range, so training needs loss scaling")],
+    ["BF16", 8, 7, "ieee", T("the standard for training, FP32 range with less precision")],
     ["FP8 E4M3", 4, 3, "fn", T("inference and the forward pass of training")],
     ["FP8 E5M2", 5, 2, "ieee", T("gradients in training, where range matters more")],
     ["FP6 E2M3", 2, 3, "fin", T("inference with a shared block scale (Blackwell)")],
     ["FP6 E3M2", 3, 2, "fin", T("inference with a shared block scale (Blackwell)")],
-    ["FP4 E2M1", 2, 1, "fin", T("the 4-bit element inside NVFP4 and MXFP4; alone it holds only 15 values")],
+    ["FP4 E2M1", 2, 1, "fin", T("the 4-bit element inside NVFP4 and MXFP4, which alone holds only 15 values")],
     ["NVFP4", 2, 1, "nv", T("inference on Blackwell, and more and more training")],
-    ["INT8", 0, 7, "int", T("quantized inference: whole numbers times a scale")]
+    ["INT8", 0, 7, "int", T("quantized inference, whole numbers times a scale")]
   ];
   var presets = ["3.14159", "0.1", "1000", "0.00001"];
   el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("How a number is stored") + '</span><span class="dg-note">' + T("pick a format, type a value") + "</span></div>" +
@@ -793,15 +793,15 @@ def("num-formats", function(el){
       var r = N / x.d, rem = N - r * x.d;
       if (TWO * rem > x.d || (TWO * rem === x.d && r % TWO === ONE)) { r++; }
       var q = Number(r) * (neg ? -1 : 1);
-      if (q > 127 || q < -128) { q = q > 0 ? 127 : -128; note = T("out of range: clamps to the end of the range"); }
+      if (q > 127 || q < -128) { q = q > 0 ? 127 : -128; note = T("out of range, so it clamps to the end of the range"); }
       bits = bin((q + 256) % 256, 8); cls = "ssssssss".replace(/s/g, "i");
       stored = { n: B(q), d: ONE };
-      formula = F("whole numbers from {0} to {1}; the top bit counts −128 (two's complement)", "−128", "127");
+      formula = F("whole numbers from {0} to {1}, where the top bit counts −128 (two's complement)", "−128", "127");
       stats = [F("{0} bits", 8), F("largest {0}", "127"), T("256 values, all evenly spaced")];
     } else if (kind === "nv") {
       // assume this value is the largest |x| in its 16-value block: scale = amax / 6, stored in E4M3
       var sc = enc(N, x.d * B(6), 4, 3, "fn", true);
-      if (sc.under || sc.q === ZERO) { stored = { n: ZERO, d: ONE }; bits = "0000"; cls = "seem"; note = T("too small: rounds to 0"); }
+      if (sc.under || sc.q === ZERO) { stored = { n: ZERO, d: ONE }; bits = "0000"; cls = "seem"; note = T("too small, rounds to 0"); }
       else {
         var sd = dyad(sc.q, sc.p, false), el2 = enc(N * sd.d, x.d * sd.n, 2, 1, "fin", true);
         stored = dyad(el2.q * sc.q, el2.p + sc.p, neg);
@@ -815,13 +815,13 @@ def("num-formats", function(el){
       var bias = (1 << (E - 1)) - 1, h = enc(N, x.d, E, M, kind, false);
       bits = (neg ? "1" : "0") + bin(h.ef, E) + bin(h.mf, M);
       cls = "s" + "e".repeat(E) + "m".repeat(M);
-      if (h.inf) { stored = null; note = T("too big: becomes infinity"); }
+      if (h.inf) { stored = null; note = T("too big, becomes infinity"); }
       else {
         stored = dyad(h.q, h.p, neg);
-        if (h.clamp) { note = T("too big: clamps to the largest value"); }
-        else if (h.under) { note = T("too small: rounds to 0"); }
+        if (h.clamp) { note = T("too big, clamps to the largest value"); }
+        else if (h.under) { note = T("too small, rounds to 0"); }
         formula = h.ef ? F("exponent field {0} − bias {1} = {2}, so the value is {3} × 2^{2} × {4}", h.ef, bias, fmt(h.ef - bias, 4), neg ? "−1" : "+1", fmt(1 + Number(h.mf) / Math.pow(2, M), sig))
-          : F("exponent field 0: a subnormal (or zero), value = {0} × 2^{1} × {2}", neg ? "−1" : "+1", fmt(1 - bias, 4), fmt(Number(h.mf) / Math.pow(2, M), sig));
+          : F("exponent field 0 means a subnormal (or zero), value = {0} × 2^{1} × {2}", neg ? "−1" : "+1", fmt(1 - bias, 4), fmt(Number(h.mf) / Math.pow(2, M), sig));
       }
       var mx = enc(p10(400), ONE, E, M, kind, true), mxv = num(dyad(mx.q, mx.p, false));
       stats = [F("{0} bits", 1 + E + M), F("largest {0}", fmt(mxv, 6)), F("smallest normal {0}", fmt(Math.pow(2, 1 - bias), 3)), F("about {0} decimal digits", ((M + 1) * Math.LOG10E * Math.LN2).toFixed(1))];
@@ -892,10 +892,10 @@ def("roofline-chart", function(el){
     dot.setAttribute("class", "rf-dot " + (mem ? "mem" : "cmp"));
     dot.style.transform = "translate(" + px(ai) + "px," + py(got) + "px)";
     var verdict = mem ? T("memory bound") : T("compute bound");
-    $(".rf-svg").setAttribute("aria-label", F("{0} on the {1}: {2}, {3} GFLOPS", k[0], g[0], verdict, Math.round(got).toLocaleString("en-US")));
+    $(".rf-svg").setAttribute("aria-label", F("{0} on the {1}, {2}, {3} GFLOPS", k[0], g[0], verdict, Math.round(got).toLocaleString("en-US")));
     $(".dg-info").innerHTML = ("<code>" + k[3] + "</code><br>" +
       F("{0} FLOP over {1} bytes = <b>{2} FLOP/byte</b>. The ridge point of the {3} is {4}.", k[1].toLocaleString("en-US"), k[2].toLocaleString("en-US"), num(ai), g[0], num(ridge)) + " " +
-      F("<em>{0}</em>: at most <b>{1} GFLOPS</b>, {2}% of the peak. {3}", verdict, Math.round(got).toLocaleString("en-US"), +(got / peak * 100).toPrecision(2),
+      F("<em>{0}</em> reaches at most <b>{1} GFLOPS</b>, {2}% of the peak. {3}", verdict, Math.round(got).toLocaleString("en-US"), +(got / peak * 100).toPrecision(2),
         mem ? T("Faster math would not help. Move fewer bytes.") : T("Memory keeps up. Now the math units are the limit, so Tensor Cores and better math help."))).replace(/。 /g, "。");
   }
   onTabs($(".dg-tabs"), function(i){ g = gpus[i]; draw(); });
@@ -939,7 +939,7 @@ def("sm-inside", function(el){
     reg: [T("Registers"), T("The fastest storage there is. Every thread keeps its own variables here. On the L40S each SM has 65,536 registers, 256 KB in total.")],
     smem: [T("Shared memory"), T("A small, fast memory that the threads of one block use to swap data. On the L40S each SM has 128 KB, shared with the L1 cache.")],
     ctrl: [T("Control"), T("Warp schedulers decide which group of 32 threads runs next, every clock cycle. The L40S has 4 per SM.")],
-    exec: [T("Execution units"), T("The units that do the actual math: 128 FP32 cores and 4 Tensor Cores per SM on the L40S, plus integer and special function units.")]
+    exec: [T("Execution units"), T("The units that do the actual math. The L40S has 128 FP32 cores and 4 Tensor Cores per SM, plus integer and special function units.")]
   };
   var tiles = ""; for (var i = 0; i < 24; i++) { tiles += "<i" + (i ? "" : ' class="on"') + "></i>"; }
   var units = ""; for (var j = 0; j < 32; j++) { units += "<i></i>"; }

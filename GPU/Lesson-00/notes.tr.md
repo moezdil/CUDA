@@ -10,27 +10,27 @@ Kodu CPU yerine GPU'da çalıştırmak, onu tek başına hızlandırmaz. İyi pe
 
 CPU da GPU da veri işler ve komut çalıştırır. Ama ikisi çok farklı amaçlar için tasarlanmıştır.
 
-CPU şunlar için tasarlanır:
+CPU şu hedeflerle tasarlanır.
 
 - hızlı yanıt  
 - karmaşık mantık  
 - sıralı çalışma  
 
-GPU ise aynı anda çok sayıda iş yapmak için tasarlanır:
+GPU ise aynı anda çok sayıda iş yapmak için tasarlanır.
 
-- CPU: tek bir karmaşık işi çok hızlı yapar  
-- GPU: çok sayıda basit işi paralel yapar  
+- CPU tek bir karmaşık işi çok hızlı yapar  
+- GPU çok sayıda basit işi paralel yapar  
 
 ## Bellek
 
 CPU sistem RAM'ini kullanır. Her şey aynı ortak bellekten geçer.
 
-GPU'nun ise VRAM adı verilen kendi belleği vardır. Oyun kartları GDDR bellek, veri merkezi GPU'ları ise HBM kullanır. Bunun anlamı şu:
+GPU'nun ise VRAM adı verilen kendi belleği vardır. Oyun kartları GDDR bellek, veri merkezi GPU'ları ise HBM kullanır. Bu iki şey demektir.
 
 - CPU ile GPU veriyi kendiliğinden paylaşmaz  
 - veri ikisi arasında kopyalanmak zorundadır  
 
-Bu kopyalama darboğaza dönüşebilir. NVIDIA L40S'i ele al: kendi 48 GB'lık GDDR6 belleğini 864 GB/s hızla okur, CPU ile ise PCIe 4.0 x16 üzerinden her yönde yaklaşık 32 GB/s hızla konuşur. PCIe üzerinden 1 GB taşımak 1 / 32 = 0,031 s, yani yaklaşık 31 ms sürer. Aynı 1 GB'ı VRAM'den okumak 1 / 864 = 0,0012 s, yani yaklaşık 1,2 ms sürer. Kopyalama 864 / 32 = 27 kat daha yavaştır.
+Bu kopyalama darboğaza dönüşebilir. NVIDIA L40S'i ele al. Kendi 48 GB'lık GDDR6 belleğini 864 GB/s hızla okur, CPU ile ise PCIe 4.0 x16 üzerinden her yönde yaklaşık 32 GB/s hızla konuşur. PCIe üzerinden 1 GB taşımak 1 / 32 = 0,031 s, yani yaklaşık 31 ms sürer. Aynı 1 GB'ı VRAM'den okumak 1 / 864 = 0,0012 s, yani yaklaşık 1,2 ms sürer. Kopyalama 864 / 32 = 27 kat daha yavaştır.
 
 > [!WARNING]
 > CPU ile GPU arasında veri kopyalamak, çoğu zaman bir GPU programının en yavaş adımıdır. Bir kez kopyala, GPU'da bol iş yap, sonuçları da bir kez geri kopyala.
@@ -40,13 +40,13 @@ Bu kopyalama darboğaza dönüşebilir. NVIDIA L40S'i ele al: kendi 48 GB'lık G
 Önbellek, işlemcinin hemen yanında duran küçük ve çok hızlı bir bellektir. Hem CPU'larda hem GPU'larda önbellek bulunur, ama ikisi onu farklı şekilde kullanır.
 
 > [!NOTE]
-> CPU'lar birkaç önbellek seviyesine dayanır: L1, L2 ve L3. Bunlar küçük ama çok hızlıdır.
+> CPU'lar L1, L2 ve L3 adında birkaç önbellek seviyesine dayanır. Bunlar küçük ama çok hızlıdır.
 
-GPU'larda da önbellek vardır. Bunun yanında bir şey daha bulunur: paylaşımlı bellek. GPU'daki thread'ler birlikte çalışmak ve veri paylaşmak için onu kullanır. Paylaşımlı bellek, GPU optimizasyonunun en önemli araçlarından biridir.
+GPU'larda da önbellek vardır. Bunun yanında paylaşımlı bellek denen bir şey daha bulunur. GPU'daki thread'ler birlikte çalışmak ve veri paylaşmak için onu kullanır. Paylaşımlı bellek, GPU optimizasyonunun en önemli araçlarından biridir.
 
 ## Çekirdek Hızı
 
-GPU'yu güçlü yapan, çekirdeklerinin daha hızlı olması değildir. Tek bir CPU çekirdeği genelde daha yüksek bir saat hızında çalışır: bir masaüstü CPU çekirdeği çoğu zaman 5 GHz'e ya da üstüne çıkar. Bir GPU çekirdeği daha yavaştır: 2025'in en güçlü oyun GPU'larından GeForce RTX 5090, 2,41 GHz'e çıkar. Çekirdek çekirdeğe karşılaştırırsan CPU kazanır.
+GPU'yu güçlü yapan, çekirdeklerinin daha hızlı olması değildir. Tek bir CPU çekirdeği genelde daha yüksek bir saat hızında çalışır. Bir masaüstü CPU çekirdeği çoğu zaman 5 GHz'e ya da üstüne çıkar. Bir GPU çekirdeği daha yavaştır. 2025'in en güçlü oyun GPU'larından GeForce RTX 5090, 2,41 GHz'e çıkar. Çekirdek çekirdeğe karşılaştırırsan CPU kazanır.
 
 ## GPU'nun Gücü Nereden Gelir
 
@@ -60,12 +60,12 @@ GPU'lar ancak bir problem paralel parçalara bölünebildiğinde öne geçer. S�
 
 ## CPU ve GPU Nasıl Birlikte Çalışır
 
-GPU tek başına çalışmaz. Tipik bir sistemde:
+GPU tek başına çalışmaz. Tipik bir sistemde görevler şöyle paylaşılır.
 
 - CPU programı yönetir  
 - GPU paralel işi çalıştırır  
 
-İkisi PCIe gibi bir bağlantı üzerinden konuşur. Veri akışı şöyledir:
+İkisi PCIe gibi bir bağlantı üzerinden konuşur. Veri akışı şöyledir.
 
 CPU → veriyi GPU'ya gönderir  
 GPU → veriyi işler  
@@ -79,7 +79,7 @@ Bu akış kötü yönetilirse performans düşer.
 
 GPU'nun içindeki en önemli birim SM'dir. SM küçük bir işlem birimidir. Bir GPU, birlikte çalışan çok sayıda SM'den oluşur.
 
-Her SM'de paralel iş çalıştırmak için gereken her şey bulunur:
+Her SM'de paralel iş çalıştırmak için gereken her şey bulunur.
 
 - register'lar, mevcut en hızlı depolama alanı  
 - paylaşımlı bellek, thread'lerin veri alışverişi yaptığı yer  
@@ -90,7 +90,7 @@ Her SM'de paralel iş çalıştırmak için gereken her şey bulunur:
 
 ## Yürütme Birimleri
 
-Her SM'de farklı türde hesaplama birimleri vardır. Her tür belirli bir işte uzmanlaşmıştır:
+Her SM'de farklı türde hesaplama birimleri vardır. Her tür belirli bir işte uzmanlaşmıştır.
 
 - kayan noktalı sayı birimleri, grafikte ve yapay zekâda çok kullanılır  
 - tam sayı birimleri  
@@ -111,7 +111,7 @@ L2 önbellek, tüm GPU için ortak bir önbellek katmanıdır. L1 ya da paylaş�
 
 ## Bu Neden Önemli
 
-CUDA sadece kod yazmak değildir. Donanımı anlamaktır. Bir GPU'yu iyi kullanmak için şunları bilmen gerekir:
+CUDA sadece kod yazmak değildir. Donanımı anlamaktır. Bir GPU'yu iyi kullanmak için üç şeyi bilmen gerekir.
 
 - belleğin nasıl çalıştığını  
 - paralel çalışmanın nasıl işlediğini  
@@ -122,28 +122,28 @@ GPU programlamak, paralel düşünmek demektir. CUDA'da bundan sonra gelen her �
 ## Sözlük
 
 - GPU (Graphics Processing Unit): binlerce basit çekirdeğiyle çok sayıda işi paralel çalıştırmak için tasarlanmış işlemci.
-- CPU (Central Processing Unit): bilgisayarın ana işlemcisi; hızlı tepki, karmaşık mantık ve sıralı iş için tasarlanmıştır.
-- sıralı çalışma (sequential execution): adımların birbiri ardına çalışması; her adım bir öncekini bekler.
+- CPU (Central Processing Unit): bilgisayarın ana işlemcisi. Hızlı tepki, karmaşık mantık ve sıralı iş için tasarlanmıştır.
+- sıralı çalışma (sequential execution): adımların birbiri ardına çalışması. Her adım bir öncekini bekler.
 - paralel (parallel): birçok işin birbiri ardına değil, aynı anda çalışması.
-- sistem RAM (Random Access Memory): bilgisayarın anakart üzerindeki ana belleği; CPU bunu kullanır.
+- sistem RAM (Random Access Memory): bilgisayarın anakart üzerindeki ana belleği. CPU bunu kullanır.
 - VRAM: GPU'nun kendi belleği, CPU'nun kullandığı sistem RAM'inden ayrıdır.
 - GDDR (Graphics Double Data Rate): oyun kartlarında ve birçok iş istasyonu GPU'sunda kullanılan bellek türü, örneğin L40S'teki GDDR6.
-- HBM (High Bandwidth Memory): veri merkezi GPU'larındaki üst üste yığılmış bellek; GDDR'dan çok daha hızlıdır.
-- darboğaz (bottleneck): bir zincirin en yavaş adımı; bütün zincirin hızını o belirler.
+- HBM (High Bandwidth Memory): veri merkezi GPU'larındaki üst üste yığılmış bellek, GDDR'dan çok daha hızlıdır.
+- darboğaz (bottleneck): bir zincirin en yavaş adımı. Bütün zincirin hızını o belirler.
 - L40S: 142 SM'li, 18.176 çekirdekli ve 48 GB GDDR6 bellekli bir NVIDIA veri merkezi GPU'su (Ada Lovelace mimarisi).
 - önbellek (cache): işlemciye yakın, küçük ve çok hızlı bir bellek.
 - L1 önbellek (L1): en küçük ve en hızlı önbellek seviyesi, çekirdeğin hemen yanındadır (GPU'da her SM'nin içinde).
 - paylaşımlı bellek (shared memory): thread'lerin birlikte çalışmak ve veri paylaşmak için kullandığı GPU belleği.
-- thread: tek bir komut akışı; GPU aynı anda binlerce thread çalıştırır.
-- çekirdek (core): komut çalıştıran tek bir işlem birimi; CPU'da birkaç güçlü, GPU'da binlerce basit çekirdek vardır.
-- saat hızı (clock speed): tek bir çekirdeğin ne kadar hızlı çalıştığı; CPU'da çoğu zaman birkaç GHz.
-- GHz (gigahertz): saniyede bir milyar saat döngüsü; 3 GHz'lik bir çekirdek saniyede 3 milyar kez tıklar.
-- PCIe (Peripheral Component Interconnect Express): CPU ile GPU'nun birbirine veri göndermek için kullandığı bağlantı; PCIe 4.0 x16 her yönde yaklaşık 32 GB/s taşır.
+- thread: tek bir komut akışı. GPU aynı anda binlerce thread çalıştırır.
+- çekirdek (core): komut çalıştıran tek bir işlem birimi. CPU'da birkaç güçlü, GPU'da binlerce basit çekirdek vardır.
+- saat hızı (clock speed): tek bir çekirdeğin ne kadar hızlı çalıştığı, CPU'da çoğu zaman birkaç GHz.
+- GHz (gigahertz): saniyede bir milyar saat döngüsü, yani 3 GHz'lik bir çekirdek saniyede 3 milyar kez tıklar.
+- PCIe (Peripheral Component Interconnect Express): CPU ile GPU'nun birbirine veri göndermek için kullandığı bağlantı. PCIe 4.0 x16 her yönde yaklaşık 32 GB/s taşır.
 - SM (Streaming Multiprocessor): GPU'nun içindeki en önemli işlem birimi, GPU çok sayıda SM'den oluşur.
-- register (yazmaç): SM'deki en hızlı depolama alanı; her thread kendi değişkenlerini register'larda tutar.
-- kayan noktalı sayı birimleri (floating-point units): 3,14 gibi ondalıklı sayılarla hesap yapan birimler; özellik tablolarında CUDA çekirdeği diye geçer.
-- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitilmesi de çalıştırılması da büyük ölçüde matris hesabıdır.
-- Tensor Core: SM'nin içinde matris hesapları için tasarlanmış birim; yapay zekâ için kritiktir.
+- register (yazmaç): SM'deki en hızlı depolama alanı. Her thread kendi değişkenlerini register'larda tutar.
+- kayan noktalı sayı birimleri (floating-point units): 3,14 gibi ondalıklı sayılarla hesap yapan birimler. Özellik tablolarında CUDA çekirdeği diye geçer.
+- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım. Eğitilmesi de çalıştırılması da büyük ölçüde matris hesabıdır.
+- Tensor Core: SM'nin içinde matris hesapları için tasarlanmış birim, yapay zekâ için kritiktir.
 - özel fonksiyon birimleri (special function units, SFU): sinüs, kosinüs, karekök gibi fonksiyonları donanımda hesaplayan birimler.
 - load/store birimleri (load/store units): veriyi bellek ile hesaplama birimleri arasında taşıyan birimler.
 - L2 önbellek: tüm GPU için ortak, daha büyük ama daha yavaş bir önbellek, tek bir SM'ye bağlı değildir.

@@ -10,12 +10,12 @@ It is not a marketing score or a benchmark. It says exactly what a GPU architect
 
 ## How the Numbering Works
 
-Compute capability is a version number, like 7.5, 8.9 or 12.0. The rule is the same for all generations:
+Compute capability is a version number, like 7.5, 8.9 or 12.0. The rule is the same for all generations.
 
 - The number before the dot signals a major architectural change
 - The number after the dot represents minor improvements or extensions
 
-So going from 7.x to 8.x is not just a speed bump. It means a different architecture with new hardware units and new capabilities. A worked example: the RTX 4090 is CC 8.9 and the A100 is CC 8.0. Both belong to the 8.x family, so they share the core design, but 8.9 adds features the A100 does not have, such as FP8 Tensor Cores.
+So going from 7.x to 8.x is not just a speed bump. It means a different architecture with new hardware units and new capabilities. A worked example makes it concrete. The RTX 4090 is CC 8.9 and the A100 is CC 8.0. Both belong to the 8.x family, so they share the core design, but 8.9 adds features the A100 does not have, such as FP8 Tensor Cores.
 
 > [!TIP]
 > To see the CC of the GPU in your machine, run `nvidia-smi --query-gpu=name,compute_cap --format=csv`. NVIDIA's "CUDA GPUs" web page lists the CC of every card.
@@ -38,7 +38,7 @@ Hopper (the H100 and H200) was another major step. It introduced new execution m
 
 Blackwell is the main shipping generation in 2026. It has 5th-generation Tensor Cores and a new precision format called NVFP4. NVFP4 doubles throughput compared to FP8 for large model inference. FP4 acceleration does not exist on earlier architectures.
 
-Blackwell comes in several compute capabilities, one per chip family:
+Blackwell comes in several compute capabilities, one per chip family.
 
 | CC | Products |
 |---|---|
@@ -53,7 +53,7 @@ Blackwell comes in several compute capabilities, one per chip family:
 
 ## Feature Support
 
-The official CUDA documentation has tables that map features to compute capability versions. These tables show clear patterns:
+The official CUDA documentation has tables that map features to compute capability versions. These tables show clear patterns.
 
 - GPUs at CC 5.0 do not support FP16 operations
 - Tensor Cores appear only from CC 7.0 onward
@@ -68,20 +68,20 @@ So before writing performance-sensitive CUDA code, ask "Does my GPU support what
 
 Compute capability also decides which CUDA toolkit versions you can use. A new architecture needs a toolkit that knows it, and old architectures are dropped from new toolkits after some years.
 
-Some examples:
+Here are some examples.
 
-- Hopper (CC 9.0): requires CUDA 11.8 or higher
-- Blackwell (CC 10.0 and 12.0): requires CUDA 12.8 or higher for native cubin support
-- Blackwell Ultra (CC 10.3): requires CUDA 12.9 or higher
-- Rubin (CC 10.7): supported in CUDA 13.4
-- Maxwell, Pascal and Volta (CC 5.x to 7.0): not supported by CUDA 13 at all; the last toolkits for them are CUDA 12.x
+- Hopper (CC 9.0) requires CUDA 11.8 or higher
+- Blackwell (CC 10.0 and 12.0) requires CUDA 12.8 or higher for native cubin support
+- Blackwell Ultra (CC 10.3) requires CUDA 12.9 or higher
+- Rubin (CC 10.7) is supported in CUDA 13.4
+- Maxwell, Pascal and Volta (CC 5.x to 7.0) are not supported by CUDA 13 at all, and the last toolkits for them are CUDA 12.x
 
 > [!WARNING]
 > CUDA 13 (the current major version, 13.4 as of September 2026) supports CC 7.5 (Turing) and newer only. On a Pascal card such as a GTX 1080 (CC 6.1), you must stay on CUDA 12.x.
 
 A toolkit below the minimum for your architecture, or a toolkit that has dropped your architecture, gives a hard error. The code will not compile, or it will fail at runtime.
 
-The workflow is always the same:
+The workflow is always the same.
 
 1. Find your GPU's compute capability.
 2. Choose your CUDA version.
@@ -113,14 +113,14 @@ Know your CC number. Check it against the CUDA documentation. Choose the right t
 - compute capability (CC): NVIDIA's version number that says what a GPU architecture can and cannot do.
 - GPU (Graphics Processing Unit): a processor built to run many simple tasks in parallel.
 - CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
-- benchmark: a test program that measures speed; compute capability is not a speed score.
-- architecture: the hardware design of a GPU family; each architecture gets its own major CC number.
+- benchmark: a test program that measures speed. Compute capability is not a speed score.
+- architecture: the hardware design of a GPU family. Each architecture gets its own major CC number.
 - number before the dot (major number): it signals a major architectural change, such as 8 for Ampere and 9 for Hopper.
 - number after the dot (minor number): it stands for minor improvements or extensions, such as 8.6 or 8.9 within the 8.x family.
-- `nvidia-smi`: NVIDIA's command-line tool; with `--query-gpu=compute_cap` it prints the CC of each GPU.
+- `nvidia-smi`: NVIDIA's command-line tool. With `--query-gpu=compute_cap` it prints the CC of each GPU.
 - Tensor Cores: special units that speed up matrix operations for AI. They appear from CC 7.0 onward.
 - CUDA cores: the general-purpose arithmetic units of an NVIDIA GPU, the ones counted in its core count.
-- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math.
+- AI (artificial intelligence): software that learns from data, and training it is mostly huge matrix math.
 - Turing: NVIDIA's 2018 architecture (RTX 20 series), CC 7.5, the oldest one CUDA 13 supports.
 - Ada Lovelace: NVIDIA's 2022 architecture (RTX 40 series, L40S), CC 8.9.
 - Hopper: NVIDIA's 2022 data center architecture (H100, H200), CC 9.0.
@@ -132,8 +132,8 @@ Know your CC number. Check it against the CUDA documentation. Choose the right t
 - inference: running a trained AI model to get answers, as opposed to training it.
 - FP16 (16-bit floating point): half-precision operations. GPUs at CC 5.0 do not support them.
 - emulation: imitating missing hardware in software, which is usually far slower or not possible at all.
-- toolkit (CUDA Toolkit): NVIDIA's package with the nvcc compiler, libraries and tools; each version supports a range of compute capabilities.
-- CUDA 13: the current major CUDA version; it supports CC 7.5 and newer only.
+- toolkit (CUDA Toolkit): NVIDIA's package with the nvcc compiler, libraries and tools. Each version supports a range of compute capabilities.
+- CUDA 13: the current major CUDA version, and it supports CC 7.5 and newer only.
 - Maxwell / Pascal / Volta: NVIDIA architectures from 2014, 2016 and 2017 (CC 5.x to 7.0) that CUDA 13 no longer supports.
 - cubin: a compiled GPU binary for one specific compute capability, unlike PTX, which can still be compiled for newer GPUs.
 - runtime: the time when the program is running, as opposed to compile time.

@@ -7,7 +7,7 @@ Lessons 00 to 04 compiled their programs with one short command. This lesson goe
 
 ## Code
 
-The program is in `code/project001.cu`:
+The program is in `code/project001.cu`.
 
 ```c
 #include "cuda_runtime.h"
@@ -49,8 +49,8 @@ Step through the program in the order you would write it. The new part is the wa
 
 1. `1-3 cpu` **Headers.** The CUDA runtime, the built-in variables, and `stdio.h` for `printf`. These three lines start every program in these lessons.
 2. `5-6,13 gpu` **The empty kernel.** Write `__global__ void test01()` and its braces first. Then fill the body line by line.
-3. `7-8 gpu` **A plan in comments.** Before the code, write down what the kernel does and the numbers it relies on: 32 threads per warp, so 64 threads make 2 warps per block. Comments cost nothing at run time and make the next line easy to check.
-4. `9-10 gpu` **The warp ID.** Declare `warp_ID_Value`, then set it to `threadIdx.x / 32`. Both sides are integers, so the division drops the remainder: thread 45 gets 1. End each line with `;`. The Compilation Errors section below shows what a missing one does.
+3. `7-8 gpu` **A plan in comments.** Before the code, write down what the kernel does and the numbers it relies on. There are 32 threads per warp, so 64 threads make 2 warps per block. Comments cost nothing at run time and make the next line easy to check.
+4. `9-10 gpu` **The warp ID.** Declare `warp_ID_Value`, then set it to `threadIdx.x / 32`. Both sides are integers, so the division drops the remainder, so thread 45 gets 1. End each line with `;`. The Compilation Errors section below shows what a missing one does.
 5. `11-12 gpu` **The print.** One `printf` with three `%d`, filled by the block ID, the thread ID and the warp ID, in that order. A long call can go over two lines, because the compiler reads up to the `;` as one statement.
 6. `15-16,20-21 cpu` **The main function.** Write `main` with `return 0;` at the end. Everything in it runs on the CPU.
 7. `17-18 cpu` **The launch.** The comment repeats the pattern `kernel_name<<<num_of_blocks, num_of_threads_per_block>>>`, and the next line fills it in with 2 blocks of 64 threads. The spaces around `<<<2, 64>>>` are allowed. The compiler ignores them.
@@ -60,7 +60,7 @@ Step through the program in the order you would write it. The new part is the wa
 
 ## Compile and Run
 
-### Step 1: verify nvcc
+### Step 1, verify nvcc
 
 First check that the CUDA compiler is installed and see which version it is. If this command fails, nothing else in this lesson will work.
 
@@ -71,7 +71,7 @@ nvcc --version
 - `nvcc` is the CUDA compiler.
 - `--version` prints the compiler version and exits. It does not compile anything.
 
-Output on this machine:
+This is the output on this machine.
 
 ```
 nvcc: NVIDIA (R) Cuda compiler driver
@@ -83,9 +83,9 @@ Build cuda_13.0.r13.0/compiler.36424714_0
 
 The important line is `release 13.0, V13.0.88`. It says this is CUDA 13.0. The other lines are the tool name, the copyright, and the build date and ID of the compiler.
 
-### Step 2: compile
+### Step 2, compile
 
-Now turn the source file into a program the machine can run. This is the same command as in Lessons 00 to 05:
+Now turn the source file into a program the machine can run. This is the same command as in Lessons 00 to 05.
 
 ```bash
 nvcc -o project001 project001.cu
@@ -98,7 +98,7 @@ nvcc -o project001 project001.cu
 > [!WARNING]
 > If a file named `project001` already exists, `-o project001` overwrites it without asking.
 
-Check that the program file exists:
+Check that the program file exists.
 
 ```bash
 ls -lh project001
@@ -114,20 +114,20 @@ ls -lh project001
 
 The line starts with `-`, so it is a normal file. The `x` letters in `rwxrwxr-x` mean the file can be run. `ubuntu ubuntu` is the owner and group. `966K` is the size of the program, about 966 KB. Then come the date and time it was built and its name. If the compile had failed, `ls` would report that the file does not exist.
 
-### Step 3: name the GPU architecture
+### Step 3, name the GPU architecture
 
-Without `-arch`, `nvcc` picks a safe, generic default target. It is better to name the GPU you build for. The L40S has compute capability 8.9 (see [Lesson 03](../Lesson-03/notes.md)), and its architecture name is `sm_89`:
+Without `-arch`, `nvcc` picks a safe, generic default target. It is better to name the GPU you build for. The L40S has compute capability 8.9 (see [Lesson 03](../Lesson-03/notes.md)), and its architecture name is `sm_89`.
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
 ```
 
-- `-arch=sm_89` builds for compute capability 8.9, the L40S. The number is the CC without the dot: 8.9 becomes `89`.
+- `-arch=sm_89` builds for compute capability 8.9, the L40S. The number is the CC without the dot, so 8.9 becomes `89`.
 - `-o project001` and `project001.cu` are the same as before.
 
 From here on, every lesson compiles with `-arch=sm_89`. On another GPU, put in its own CC, for example `-arch=sm_80` for CC 8.0. [Lesson 05](../Lesson-05/notes.md) explains what the compiler builds for this target.
 
-Check that this toolkit supports sm_89:
+Check that this toolkit supports sm_89.
 
 ```bash
 nvcc --help | grep sm_89
@@ -144,7 +144,7 @@ nvcc --help | grep sm_89
 
 Each line is part of a list of allowed values in the help text. `grep` prints every line that matches, so `sm_89` shows up twice. Any match means this toolkit can build for the L40S. If there were no output, `-arch=sm_89` would not work with this `nvcc`.
 
-### Step 4: run
+### Step 4, run
 
 Run the program you just built.
 
@@ -159,7 +159,7 @@ Run the program you just built.
 
 At the kernel launch line, the CPU sends the kernel to the GPU. It does not wait. It goes straight to the next line. If that line is `return 0`, the program ends before the GPU prints anything.
 
-To see this, remove the `cudaDeviceSynchronize();` line, compile again, and run the program three times. On this machine the program never printed anything:
+To see this, remove the `cudaDeviceSynchronize();` line, compile again, and run the program three times. On this machine the program never printed anything.
 
 ```bash
 $ ./project001
@@ -173,11 +173,11 @@ $
 The `$` is the shell prompt. It is not part of the command. After each `./project001` the next line is an empty prompt, so none of the three runs printed anything. The kernel did run on the GPU. But the program ended before the GPU's print buffer was flushed to the terminal.
 
 > [!WARNING]
-> Missing output depends on timing. On this machine it never appeared, but on another machine, driver or OS you may see some or all of the lines in some runs. Never rely on that: without `cudaDeviceSynchronize()`, the CPU does not wait for the GPU.
+> Missing output depends on timing. On this machine it never appeared, but on another machine, driver or OS you may see some or all of the lines in some runs. Never rely on that. Without `cudaDeviceSynchronize()`, the CPU does not wait for the GPU.
 
 `cudaDeviceSynchronize()` makes the CPU wait at that line until all GPU threads finish. When it returns, the print buffer is flushed and all output is on the terminal. Every run then prints the full output.
 
-Put the line back, then compile and run again:
+Put the line back, then compile and run again.
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
@@ -324,7 +324,7 @@ The block ID is 1 --- The thread ID is 62 --- The warp ID 1
 The block ID is 1 --- The thread ID is 63 --- The warp ID 1
 ```
 
-How to read it:
+Here is how to read it.
 
 - There are 128 lines because 2 blocks × 64 threads = 128 threads, and each thread calls `printf` once.
 - The thread ID goes from 0 to 63 in block 0 and then starts at 0 again in block 1. `threadIdx.x` counts inside a block, not across the whole launch.
@@ -334,7 +334,7 @@ On this machine, block 0 printed before block 1 in both runs. A second run gave 
 
 ## Compilation Errors
 
-To see how the compiler reports errors, remove the `;` at the end of `warp_ID_Value = threadIdx.x / 32` (line 10). Then compile again:
+To see how the compiler reports errors, remove the `;` at the end of `warp_ID_Value = threadIdx.x / 32` (line 10). Then compile again.
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
@@ -342,7 +342,7 @@ nvcc -arch=sm_89 -o project001 project001.cu
 
 This is the same compile command as before. This time it fails, so no new program is written.
 
-Output on this machine:
+This is the output on this machine.
 
 ```
 project001.cu(9): error: expected a ";"
@@ -352,7 +352,7 @@ project001.cu(9): error: expected a ";"
 1 error detected in the compilation of "project001.cu".
 ```
 
-How to read it:
+Here is how to read it.
 
 - `project001.cu(9)` is the file name and the line number, in brackets.
 - `error: expected a ";"` says what the compiler was looking for.

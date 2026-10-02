@@ -9,7 +9,7 @@
 
 Vektörler artık 2048'er eleman tutuyor. Eleman başına bir thread demek 2048 thread demek. Tek bir block en fazla 1024 thread alabilir. Bu sınır, [Ders 03](../Lesson-03/notes.md)'te gördüğün gibi compute capability'nin bir parçası. Bu yüzden `<<<1, 2048>>>` başlatılırken reddedilir ([Ders 02](../Lesson-02/notes.md)).
 
-Çıkış yolu daha fazla block. En basit bölme, 1024 thread'lik 2 block, yani `<<<2, 1024>>>`:
+Çıkış yolu daha fazla block. En basit bölme, 1024 thread'lik 2 block, yani `<<<2, 1024>>>`.
 
 - block 0, 0 ile 1023 arasındaki elemanları alır
 - block 1, 1024 ile 2047 arasındaki elemanları alır
@@ -18,23 +18,23 @@ Ders 08'deki kernel `int i = threadIdx.x;` kullanıyordu. Bu artık işe yaramaz
 
 ## Global İndeks
 
-Her thread'in yalnızca kendi block'u içinde değil, bütün vektörde kendine ait bir elemana ihtiyacı var. Bunun formülü global indekstir:
+Her thread'in yalnızca kendi block'u içinde değil, bütün vektörde kendine ait bir elemana ihtiyacı var. Bunun formülü global indekstir.
 
 ```c
 int i = blockIdx.x * blockDim.x + threadIdx.x;
 ```
 
-- `blockIdx.x`: bu thread'in hangi block'ta olduğu.
-- `blockDim.x`: her block'ta kaç thread olduğu, burada 1024.
-- `threadIdx.x`: thread'in kendi block'u içindeki yeri.
+- `blockIdx.x`, bu thread'in hangi block'ta olduğunu söyler.
+- `blockDim.x`, her block'ta kaç thread olduğunu söyler, burada 1024.
+- `threadIdx.x`, thread'in kendi block'u içindeki yeridir.
 
-`blockIdx.x * blockDim.x`, bu block'tan önceki block'ların bütün thread'lerini atlar. `<<<2, 1024>>>` için gerçek sayılarla kontrol et:
+`blockIdx.x * blockDim.x`, bu block'tan önceki block'ların bütün thread'lerini atlar. `<<<2, 1024>>>` için gerçek sayılarla kontrol et.
 
-- block 0, thread 2: 0 * 1024 + 2 = 2
-- block 1, thread 0: 1 * 1024 + 0 = 1024, ikinci yarının ilk elemanı
-- block 1, thread 1023: 1 * 1024 + 1023 = 2047, son eleman
+- block 0, thread 2 için 0 * 1024 + 2 = 2
+- block 1, thread 0 için 1 * 1024 + 0 = 1024, ikinci yarının ilk elemanı
+- block 1, thread 1023 için 1 * 1024 + 1023 = 2047, son eleman
 
-0'dan 2047'ye kadar her eleman tam olarak bir thread alır. Kaydırıcıları oynat ve herhangi bir başlatma için formülü görmek üzere bir thread'in üzerine gel:
+0'dan 2047'ye kadar her eleman tam olarak bir thread alır. Kaydırıcıları oynat ve herhangi bir başlatma için formülü görmek üzere bir thread'in üzerine gel.
 
 <global-id></global-id>
 
@@ -43,7 +43,7 @@ int i = blockIdx.x * blockDim.x + threadIdx.x;
 
 ## Grid Boyutunu Seçmek
 
-İşi nasıl böleceğine sen karar verirsin. 2048 eleman için bunların hepsi tam olarak 2048 thread başlatır:
+İşi nasıl böleceğine sen karar verirsin. 2048 eleman için bunların hepsi tam olarak 2048 thread başlatır.
 
 | Başlatma | Block | Block başına thread | Toplam thread |
 |---|---|---|---|
@@ -53,11 +53,11 @@ int i = blockIdx.x * blockDim.x + threadIdx.x;
 
 Daha çok block, block başına daha az thread demek, tersi de geçerli. Çarpım her elemanı kapsamalı.
 
-Gerçek vektör uzunlukları nadiren bu kadar yuvarlak sayılardır. Vektörün 2000 elemanı olsun ve block başına 256 thread istiyor ol. 2000 / 256 = 7,8 eder ve C'deki tam sayı bölmesi kesirli kısmı atar:
+Gerçek vektör uzunlukları nadiren bu kadar yuvarlak sayılardır. Vektörün 2000 elemanı olsun ve block başına 256 thread istiyor ol. 2000 / 256 = 7,8 eder ve C'deki tam sayı bölmesi kesirli kısmı atar.
 
 - `2000 / 256` sonucu 7 block, yani 7 * 256 = 1792 thread. Son 208 eleman hiç toplanmaz.
 
-Bu yüzden yukarı yuvarla. Bunun standart yolu şu formül:
+Bu yüzden yukarı yuvarla. Bunun standart yolu şu formül.
 
 ```c
 int blocks = (N + threads - 1) / threads;
@@ -65,7 +65,7 @@ int blocks = (N + threads - 1) / threads;
 
 - `(2000 + 256 - 1) / 256` = 2255 / 256 = 8 block, yani 8 * 256 = 2048 thread.
 
-Şimdi 48 thread fazla var (2048 - 2000). Bunların global indeksi 2000 ile 2047 arası, yani vektörlerin sonunun ötesinde. Kernel'daki Ders 08'den gelen sınır kontrolü tam da bu yüzden var:
+Şimdi 48 thread fazla var (2048 - 2000). Bunların global indeksi 2000 ile 2047 arası, yani vektörlerin sonunun ötesinde. Kernel'daki Ders 08'den gelen sınır kontrolü tam da bu yüzden var.
 
 ```c
 if (i < n) {
@@ -85,14 +85,14 @@ Fazladan 48 thread için `i < n` yanlış çıkar ve hiçbir şey yapmazlar.
 
 Bir block her zaman tek bir SM'de çalışır. Bir SM aynı anda birden fazla block tutabilir. L40S'te bir SM en fazla 1536 thread (48 warp) ve en fazla 24 block tutar. Hangi SM'nin hangi block'u alacağına donanımdaki zamanlayıcı karar verir. Boştaki bir GPU'da block'ları genellikle önce her SM'ye bir tane olacak şekilde dağıtır, ama bunun garantisi yoktur.
 
-Şimdi 142 SM'li L40S için say:
+Şimdi 142 SM'li L40S için say.
 
-- `<<<2, 1024>>>`: 2 block, yani en fazla 2 SM çalışır. Bu 142'de 2, yaklaşık %1,4. Diğer 140 SM boş bekler.
-- `<<<64, 32>>>`: 64 block, yani 64'e kadar SM çalışır, yaklaşık %45. Ama her biri yalnızca tek bir warp tutar, oysa 48 tane çalıştırabilir.
+- `<<<2, 1024>>>` ile 2 block var, yani en fazla 2 SM çalışır. Bu 142'de 2, yaklaşık %1,4. Diğer 140 SM boş bekler.
+- `<<<64, 32>>>` ile 64 block var, yani 64'e kadar SM çalışır, yaklaşık %45. Ama her biri yalnızca tek bir warp tutar, oysa 48 tane çalıştırabilir.
 
 Asıl sorun işin büyüklüğü. L40S aynı anda 142 * 1536 = 218.112 thread tutabilir. 2048 thread bunun %1'inden az. Bu kadar az işle hiçbir grid düzeni bir GPU'yu dolduramaz. GPU'lar yüz binlerce ya da milyonlarca eleman olduğunda kendini gösterir.
 
-Bir block boyutu seç ve grid'in L40S'in 142 SM'sine nasıl yerleştiğini gör:
+Bir block boyutu seç ve grid'in L40S'in 142 SM'sine nasıl yerleştiğini gör.
 
 <grid-size n="2048" sms="142"></grid-size>
 
@@ -103,7 +103,7 @@ Bir block boyutu seç ve grid'in L40S'in 142 SM'sine nasıl yerleştiğini gör:
 
 `<<<2, 1024>>>` ile `<<<64, 32>>>`'yi karşılaştırmak için kernel'ın süresini ölçmen gerekir. Bir kernel başlatması hemen geri döner ve GPU arka planda çalışır ([Ders 00](../Lesson-00/notes.md)), bu yüzden başlatma satırının etrafına konan normal bir CPU saati neredeyse hiçbir şey ölçmez. CUDA event'leri bu sorunu çözer. Bir event, GPU'nun iş kuyruğuna koyduğun bir işarettir. GPU bu işarete geldiğinde zamanı not eder.
 
-Kalıp beş parçadan oluşur:
+Kalıp beş parçadan oluşur.
 
 ```c
 cudaEvent_t start, stop;
@@ -119,30 +119,30 @@ cudaEventElapsedTime(&ms, start, stop);
 
 `cudaEventElapsedTime`, iki işaret arasındaki süreyi milisaniye olarak verir. 1 milisaniye 1000 mikrosaniyedir.
 
-Ölçüm kalıbını adım adım geç, sonra iki klasik hatadan birini aç:
+Ölçüm kalıbını adım adım geç, sonra iki klasik hatadan birini aç.
 
 <event-timing></event-timing>
 
 > [!WARNING]
 > `cudaEventSynchronize(stop)` satırını atlama. `cudaEventRecord` hemen geri döner, bu yüzden beklemeden CPU süreyi GPU `stop`'a varmadan önce sorar. O zaman `cudaEventElapsedTime` sana bir süre vermek yerine `cudaErrorNotReady` hatasıyla döner.
 
-Sayıları güvenilir yapan iki alışkanlık daha var:
+Sayıları güvenilir yapan iki alışkanlık daha var.
 
 - **Önce ısındır.** Bir programdaki ilk başlatma, kernel'ın GPU'ya yüklenmesi gibi tek seferlik kurulum maliyetlerini öder. Ölçüme başlamadan önce kernel'ı bir kez çalıştır ve `cudaDeviceSynchronize()` ile bitmesini bekle.
 - **Tekrarla ve ortalamasını al.** Bu kernel'ın tek bir başlatması çok kısadır ve saatin çözünürlüğü yaklaşık yarım mikrosaniyedir. 100 başlatmayı ölçüp 100'e bölmek, tek bir başlatmayı ölçmekten çok daha kararlı bir sayı verir.
 
 > [!TIP]
-> Kesin kernel süreleri için bir profiler kullan. Nsight Systems, koduna dokunmadan her kernel'ı ölçer: `nsys profile --stats=true ./vector_add_blocks 256` her kernel'ın süresini gösteren bir tablo yazdırır.
+> Kesin kernel süreleri için bir profiler kullan. Nsight Systems, koduna dokunmadan her kernel'ı ölçer ve `nsys profile --stats=true ./vector_add_blocks 256` her kernel'ın süresini gösteren bir tablo yazdırır.
 
 ## Ne Beklemelisin
 
-Yalnızca 2048 elemanla kernel'ın içindeki iş çok küçük. Başlatma başına sürenin çoğu başlatmanın kendisine gider: CPU kernel'ı sürücüye verir, GPU onu hazırlar ve başlatır. Bu başlatma maliyeti 2 block için de 64 block için de aşağı yukarı aynı. Bu yüzden burada ayarların birbirine yakın çıkmasını ve çalıştırmadan çalıştırmaya küçük değişiklikler görmeyi bekle.
+Yalnızca 2048 elemanla kernel'ın içindeki iş çok küçük. Başlatma başına sürenin çoğu başlatmanın kendisine gider. CPU kernel'ı sürücüye verir, GPU onu hazırlar ve başlatır. Bu başlatma maliyeti 2 block için de 64 block için de aşağı yukarı aynı. Bu yüzden burada ayarların birbirine yakın çıkmasını ve çalıştırmadan çalıştırmaya küçük değişiklikler görmeyi bekle.
 
 Bu bir başarısızlık değil, bir sonuç. Grid düzeninin önem kazanması için bir GPU'nun büyük bir işe ihtiyacı olduğunu gösteriyor. Aşağıdaki Kendin Dene bölümü vektörleri 8192 kat büyütüyor, böylece farkın büyüdüğünü görebilirsin.
 
 ## Kod
 
-Programın tamamı `code/vector_add_blocks.cu` dosyasında. Block başına thread sayısını komut satırından okur, grid boyutunu hesaplar, ısınır, 100 başlatmayı ölçer ve sonucu kontrol eder:
+Programın tamamı `code/vector_add_blocks.cu` dosyasında. Block başına thread sayısını komut satırından okur, grid boyutunu hesaplar, ısınır, 100 başlatmayı ölçer ve sonucu kontrol eder.
 
 ```c
 #include "cuda_runtime.h"
@@ -236,14 +236,14 @@ int main(int argc, char **argv)
 }
 ```
 
-- `int main(int argc, char **argv)`: `argc` komut satırındaki kelimeleri sayar, `argv` onları tutar. `./vector_add_blocks 256` için `argc` = 2 ve `argv[1]` = `"256"` olur.
-- `atoi(argv[1])`: `"256"` metnini 256 sayısına çevirir. Argüman yoksa program 1024 kullanır.
-- `int blocks = (N + threads - 1) / threads;`: yukarıdaki yukarı yuvarlama formülü.
-- `int i = blockIdx.x * blockDim.x + threadIdx.x;`: global indeks. Kernel'ın geri kalanı Ders 08'dekiyle aynı.
+- `int main(int argc, char **argv)` içinde `argc` komut satırındaki kelimeleri sayar, `argv` onları tutar. `./vector_add_blocks 256` için `argc` = 2 ve `argv[1]` = `"256"` olur.
+- `atoi(argv[1])`, `"256"` metnini 256 sayısına çevirir. Argüman yoksa program 1024 kullanır.
+- `int blocks = (N + threads - 1) / threads;` yukarıdaki yukarı yuvarlama formülüdür.
+- `int i = blockIdx.x * blockDim.x + threadIdx.x;` global indekstir. Kernel'ın geri kalanı Ders 08'dekiyle aynı.
 - Isınma başlatması bir kez çalışır ve ölçülmez. `cudaDeviceSynchronize()`, ölçüm başlamadan önce bittiğinden emin olur.
 - `for` döngüsü kernel'ı iki event işareti arasında 100 kez başlatır. CPU başlatmaları yalnızca kuyruğa koyar. GPU onları birbiri ardına çalıştırır.
-- `ms * 1000.0f / RUNS`: toplam milisaniyeyi başlatma başına mikrosaniyeye çevirir.
-- `cudaEventDestroy`: event'leri serbest bırakır, tıpkı `cudaFree`'nin belleği serbest bırakması gibi.
+- `ms * 1000.0f / RUNS` toplam milisaniyeyi başlatma başına mikrosaniyeye çevirir.
+- `cudaEventDestroy` event'leri serbest bırakır, tıpkı `cudaFree`'nin belleği serbest bırakması gibi.
 
 ## Kod Gezintisi
 
@@ -254,18 +254,18 @@ Programı yazacağın sırayla adım adım geç. Çoğu Ders 08'den geliyor. Yen
 1. `1-4 cpu` **Header'lar.** Ders 08'deki dört header'ın aynısı. `stdlib.h` yine gerekli, bu kez komut satırındaki metni sayıya çeviren `atoi` için de.
 2. `6-7 cpu` **Boyutlar.** `N` vektör uzunluğu, artık 2048. `RUNS` kaç başlatmayı ölçeceğin. İkisini en üstte tanımlamak, başka değerler denemek istediğinde tek yerde tek değişiklik demek.
 3. `9-18 cpu` **CHECK makrosu.** Ders 08'den olduğu gibi kopyala. Bu programdaki her CUDA çağrısı ondan geçer, böylece bir hata yanlış sayılar vermek yerine dosya ve satırla programı durdurur.
-4. `20-21,26 gpu` **Kernel'ın iskeleti.** Önce imzayı ve süslü parantezleri yaz. Parametreler Ders 08'dekiyle aynı: iki girdi, bir çıktı ve uzunluk `n`.
-5. `22 gpu` **Global indeks.** Değişen satır bu. `blockIdx.x * blockDim.x` önceki block'ların bütün thread'lerini atlar, `threadIdx.x` de bu block içindeki yeri ekler. 1024 thread'lik bir başlatmada block 1, thread 0 için: 1 * 1024 + 0 = 1024. Sık yapılan hata `threadIdx.x`'i tek başına bırakmaktır, o zaman her block aynı ilk elemanlar üzerinde çalışır.
-6. `23-25 gpu` **Koru ve topla.** Sınır kontrolü artık gerçekten önemli: yukarı yuvarlanmış bir grid'de son block'un sonun ötesinde thread'leri olabilir. Yalnızca `i < n` olan thread'ler kendi çiftini toplar.
+4. `20-21,26 gpu` **Kernel'ın iskeleti.** Önce imzayı ve süslü parantezleri yaz. Parametreler Ders 08'dekiyle aynı, iki girdi, bir çıktı ve uzunluk `n`.
+5. `22 gpu` **Global indeks.** Değişen satır bu. `blockIdx.x * blockDim.x` önceki block'ların bütün thread'lerini atlar, `threadIdx.x` de bu block içindeki yeri ekler. 1024 thread'lik bir başlatmada block 1, thread 0 için sonuç 1 * 1024 + 0 = 1024. Sık yapılan hata `threadIdx.x`'i tek başına bırakmaktır, o zaman her block aynı ilk elemanlar üzerinde çalışır.
+6. `23-25 gpu` **Koru ve topla.** Sınır kontrolü artık gerçekten önemli. Yukarı yuvarlanmış bir grid'de son block'un sonun ötesinde thread'leri olabilir. Yalnızca `i < n` olan thread'ler kendi çiftini toplar.
 7. `28-29,88-89 cpu` **main'in iskeleti.** Bu kez `main`, `argc` ve `argv` alıyor, böylece program block boyutunu komut satırından okuyabiliyor. `return 0;` satırını ve kapanan süslü parantezi hemen yaz.
-8. `30-31 cpu` **Block başına thread.** Bir argüman varsa `atoi` onu sayıya çevirir, yoksa program 1024 kullanır. `? :` operatörü kısa bir if/else'tir: önce koşul, sonra doğruysa değer, sonra yanlışsa değer.
-9. `32 cpu` **Grid boyutu.** `(N + threads - 1) / threads` ile yukarı yuvarla. 1000 thread ile: (2048 + 999) / 1000 = 3 block. Düz `N / threads` 2 block, yani yalnızca 2000 thread verirdi ve son 48 eleman atlanırdı.
+8. `30-31 cpu` **Block başına thread.** Bir argüman varsa `atoi` onu sayıya çevirir, yoksa program 1024 kullanır. `? :` operatörü kısa bir if/else'tir. Önce koşul, sonra doğruysa değer, sonra yanlışsa değer.
+9. `32 cpu` **Grid boyutu.** `(N + threads - 1) / threads` ile yukarı yuvarla. 1000 thread ile (2048 + 999) / 1000 = 3 block. Düz `N / threads` 2 block, yani yalnızca 2000 thread verirdi ve son 48 eleman atlanırdı.
 10. `33,35-41,82-87 cpu` **Ayır ve serbest bırak.** Bayt cinsinden boyutu, üç `malloc` ve üç `cudaMalloc` çağrısını yaz ve hemen ardından `main`'in sonundaki `cudaFree` ve `free` eşlerini ekle. Her çifti birlikte yazmak hiçbirini unutmaman demek.
 11. `43-48 cpu` **Doldur ve kopyala.** `a` ve `b`'yi host'ta doldur ve device'a kopyala, tıpkı Ders 08'deki 2. ve 3. adımlar gibi. `c`'nin her elemanı 2048 çıkmalı.
-12. `50-53 cpu` **Isınma.** Ölçülmeyen tek bir başlatma, `cudaGetLastError()` ile kontrol edilir, sonra `cudaDeviceSynchronize()` bitmesini bekler. Başlatma satırının kendisi CPU'da çalışır: kernel'ı yalnızca GPU'ya teslim eder.
+12. `50-53 cpu` **Isınma.** Ölçülmeyen tek bir başlatma, `cudaGetLastError()` ile kontrol edilir, sonra `cudaDeviceSynchronize()` bitmesini bekler. Başlatma satırının kendisi CPU'da çalışır ve kernel'ı yalnızca GPU'ya teslim eder.
 13. `55-59,80-81 cpu` **Event'leri oluştur ve başlat.** `start` ve `stop`'u tanımla, oluştur ve `start` işaretini GPU kuyruğuna koy. İki `cudaEventDestroy` satırını da şimdi, diğer temizlik satırlarının yanına, sona ekle.
 14. `60-62 cpu` **Ölçülen başlatmalar.** Döngü 100 başlatmayı kuyruğa koyar. CPU bu döngüyü, GPU kernel'ları bitirmeden çok önce bitirir.
-15. `63-67 cpu` **Durdur ve süreyi oku.** `stop` işaretini kuyruğa koy, `cudaEventSynchronize` ile GPU'nun ona varmasını bekle, başlatma hatalarını kontrol et, sonra iki işaret arasındaki milisaniyeyi oku. Synchronize satırını unutmak klasik hatadır: süre henüz hazır değildir.
+15. `63-67 cpu` **Durdur ve süreyi oku.** `stop` işaretini kuyruğa koy, `cudaEventSynchronize` ile GPU'nun ona varmasını bekle, başlatma hatalarını kontrol et, sonra iki işaret arasındaki milisaniyeyi oku. Synchronize satırını unutmak klasik hatadır, çünkü süre henüz hazır değildir.
 16. `69-75 cpu` **Geri kopyala ve kontrol et.** `c`'yi geri kopyala ve yanlış elemanları say. Sonuçları yanlış olan hızlı bir kernel hiçbir işe yaramaz, bu yüzden her zaman kontrol et.
 17. `76-78 cpu` **Raporu yazdır.** Başlatmanın şekli, mikrosaniye cinsinden başlatma başına ortalama süre ve hata sayısı.
 
@@ -280,14 +280,14 @@ nvcc -arch=sm_89 -o vector_add_blocks vector_add_blocks.cu
 ./vector_add_blocks 1000
 ```
 
-- `nvcc -arch=sm_89 ...`: [Ders 06](../Lesson-06/notes.md)'daki gibi L40S için derler.
-- `./vector_add_blocks 1024`: 1024 thread'lik 2 block.
-- `./vector_add_blocks 32`: 32 thread'lik 64 block.
-- `./vector_add_blocks 1000`: 1000 thread'lik 3 block, 2048 eleman için 3000 thread. Sınır kontrolü fazladan 952 thread'i durdurur.
+- `nvcc -arch=sm_89 ...`, [Ders 06](../Lesson-06/notes.md)'daki gibi L40S için derler.
+- `./vector_add_blocks 1024` 1024 thread'lik 2 block çalıştırır.
+- `./vector_add_blocks 32` 32 thread'lik 64 block çalıştırır.
+- `./vector_add_blocks 1000` 1000 thread'lik 3 block çalıştırır, 2048 eleman için 3000 thread. Sınır kontrolü fazladan 952 thread'i durdurur.
 
 ## Çıktı
 
-Bu, `./vector_add_blocks 1000` çıktısı. Süre `...` olarak gösterildi, çünkü GPU'ya bağlı:
+Bu, `./vector_add_blocks 1000` çıktısı. Süre `...` olarak gösterildi, çünkü GPU'ya bağlı.
 
 ```
 <<<3, 1000>>>: 3000 threads for 2048 elements
@@ -295,12 +295,12 @@ average time per launch: ... us
 errors: 0
 ```
 
-Nasıl okunur:
+Çıktıyı şöyle okuyabilirsin.
 
-- `<<<3, 1000>>>`: yukarı yuvarlama formülü 3 block verdi.
-- `3000 threads for 2048 elements`: 952 thread'in yapacak işi yok. Sınır kontrolü onları bellekten uzak tutar.
-- `average time per launch`: buraya senin sayın gelir. Üç çalıştırma arasında karşılaştır.
-- `errors: 0`: 2048'i bölmeyen bir block boyutunda bile 2048 toplamın hepsi doğru.
+- `<<<3, 1000>>>`, yukarı yuvarlama formülünün 3 block verdiğini gösterir.
+- `3000 threads for 2048 elements`, 952 thread'in yapacak işi olmadığı anlamına gelir. Sınır kontrolü onları bellekten uzak tutar.
+- `average time per launch` satırına senin sayın gelir. Üç çalıştırma arasında karşılaştır.
+- `errors: 0`, 2048'i bölmeyen bir block boyutunda bile 2048 toplamın hepsinin doğru olduğunu gösterir.
 
 ## Kendin Dene
 
@@ -310,7 +310,7 @@ Nasıl okunur:
 
 ## Kendin Yaz
 
-GPU'lar için klasik bir test olan SAXPY için bir kernel yaz: 5000 float için `y[i] = a * x[i] + y[i]`, block başına 256 thread ile. 5000, 256'nın katı değil, bu yüzden yukarı yuvarlamaya ve korumaya ihtiyacın var.
+GPU'lar için klasik bir test olan SAXPY için, 5000 float üzerinde `y[i] = a * x[i] + y[i]` hesaplayan ve block başına 256 thread kullanan bir kernel yaz. 5000, 256'nın katı değil, bu yüzden yukarı yuvarlamaya ve korumaya ihtiyacın var.
 
 1. Kernel'ı global indeks ve sınır kontrolüyle yaz.
 2. Block sayısını yukarı yuvarlama formülüyle hesapla.
@@ -430,7 +430,7 @@ int main()
 - grid boyutu: bir başlatmadaki block sayısı, `<<<blocks, threads>>>` içindeki ilk sayı.
 - yukarı yuvarlama formülü (round-up formula): `(N + threads - 1) / threads`, `blocks * threads` en az `N` olsun diye gereken block sayısı.
 - sınır kontrolü: `if (i < n)`, yukarı yuvarlanmış bir grid'in fazladan thread'lerinin sonun ötesindeki belleğe dokunmasını engeller.
-- SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içinde block'ları çalıştıran işlemci. Bir block tek bir SM'de çalışır; bir SM birden fazla block tutabilir. L40S'te 142 tane var.
+- SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içinde block'ları çalıştıran işlemci. Bir block tek bir SM'de çalışır ve bir SM birden fazla block tutabilir. L40S'te 142 tane var.
 - `nvidia-smi` GPU utilization: bir kernel'ın çalıştığı zamanın oranı. Kaç SM'nin meşgul olduğunu söylemez.
 - CUDA event (`cudaEvent_t`): GPU'nun iş kuyruğundaki bir işaret. GPU işarete vardığında zamanı not eder.
 - `cudaEventRecord`: kuyruğa bir event işareti koyar. Hemen geri döner.

@@ -7,7 +7,7 @@ Bu derste olabilecek en basit CUDA programını çalıştıracaksın. Kernel tek
 
 ## GPU ve CPU
 
-CPU'da bir fonksiyon tek bir çekirdekte bir kez çalışır. GPU'da ise bir kernel aynı anda birçok kez çalışır. Kernel, GPU'da çalışan bir fonksiyondur ve onun çalışan her kopyasına thread denir. Kaç thread çalışacağını iki sayı belirler: block sayısı ve block başına thread sayısı.
+CPU'da bir fonksiyon tek bir çekirdekte bir kez çalışır. GPU'da ise bir kernel aynı anda birçok kez çalışır. Kernel, GPU'da çalışan bir fonksiyondur ve onun çalışan her kopyasına thread denir. Kaç thread çalışacağını iki sayı belirler. Biri block sayısı, diğeri block başına thread sayısı.
 
 Örneğin 3'er thread'li 2 block, 2 x 3 = 6 thread başlatır ve bu 6 thread'in hepsi aynı kernel kodunu çalıştırır.
 
@@ -30,22 +30,22 @@ printIDs<<<1, 1>>>();
 //  blocks -+  +- threads per block
 ```
 
-`<<<...>>>` sözdizimine çalıştırma ayarı denir ve fonksiyon adı ile argüman listesi arasına yazılır. İlk sayı block sayısı, ikinci sayı block başına thread sayısıdır. `<<<1, 1>>>`, tek thread'li tek bir block demektir; toplam thread sayısı 1 x 1 = 1.
+`<<<...>>>` sözdizimine çalıştırma ayarı denir ve fonksiyon adı ile argüman listesi arasına yazılır. İlk sayı block sayısı, ikinci sayı block başına thread sayısıdır. `<<<1, 1>>>`, tek thread'li tek bir block demektir ve toplam thread sayısı 1 x 1 = 1.
 
 <cuda-launch blocks="1" threads="1" fn="printIDs"></cuda-launch>
 
 ## Thread, Block, Grid
 
-Her kernel başlatması üç seviye oluşturur:
+Her kernel başlatması üç seviye oluşturur.
 
-- thread: en küçük birim. Bir thread, kernel'ın bir kopyasını çalıştırır.
-- block: tek bir SM üzerinde çalışan bir grup thread. SM, GPU'nun içindeki birçok küçük işlemciden biridir. Aynı block'taki thread'ler bellek paylaşabilir.
-- grid: bir kernel başlatmasındaki tüm block'lar. Bir başlatma, bir grid.
+- Thread en küçük birimdir. Bir thread, kernel'ın bir kopyasını çalıştırır.
+- Block, tek bir SM üzerinde çalışan bir grup thread'dir. SM, GPU'nun içindeki birçok küçük işlemciden biridir. Aynı block'taki thread'ler bellek paylaşabilir.
+- Grid, bir kernel başlatmasındaki tüm block'lardır. Bir başlatma, bir grid.
 
 <cuda-hierarchy></cuda-hierarchy>
 
 > [!NOTE]
-> Bir GPU'da birçok SM vardır; bu derslerde kullanılan L40S'te 142 tane. Bir block asla iki SM'ye bölünmez, ama farklı block'lar aynı anda farklı SM'lerde çalışabilir. [Ders 02](../Lesson-02/notes.md) bundan yararlanıyor.
+> Bir GPU'da birçok SM vardır. Bu derslerde kullanılan L40S'te 142 tane var. Bir block asla iki SM'ye bölünmez, ama farklı block'lar aynı anda farklı SM'lerde çalışabilir. [Ders 02](../Lesson-02/notes.md) bundan yararlanıyor.
 
 ## `blockIdx.x` ve `threadIdx.x`
 
@@ -57,13 +57,13 @@ printf("Block ID: %d  Thread ID: %d", blockIdx.x, threadIdx.x);
 
 ## Header Dosyaları
 
-- `cuda_runtime.h`: CUDA runtime API'si. `cudaDeviceSynchronize()` ve hata kontrol fonksiyonları burada tanımlanır.
-- `stdio.h`: standart C, `printf` için gerekli.
-- `device_launch_parameters.h`: MSVC ya da bazı IDE'leri kullanırken `blockIdx`, `threadIdx`, `blockDim` ve `gridDim`'i editöre tanıtır. `nvcc`'nin buna ihtiyacı yoktur, ama zararı da yoktur.
+- `cuda_runtime.h`, CUDA runtime API'sidir. `cudaDeviceSynchronize()` ve hata kontrol fonksiyonları burada tanımlanır.
+- `stdio.h` standart C'dir ve `printf` için gereklidir.
+- `device_launch_parameters.h`, MSVC ya da bazı IDE'leri kullanırken `blockIdx`, `threadIdx`, `blockDim` ve `gridDim`'i editöre tanıtır. `nvcc`'nin buna ihtiyacı yoktur, ama zararı da yoktur.
 
 ## `cudaDeviceSynchronize()`
 
-Kernel başlatmaları asenkrondur: CPU kernel'ı başlatır ve hemen bir sonraki satıra geçer. `cudaDeviceSynchronize()` olmadan `main()` biter ve program, GPU daha hiçbir şey yazdıramadan kapanır. Bu fonksiyon, CPU'nun bütün GPU işleri bitene kadar beklemesini sağlar.
+Kernel başlatmaları asenkrondur. CPU kernel'ı başlatır ve hemen bir sonraki satıra geçer. `cudaDeviceSynchronize()` olmadan `main()` biter ve program, GPU daha hiçbir şey yazdıramadan kapanır. Bu fonksiyon, CPU'nun bütün GPU işleri bitene kadar beklemesini sağlar.
 
 <kernel-sync></kernel-sync>
 
@@ -93,7 +93,7 @@ int main()
 - Üç `#include` satırı, yukarıda anlatılan header'ları yükler.
 - `printIDs` kernel'dır. Her thread kendi block ID'sini ve thread ID'sini yazdırır. Metnin başındaki `\n`, her çıktının yeni bir satırda başlamasını sağlar.
 - `printIDs<<<1, 1>>>();`, kernel'ı tek thread'li tek bir block ile başlatır.
-- `cudaDeviceSynchronize();` GPU'yu bekler; böylece yazdırılanlar program bitmeden ekrana gelir.
+- `cudaDeviceSynchronize();` GPU'yu bekler, böylece yazdırılanlar program bitmeden ekrana gelir.
 
 ## Kod Gezintisi
 
@@ -102,11 +102,11 @@ Programı, boş bir dosyadan başlayarak yazacağın sırayla adım adım geç.
 <div class="code-walk" markdown>
 
 1. `1-3 cpu` **Header'lar.** Önce üç `#include` satırını yaz, çünkü aşağıdaki her şey onların tanımladığı adları kullanır. `cuda_runtime.h`, `cudaDeviceSynchronize()`'ı getirir, `stdio.h` de `printf`'i getirir. `stdio.h` olmadan kernel'daki `printf` çağrısı derlenmez.
-2. `5-6,8 gpu` **Boş kernel.** Kernel'ın gövdesinden önce iskeletini yaz: `__global__`, dönüş tipi `void`, bir ad ve boş bir süslü parantez çifti. Bir kernel `void` döndürmek zorundadır, çünkü dönüş değerini bekleyen bir çağıran yoktur. `__global__`'ı yazmazsan derleyici normal bir CPU fonksiyonu oluşturur ve sonraki başlatma satırı derlenmez.
+2. `5-6,8 gpu` **Boş kernel.** Kernel'ın gövdesinden önce iskeletini yaz. Bunlar `__global__`, dönüş tipi `void`, bir ad ve boş bir süslü parantez çiftidir. Bir kernel `void` döndürmek zorundadır, çünkü dönüş değerini bekleyen bir çağıran yoktur. `__global__`'ı yazmazsan derleyici normal bir CPU fonksiyonu oluşturur ve sonraki başlatma satırı derlenmez.
 3. `7 gpu` **Kernel gövdesi.** `blockIdx.x` ve `threadIdx.x`'i yazdıran tek bir `printf` ekle. Bu satır GPU'da, her thread'de bir kez çalışır. Her `%d`, metinden sonra gelen değerle aynı sırayla doldurulur.
 4. `10-11,14-15 cpu` **main fonksiyonu.** `main`'i süslü parantezleri ve `return 0;` satırıyla şimdi yaz, ortasını sonra doldur. Bu, CPU'da çalışan normal C kodudur.
-5. `12 cpu` **Başlatma.** Kernel'ı adıyla çağır, ardından `<<<1, 1>>>` ve argüman listesi `()` gelir. Kural: önce block sayısı, sonra block başına thread sayısı. `printIDs` hiç argüman almasa da boş `()` yine de gereklidir.
-6. `13 cpu` **GPU'yu bekle.** Başlatma hemen geri döner, bu yüzden hemen ardından `cudaDeviceSynchronize();` ekle. Bu, en sık yapılan ilk hatadır: bu satır olmadan program derlenir, çalışır ama hiçbir şey yazdırmaz.
+5. `12 cpu` **Başlatma.** Kernel'ı adıyla çağır, ardından `<<<1, 1>>>` ve argüman listesi `()` gelir. Kural basit, önce block sayısı gelir, sonra block başına thread sayısı. `printIDs` hiç argüman almasa da boş `()` yine de gereklidir.
+6. `13 cpu` **GPU'yu bekle.** Başlatma hemen geri döner, bu yüzden hemen ardından `cudaDeviceSynchronize();` ekle. Bu, en sık yapılan ilk hatadır. Bu satır olmadan program derlenir, çalışır ama hiçbir şey yazdırmaz.
 
 </div>
 
@@ -177,7 +177,7 @@ int main()
     }
     ```
 
-    `nvcc -o hello hello.cu` ve `./hello` ile derle ve çalıştır. Tek bir satır görmelisin: `Hello from block 0, thread 0`.
+    `nvcc -o hello hello.cu` ve `./hello` ile derle ve çalıştır. Ekranda tek bir satır, yani `Hello from block 0, thread 0` görmelisin.
 
 ## Sözlük
 
@@ -186,7 +186,7 @@ int main()
 - CPU (Central Processing Unit, merkezi işlem birimi): ana işlemci. `main()`'i çalıştırır ve kernel'ları başlatır.
 - kernel: GPU'da çalışan bir fonksiyon. Onu bir kez yazarsın, GPU onu aynı anda birçok thread'de çalıştırır.
 - thread: en küçük çalışma birimi. Bir thread, kernel'ın çalışan bir kopyasıdır ve kendi ID'si vardır.
-- block: tek bir SM üzerinde çalışan bir grup thread; paylaşımlı bellek (shared memory) üzerinden veri paylaşabilirler.
+- block: tek bir SM üzerinde çalışan bir grup thread. Bu thread'ler paylaşımlı bellek üzerinden veri paylaşabilir.
 - grid: tek bir kernel çağrısıyla başlatılan tüm block'lar.
 - SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içindeki işlemcilerden biri. Block'lar SM'lerde çalışır.
 - `__global__`: derleyiciye bu fonksiyonun bir GPU kernel'ı olduğunu söyler. CPU onu çağırır, GPU çalıştırır.

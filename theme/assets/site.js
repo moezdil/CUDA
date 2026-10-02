@@ -186,7 +186,7 @@ customElements.define("cuda-launch", class extends HTMLElement {
       read.innerHTML = idle;
       if (N > 1024) {
         grid.innerHTML = '<div class="dg-err"><b>' + T("launch dropped.") + '</b> ' + F("{0} threads per block is over the 1024 limit.", N) + " " +
-          T("It compiles, then the driver rejects it at runtime: no output, no crash. <code>cudaGetLastError()</code> returns <code>cudaErrorInvalidConfiguration</code>.") + "</div>";
+          T("It compiles, then the driver rejects it at runtime. No output, no crash. <code>cudaGetLastError()</code> returns <code>cudaErrorInvalidConfiguration</code>.") + "</div>";
         return;
       }
       var html = "";
@@ -212,7 +212,7 @@ customElements.define("cuda-launch", class extends HTMLElement {
       for (var k = w * 32; k < w * 32 + 32; k++) { cells.children[k].classList.add("mate"); }
       cell.classList.add("hot");
       read.innerHTML = t >= N
-        ? F("block <b>{0}</b> · warp <b>{1}</b> · lane <b>{2}</b> is <em>idle</em>: the warp is scheduled as 32 lanes, but only {3} of them have a thread.", b, w, l, N - w * 32)
+        ? F("block <b>{0}</b> · warp <b>{1}</b> · lane <b>{2}</b> is <em>idle</em>. The warp is scheduled as 32 lanes, but only {3} of them have a thread.", b, w, l, N - w * 32)
         : F("blockIdx.x <b>{0}</b> · threadIdx.x <b>{1}</b> · warp <b>{1} / 32 = {2}</b> · lane <b>{1} % 32 = {3}</b>", b, t, w, l) + "<br>" +
           F("global id = blockIdx.x × blockDim.x + threadIdx.x = {0} × {1} + {2} = <em>{3}</em>", b, N, t, b * N + t);
     }
@@ -591,7 +591,7 @@ cuda("warp-lane", function(el){
     el.querySelectorAll(".lanes i").forEach(function(c, k){ c.classList.toggle("col", k === l); });
     el.querySelector(".wl-eq").innerHTML = '<div><span class="e2">warp</span> = threadIdx.x / 32 = ' + t + " / 32 = <b class='e2'>" + w + "</b></div>" +
       '<div><span class="e3">lane</span> = threadIdx.x % 32 = ' + t + " % 32 = <b class='e3'>" + l + "</b></div>";
-    el.querySelector(".dg-info").innerHTML = F("Thread <b>{0}</b> is in warp <em>{1}</em> at lane <em>{2}</em>. Check: {1} × 32 + {2} = {0}.", t, w, l) + " " +
+    el.querySelector(".dg-info").innerHTML = F("Thread <b>{0}</b> is in warp <em>{1}</em> at lane <em>{2}</em>, because {1} × 32 + {2} = {0}.", t, w, l) + " " +
       T("<code>/</code> between two ints drops the remainder, and <code>%</code> gives exactly that remainder.") +
       (N % 32 ? " " + F("The last warp has only {0} threads, so {1} of its lanes are idle.", N % 32, 32 - N % 32) : "");
   }
@@ -610,7 +610,7 @@ cuda("cuda-stack", function(el){
       ["CUDA C/C++", T("the main one"), T("C++ with a few additions such as <code>__global__</code> and <code>&lt;&lt;&lt; &gt;&gt;&gt;</code>. Every kernel in these lessons is written in it.")],
       ["CUDA Fortran", T("Fortran + CUDA"), T("Fortran with the same CUDA ideas. Common in older science and weather code.")],
       ["OpenACC", T("directive-based"), T("You add <code>#pragma acc</code> directive lines above normal C or Fortran loops, and the compiler writes the GPU code. No kernels by hand.")],
-      ["Python", "CuPy · Numba · CUDA Python", T("<b>CuPy</b>: NumPy-style arrays that live on the GPU. <b>Numba</b>: compiles Python functions into GPU kernels. <b>NVIDIA CUDA Python</b>: direct access to the CUDA driver and runtime from Python.")]]],
+      ["Python", "CuPy · Numba · CUDA Python", T("<b>CuPy</b> gives you NumPy-style arrays that live on the GPU. <b>Numba</b> compiles Python functions into GPU kernels. <b>NVIDIA CUDA Python</b> gives direct access to the CUDA driver and runtime from Python.")]]],
     [T("AI libraries"), T("ready-made fast GPU code"), T("Fast GPU code you call instead of writing it. PyTorch and TensorFlow use these under the hood."), [
       ["cuDNN", T("deep learning"), T("CUDA Deep Neural Network library. Building blocks like convolution and attention, tuned for each GPU.")],
       ["cuBLAS", T("linear algebra"), T("CUDA Basic Linear Algebra Subprograms. Matrix and vector math, above all matrix multiply.")],
@@ -618,10 +618,10 @@ cuda("cuda-stack", function(el){
       ["NCCL", T("multi-GPU"), T("NVIDIA Collective Communications Library, said like \"nickel\". Moves data between GPUs, which you need to train on more than one GPU.")]]],
     [T("Tools"), T("measure and debug"), T("Tools that show where time goes and find bugs."), [
       ["Nsight Systems", T("timeline profiler"), T("Records CPU and GPU work on one timeline for the whole program, so you see where it waits.")],
-      ["Nsight Compute", T("kernel profiler"), T("Looks deep into one kernel: how busy the SMs are and how well it uses memory.")],
+      ["Nsight Compute", T("kernel profiler"), T("Looks deep into one kernel, at how busy the SMs are and how well it uses memory.")],
       ["Compute Sanitizer", T("memory error checker"), T("Runs your program and reports bad memory access inside kernels, like reading past the end of an array.")]]],
     [T("Compiler"), T("from .cu file to GPU code"), T("Turns your <code>.cu</code> file into a program the GPU can run."), [
-      ["nvcc", T("the CUDA compiler"), T("NVIDIA CUDA Compiler. Splits a <code>.cu</code> file: host code goes to the normal C++ compiler, device code to NVIDIA's compiler.")],
+      ["nvcc", T("the CUDA compiler"), T("NVIDIA CUDA Compiler. Splits a <code>.cu</code> file in two. Host code goes to the normal C++ compiler, device code to NVIDIA's compiler.")],
       ["PTX", T("virtual ISA"), T("Parallel Thread Execution. A virtual instruction set that is not tied to one GPU. It is stored inside the program.")],
       ["SASS", T("real machine code"), T("Streaming ASSembler. The real machine code for one GPU generation, for example <code>sm_89</code>.")],
       [T("driver JIT"), T("PTX → SASS at run time"), T("Just-in-time compilation. If the program has no SASS for your GPU, the driver turns the stored PTX into SASS when it starts. That is how old programs run on new GPUs.")]]],
@@ -646,7 +646,7 @@ cuda("cuda-stack", function(el){
     b.classList.add("on");
     b.closest(".cs-layer").classList.add("cur");
     info.innerHTML = k.length === 1
-      ? "<b>" + l[0] + "</b><br>" + l[2] + "<br>" + F("In this layer: {0}.", l[3].map(function(it){ return it[0]; }).join(", "))
+      ? "<b>" + l[0] + "</b><br>" + l[2] + "<br>" + F("This layer holds {0}.", l[3].map(function(it){ return it[0]; }).join(", "))
       : "<b>" + l[3][k[1]][0] + "</b> · " + l[0] + "<br>" + l[3][k[1]][2];
   });
   el.querySelector('[data-k="0.0"]').click();
@@ -671,7 +671,7 @@ cuda("vector-add", function(el){
     box.querySelectorAll("i").forEach(function(c){ c.classList.remove("on", "now"); });
     cells("c").forEach(function(c){ c.textContent = ""; });
     count();
-    info.innerHTML = gpu ? F("{0} threads, one per element. Thread i adds element i. They all run at the same time.", N) : T("One CPU core walks the loop: one element per step, in order.");
+    info.innerHTML = gpu ? F("{0} threads, one per element. Thread i adds element i. They all run at the same time.", N) : T("One CPU core walks the loop, one element per step, in order.");
   }
   function count(){ el.querySelector(".dg-big b").textContent = steps; }
   function fill(i){
@@ -683,7 +683,7 @@ cuda("vector-add", function(el){
     box.querySelectorAll(".now").forEach(function(c){ c.classList.remove("now"); });
     steps++;
     if (gpu) { for (var i = 0; i < N; i++) { fill(i); } done = N; }
-    else { fill(done); info.innerHTML = F("Step {0}: i = {1}, c[{1}] = a[{1}] + b[{1}] = {2} + {3} = <em>{4}</em>", steps, done, done, N - done, N); done++; }
+    else { fill(done); info.innerHTML = F("Step {0}, i = {1}, c[{1}] = a[{1}] + b[{1}] = {2} + {3} = <em>{4}</em>", steps, done, done, N - done, N); done++; }
     count();
     if (done === N) {
       info.innerHTML = gpu ? F("<b>Done in 1 step.</b> {0} threads each added one pair at the same time. The CPU loop needs {0} steps.", N)
@@ -709,7 +709,7 @@ cuda("host-device-flow", function(el){
   // For each step: the code, what it does, and when each array gets its values (step index) or is freed (5).
   var S = [
     [T("allocate"), "int *h_a = (int *)malloc(bytes);\nint *h_b = (int *)malloc(bytes);\nint *h_c = (int *)malloc(bytes);\nCHECK(cudaMalloc(&d_a, bytes));\nCHECK(cudaMalloc(&d_b, bytes));\nCHECK(cudaMalloc(&d_c, bytes));",
-      T("Reserve memory on both sides: <code>malloc</code> on the host, <code>cudaMalloc</code> on the device. New memory holds leftover garbage, shown as ?.")],
+      T("Reserve memory on both sides, <code>malloc</code> on the host and <code>cudaMalloc</code> on the device. New memory holds leftover garbage, shown as ?.")],
     [T("fill"), "for (int i = 0; i < N; i++) {\n    h_a[i] = i;\n    h_b[i] = N - i;\n}",
       T("The CPU writes the inputs into host memory. The device arrays still hold garbage.")],
     [T("copy in"), "CHECK(cudaMemcpy(d_a, h_a, bytes, cudaMemcpyHostToDevice));\nCHECK(cudaMemcpy(d_b, h_b, bytes, cudaMemcpyHostToDevice));",
@@ -717,7 +717,7 @@ cuda("host-device-flow", function(el){
     [T("launch"), "vectorAdd<<<1, N>>>(d_a, d_b, d_c, N);",
       T("The kernel runs on the GPU. Thread i reads <code>d_a[i]</code> and <code>d_b[i]</code> and writes <code>d_c[i]</code>. It only touches device memory.")],
     [T("copy back"), "CHECK(cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost));",
-      F("<code>cudaMemcpy</code> copies <code>d_c</code> back into <code>h_c</code>. Now the CPU can read the result: every element is i + (N - i) = {0}.", N)],
+      F("<code>cudaMemcpy</code> copies <code>d_c</code> back into <code>h_c</code>. Now the CPU can read the result. Every element is i + (N - i) = {0}.", N)],
     [T("free"), "CHECK(cudaFree(d_a));\nCHECK(cudaFree(d_b));\nCHECK(cudaFree(d_c));\nfree(h_a);\nfree(h_b);\nfree(h_c);",
       T("<code>cudaFree</code> gives the device memory back, <code>free</code> the host memory. Nothing is left.")]
   ];
@@ -777,7 +777,7 @@ cuda("grid-size", function(el){
     '<div class="dg-legend"><span><i style="background:var(--accent)"></i>' + T("adds one element") + '</span><span><i class="gs-x"></i>' + T("fails <code>if (i &lt; n)</code>, does nothing") +
     '</span><span><i class="gs-idle"></i>' + T("idle lane, no thread") + "</span></div>" +
     '<span class="dg-lbl gs-sl">' + F("the {0} SMs of the L40S", S) + '</span><div class="gs-sms"></div>' +
-    '<div class="dg-legend"><span><i class="gs-on"></i>' + T("SM with a block") + "</span><span>" + T("fill = warps in use, of 48") + "</span><span>" + T("usually one block per SM first: the hardware scheduler decides") + "</span></div>" +
+    '<div class="dg-legend"><span><i class="gs-on"></i>' + T("SM with a block") + "</span><span>" + T("fill = warps in use, of 48") + "</span><span>" + T("usually one block per SM first, the hardware scheduler decides") + "</span></div>" +
     '<div class="dg-read gs-use"></div><div class="dg-info" aria-live="polite"></div>';
   var tabs = el.querySelectorAll(".dg-tabs");
   function draw(){
@@ -788,9 +788,9 @@ cuda("grid-size", function(el){
     el.querySelector(".dg-stats").innerHTML = "<span>" + T("blocks") + " <b>" + B + "</b></span><span>" + T("threads") + " <b>" + B * t + "</b></span><span>" +
       T("extra threads") + " <b>" + extra + "</b></span><span>" + T("warps / block") + " <b>" + W + "</b></span>";
     el.querySelector(".gs-txt").innerHTML = (extra
-      ? F("{0} × {1} = {2} threads for {3} elements: <em>{4}</em> extra threads fail <code>if (i &lt; n)</code> and do nothing.", B, t, B * t, N, extra)
-      : F("{0} × {1} = {2} threads for {3} elements: no extra threads.", B, t, B * t, N)) + "<br>" +
-      (t % 32 ? F("{0} threads per block is not a multiple of 32: {1} warps, and the last warp of every block has {2} idle lanes.", t, W, 32 - t % 32)
+      ? F("{0} × {1} = {2} threads for {3} elements, so <em>{4}</em> extra threads fail <code>if (i &lt; n)</code> and do nothing.", B, t, B * t, N, extra)
+      : F("{0} × {1} = {2} threads for {3} elements, so no extra threads.", B, t, B * t, N)) + "<br>" +
+      (t % 32 ? F("{0} threads per block is not a multiple of 32. That makes {1} warps, and the last warp of every block has {2} idle lanes.", t, W, 32 - t % 32)
         : F("{0} threads per block = {1} warps of 32, no idle lanes.", t, W));
     el.querySelector(".gs-lb").textContent = F("last block (block {0}) · global IDs {1} to {2}", B - 1, (B - 1) * t, B * t - 1);
     var c = "";
@@ -804,12 +804,12 @@ cuda("grid-size", function(el){
       s += "<i" + (nb ? ' class="gs-on" style="--f:' + nb * W / 48 + '"' : "") + "></i>";
     }
     el.querySelector(".gs-sms").innerHTML = s;
-    el.querySelector(".gs-use").innerHTML = F("SMs busy: <b>{0}</b> of {1} ({2}%)", busy, S, fmt(busy / S * 100, 1)) + "<br>" +
-      F("threads on the GPU: <b>{0}</b> of {1} it can hold at once ({2}%)", fmt(on), fmt(cap), fmt(on / cap * 100, 1)) +
+    el.querySelector(".gs-use").innerHTML = F("<b>{0}</b> of {1} SMs busy ({2}%)", busy, S, fmt(busy / S * 100, 1)) + "<br>" +
+      F("<b>{0}</b> threads on the GPU, of {1} it can hold at once ({2}%)", fmt(on), fmt(cap), fmt(on / cap * 100, 1)) +
       (wait ? "<br>" + F("{0} more blocks wait until an SM is free.", wait) : "");
     el.querySelector(".dg-info").innerHTML = "<b>" + (busy < 20 ? (busy === 1 ? F("Only 1 SM works, {0} wait.", S - 1) : F("Only {0} SMs work, {1} wait.", busy, S - busy))
       : maxW < 48 ? (maxW === 1 ? F("{0} SMs work, but each holds just 1 warp of the 48 it could run.", busy) : F("{0} SMs work, but each holds just {1} warps of the 48 it could run.", busy, maxW))
-      : T("Every SM is full: 48 warps each.")) + "</b><br>" +
+      : T("Every SM is full, with 48 warps each.")) + "</b><br>" +
       (on < cap / 10 ? F("{0} elements are far too little work to fill this GPU.", N) : on < cap ? T("Still not enough threads to fill every SM.") : "");
   }
   onSegs(tabs[0], function(i){ t = TS[i]; draw(); });
@@ -855,7 +855,7 @@ cuda("event-timing", function(el){
     '<div class="et"><div class="et-lane"><span>CPU</span><div class="et-tr cpu"></div></div><div class="et-lane"><span>GPU</span><div class="et-tr gpu"></div></div>' +
     '<span class="dg-note et-ax">' + T("time →") + "</span></div>" +
     '<div class="dg-legend"><span><i style="background:var(--cool)"></i>' + T("CPU call returns at once") + '</span><span><i class="et-w"></i>' + T("CPU waits") +
-    '</span><span><i style="background:var(--accent)"></i>' + T("kernel") + '</span><span><i style="background:var(--y)"></i>' + T("first launch: one-time setup") + "</span></div>" +
+    '</span><span><i style="background:var(--accent)"></i>' + T("kernel") + '</span><span><i style="background:var(--y)"></i>' + T("one-time setup at first launch") + "</span></div>" +
     '<pre class="dg-code et-code"></pre><div class="dg-info" aria-live="polite"></div>' +
     '<div class="dg-head"><div class="dg-ctl"><button class="dg-btn alt prev" type="button" aria-label="' + T("previous step") + '">← ' + T("back") + "</button>" +
     '<button class="dg-btn next" type="button" aria-label="' + T("next step") + '">' + T("next step") + ' →</button></div><span class="dg-note pos"></span></div>';

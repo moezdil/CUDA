@@ -9,7 +9,7 @@ NVIDIA was founded in April 1993. Its first product, the NV1, came out in 1995.
 > [!NOTE]
 > NVIDIA was founded by Jensen Huang, Chris Malachowsky and Curtis Priem. Jensen Huang is still its CEO.
 
-That early hardware was very basic compared to today:
+That early hardware was very basic compared to today.
 
 - very small memory  
 - very limited data bandwidth  
@@ -17,11 +17,11 @@ That early hardware was very basic compared to today:
 
 ## Modern GPUs
 
-Today's GPUs are on a completely different scale. They:
+Today's GPUs are on a completely different scale in three ways.
 
-- have thousands, or even tens of thousands, of cores  
-- have large amounts of memory  
-- run at a much higher frequency  
+- thousands, or even tens of thousands, of cores  
+- large amounts of memory  
+- a much higher frequency  
 
 Compare the GeForce 256 from 1999 with the GeForce RTX 5090 from 2025. Memory went from 32 MB to 32 GB, which is 32 GB / 32 MB = 1,000 times more. The chip clock went from 120 MHz to 2.41 GHz (2,410 MHz), so 2,410 / 120 = about 20 times faster. And 4 pixel pipelines became 21,760 CUDA cores.
 
@@ -29,7 +29,7 @@ Their role has also changed.
 
 ## More Than Graphics
 
-GPUs were first built to render images. Today that is only a small part of their work. GPUs are now widely used for:
+GPUs were first built to render images. Today that is only a small part of their work. GPUs are now widely used in many fields.
 
 - AI  
 - large-scale data processing  
@@ -48,11 +48,11 @@ Two years later, in 1999, NVIDIA introduced the GeForce 256 and marketed it as t
 
 ## Steady Growth
 
-After that, progress sped up. In 2007 NVIDIA released CUDA, which let its GPUs, starting with the GeForce 8 series from 2006, run general programs and not only graphics. Each new architecture improved performance, efficiency or features: Fermi (2010), Kepler (2012), Maxwell (2014), Pascal (2016), Volta (2017, the first Tensor Cores), Turing (2018), Ampere (2020), Ada Lovelace and Hopper (2022), Blackwell (2024). These gains added up over time. Modern GPUs are powerful because of many steps over many years, not one big jump.
+After that, progress sped up. In 2007 NVIDIA released CUDA, which let its GPUs, starting with the GeForce 8 series from 2006, run general programs and not only graphics. Each new architecture improved performance, efficiency or features. The line runs from Fermi (2010), Kepler (2012), Maxwell (2014), Pascal (2016), Volta (2017, the first Tensor Cores), Turing (2018), Ampere (2020), Ada Lovelace and Hopper (2022), to Blackwell (2024). These gains added up over time. Modern GPUs are powerful because of many steps over many years, not one big jump.
 
 ## Where We Are Today
 
-As of October 2026, NVIDIA plays a central role in:
+As of October 2026, NVIDIA plays a central role in four areas.
 
 - gaming  
 - AI infrastructure  
@@ -70,7 +70,7 @@ In many cases, GPUs are now the main driver of modern AI systems.
 
 ## Why This Matters Before CUDA
 
-Knowing how GPUs evolved helps you understand:
+Knowing how GPUs evolved helps you understand three things.
 
 - why the architecture is designed the way it is  
 - why performance differs between GPUs  
@@ -90,7 +90,7 @@ This makes it easier to move on to CUDA.
 - frequency: how many clock cycles a chip runs per second, measured in MHz (millions) or GHz (billions).
 - GeForce RTX 5090: a 2025 GeForce GPU on Blackwell with 21,760 CUDA cores and 32 GB of memory.
 - render: turn a description of a scene (shapes, colors, light) into the pixels you see on screen.
-- AI (artificial intelligence): software that learns from data, such as image recognition or chatbots; training it is mostly huge matrix math, which suits GPUs.
+- AI (artificial intelligence): software that learns from data, such as image recognition or chatbots. Training it is mostly huge matrix math, which suits GPUs.
 - compute platform: a device used for general computation, not just graphics.
 - 3D acceleration: GPU support for 3D graphics that made GPUs useful for many more people.
 - RIVA 128: NVIDIA's 1997 chip that combined 3D and 2D and made NVIDIA well known.

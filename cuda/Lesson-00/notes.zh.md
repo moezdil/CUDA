@@ -7,7 +7,7 @@
 
 ## GPU 和 CPU 的区别
 
-在 CPU 上，一个函数只在一个核心上运行一次。在 GPU 上，一个核函数会并行运行很多次。核函数就是在 GPU 上运行的函数，它的每一份运行中的副本叫作一个线程。运行多少个线程由两个数决定：线程块的数量，以及每个线程块里的线程数。
+在 CPU 上，一个函数只在一个核心上运行一次。在 GPU 上，一个核函数会并行运行很多次。核函数就是在 GPU 上运行的函数，它的每一份运行中的副本叫作一个线程。运行多少个线程由两个数决定，一个是线程块的数量，另一个是每个线程块里的线程数。
 
 比如 2 个线程块、每块 3 个线程，一共会启动 2 x 3 = 6 个线程。这 6 个线程运行的是同一份核函数代码。
 
@@ -36,11 +36,11 @@ printIDs<<<1, 1>>>();
 
 ## 线程、线程块、网格
 
-每次启动核函数，都会形成三个层级：
+每次启动核函数，都会形成三个层级。
 
-- 线程：最小的单位。一个线程运行核函数的一份副本。
-- 线程块：在同一个 SM 上运行的一组线程。SM 是 GPU 内部众多小处理器中的一个。同一个线程块里的线程可以共享内存。
-- 网格：一次核函数启动中的全部线程块。启动一次，就有一个网格。
+- 线程是最小的单位。一个线程运行核函数的一份副本。
+- 线程块是在同一个 SM 上运行的一组线程。SM 是 GPU 内部众多小处理器中的一个。同一个线程块里的线程可以共享内存。
+- 网格是一次核函数启动中的全部线程块。启动一次，就有一个网格。
 
 <cuda-hierarchy></cuda-hierarchy>
 
@@ -57,13 +57,13 @@ printf("Block ID: %d  Thread ID: %d", blockIdx.x, threadIdx.x);
 
 ## 头文件
 
-- `cuda_runtime.h`：CUDA 运行时 API。它声明了 `cudaDeviceSynchronize()` 和各种错误检查函数。
-- `stdio.h`：标准 C 头文件，`printf` 需要它。
-- `device_launch_parameters.h`：使用 MSVC 或某些 IDE 时，有了它，编辑器才能认出 `blockIdx`、`threadIdx`、`blockDim` 和 `gridDim`。`nvcc` 不需要它，但加上也没有坏处。
+- `cuda_runtime.h` 是 CUDA 运行时 API。它声明了 `cudaDeviceSynchronize()` 和各种错误检查函数。
+- `stdio.h` 是标准 C 头文件，`printf` 需要它。
+- `device_launch_parameters.h` 的作用是，在使用 MSVC 或某些 IDE 时，让编辑器认出 `blockIdx`、`threadIdx`、`blockDim` 和 `gridDim`。`nvcc` 不需要它，但加上也没有坏处。
 
 ## `cudaDeviceSynchronize()`
 
-核函数的启动是异步的：CPU 启动核函数后，会马上执行下一行。如果没有 `cudaDeviceSynchronize()`，`main()` 会直接返回，GPU 还没来得及打印，程序就已经退出了。这个函数让 CPU 一直等到 GPU 上的工作全部完成。
+核函数的启动是异步的。CPU 启动核函数后，会马上执行下一行。如果没有 `cudaDeviceSynchronize()`，`main()` 会直接返回，GPU 还没来得及打印，程序就已经退出了。这个函数让 CPU 一直等到 GPU 上的工作全部完成。
 
 <kernel-sync></kernel-sync>
 
@@ -102,11 +102,11 @@ int main()
 <div class="code-walk" markdown>
 
 1. `1-3 cpu` **头文件。** 先写三行 `#include`，因为后面的代码都要用到它们声明的名字。`cuda_runtime.h` 提供 `cudaDeviceSynchronize()`，`stdio.h` 提供 `printf`。少了 `stdio.h`，核函数里的 `printf` 就无法通过编译。
-2. `5-6,8 gpu` **空的核函数。** 先搭核函数的框架，再写函数体：`__global__`、返回类型 `void`、函数名，以及一对空的花括号。核函数必须返回 `void`，因为没有调用者在等它的返回值。如果漏掉 `__global__`，编译器会把它当成普通的 CPU 函数来编译，后面启动核函数的那一行就会编译失败。
+2. `5-6,8 gpu` **空的核函数。** 先搭核函数的框架，再写函数体，包括 `__global__`、返回类型 `void`、函数名，以及一对空的花括号。核函数必须返回 `void`，因为没有调用者在等它的返回值。如果漏掉 `__global__`，编译器会把它当成普通的 CPU 函数来编译，后面启动核函数的那一行就会编译失败。
 3. `7 gpu` **核函数的函数体。** 加一行 `printf`，打印 `blockIdx.x` 和 `threadIdx.x`。这一行会在 GPU 上的每个线程里各运行一次。每个 `%d` 依次由字符串后面列出的值填入。
 4. `10-11,14-15 cpu` **main 函数。** 先写好 `main`、它的花括号和 `return 0;`，再填中间的部分。这是在 CPU 上运行的普通 C 代码。
-5. `12 cpu` **启动核函数。** 先写核函数名，接着写 `<<<1, 1>>>`，最后是参数列表 `()`。规则是：线程块数量在前，每个线程块的线程数在后。`printIDs` 虽然不接收任何参数，空的 `()` 也不能省。
-6. `13 cpu` **等待 GPU。** 启动会立即返回，所以要紧接着加上 `cudaDeviceSynchronize();`。这是新手最常犯的第一个错误：少了它，程序照样能编译、能运行，却什么也不打印。
+5. `12 cpu` **启动核函数。** 先写核函数名，接着写 `<<<1, 1>>>`，最后是参数列表 `()`。规则是线程块数量在前，每个线程块的线程数在后。`printIDs` 虽然不接收任何参数，空的 `()` 也不能省。
+6. `13 cpu` **等待 GPU。** 启动会立即返回，所以要紧接着加上 `cudaDeviceSynchronize();`。这是新手最常犯的第一个错误。少了它，程序照样能编译、能运行，却什么也不打印。
 
 </div>
 
@@ -177,7 +177,7 @@ int main()
     }
     ```
 
-    用 `nvcc -o hello hello.cu` 编译，再用 `./hello` 运行。你应该会看到一行输出：`Hello from block 0, thread 0`。
+    用 `nvcc -o hello hello.cu` 编译，再用 `./hello` 运行。你应该会看到一行输出，也就是 `Hello from block 0, thread 0`。
 
 ## 术语表
 

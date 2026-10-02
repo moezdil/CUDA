@@ -28,25 +28,25 @@ printIDs<<<2, 1024>>>();
 
 <cuda-launch blocks="2" threads="1024" fn="printIDs"></cuda-launch>
 
-Block 0 has threads 0-1023. Block 1 has its own threads 0-1023. Thread IDs restart at 0 in every block. So `threadIdx.x` alone does not tell the two threads with ID 5 apart. To get a unique global ID, use this formula:
+Block 0 has threads 0-1023. Block 1 has its own threads 0-1023. Thread IDs restart at 0 in every block. So `threadIdx.x` alone does not tell the two threads with ID 5 apart. To get a unique global ID, use this formula.
 
 ```c
 global_id = blockIdx.x * blockDim.x + threadIdx.x
 ```
 
-`blockDim.x` is a built-in variable. It holds the number of threads per block set at launch. Here it is 1024. Each block skips over all threads of the blocks before it:
+`blockDim.x` is a built-in variable. It holds the number of threads per block set at launch. Here it is 1024. Each block skips over all threads of the blocks before it.
 
-- thread 5 in block 0: 0 * 1024 + 5 = 5
-- thread 5 in block 1: 1 * 1024 + 5 = 1029
-- thread 1023 in block 1: 1 * 1024 + 1023 = 2047, the last of the 2048 threads
+- thread 5 in block 0 gets 0 * 1024 + 5 = 5
+- thread 5 in block 1 gets 1 * 1024 + 5 = 1029
+- thread 1023 in block 1 gets 1 * 1024 + 1023 = 2047, the last of the 2048 threads
 
-With smaller numbers it is easier to see. With 4 threads per block, thread 3 in block 2 gets 2 * 4 + 3 = 11. The global IDs run 0 to 3 in block 0, 4 to 7 in block 1, and 8 to 11 in block 2. Move the sliders and hover over a thread to see the formula with its numbers:
+With smaller numbers it is easier to see. With 4 threads per block, thread 3 in block 2 gets 2 * 4 + 3 = 11. The global IDs run 0 to 3 in block 0, 4 to 7 in block 1, and 8 to 11 in block 2. Move the sliders and hover over a thread to see the formula with its numbers.
 
 <global-id></global-id>
 
 Kernels that work on arrays use this formula to give each thread one element. Thread 1029 works on element 1029.
 
-## The Silent Failure: `<<<1, 2048>>>`
+## The Silent Failure of `<<<1, 2048>>>`
 
 ```c
 // printIDs<<<1, 2048>>>();  exceeds 1024 thread-per-block limit
@@ -97,10 +97,10 @@ Step through the program in the order you would write it. The new part is the la
 
 <div class="code-walk" markdown>
 
-1. `1-3 cpu` **Headers.** The same three `#include` lines as before: the CUDA runtime, the built-in variables, and `printf`. Adding blocks needs no new header.
+1. `1-3 cpu` **Headers.** The same three `#include` lines as before, for the CUDA runtime, the built-in variables, and `printf`. Adding blocks needs no new header.
 2. `5-8 gpu` **The kernel.** The kernel does not change when you add blocks. Each thread prints `blockIdx.x` and `threadIdx.x`, and now `blockIdx.x` is 0 or 1. Remember that `threadIdx.x` restarts at 0 in every block, so it alone is not unique.
 3. `10-11,15-16 cpu` **The main function.** Write `main` with `return 0;` at the end. The launch lines go in between.
-4. `13 cpu` **The launch with 2 blocks.** To get 2048 threads, write `<<<2, 1024>>>`: 2 blocks times 1024 threads. The rule: keep the second number at 1024 or less, and raise the first number when you need more threads.
+4. `13 cpu` **The launch with 2 blocks.** To get 2048 threads, write `<<<2, 1024>>>`, which is 2 blocks times 1024 threads. The rule is to keep the second number at 1024 or less and raise the first number when you need more threads.
 5. `14 cpu` **Wait for the GPU.** `cudaDeviceSynchronize();` waits for both blocks. Without it you may see no lines at all.
 6. `12 cpu` **The invalid launch, as a comment.** Add this line last, as a reminder of what not to write. `<<<1, 2048>>>` compiles, but the runtime drops it. If you remove the `//`, that launch prints no lines and no error message, so the mistake is easy to miss.
 
@@ -122,7 +122,7 @@ nvcc -o first_kernel first_kernel.cu
 
 ## Output
 
-The program prints 2048 lines, one per thread. Here are the first few:
+The program prints 2048 lines, one per thread. Here are the first few.
 
 ```
 Block ID: 0  ===  Thread ID: 0
@@ -164,7 +164,7 @@ int main()
 ```
 
 ??? tip "Hint"
-    The formula is `blockIdx.x * blockDim.x + threadIdx.x`. Blocks come first in the launch: `<<<3, 4>>>`.
+    The formula is `blockIdx.x * blockDim.x + threadIdx.x`. Blocks come first in the launch, as in `<<<3, 4>>>`.
 
 ??? note "Solution"
     ```c

@@ -2,7 +2,7 @@
 
 A GPU does not run its threads one by one. It runs them in groups of 32 called warps, and it hides slow memory by switching between warps instead of waiting. This lesson explains how that works, why a GPU wants far more threads than it has cores, and what occupancy means.
 
-## SIMT: One Instruction, Many Threads
+## SIMT, One Instruction for Many Threads
 
 NVIDIA calls its execution model SIMT. You write a kernel as if for one thread, and the GPU runs many threads with that same code. Each thread has its own registers and its own data, for example its own element of an array.
 
@@ -28,7 +28,7 @@ An SM can hold up to 48 warps at the same time on the L40S, which is 48 × 32 = 
 
 A load from VRAM takes hundreds of clock cycles. [Lesson 07](../Lesson-07/notes.md) shows the memory hierarchy behind this. When a warp needs a value that has not arrived yet, it cannot run its next instruction. The warp stalls.
 
-A CPU core would try to avoid this with big caches and by guessing ahead. A GPU does something simpler: the warp scheduler skips the stalled warp and issues an instruction from another warp that is ready. When the data arrives, the first warp becomes ready again and gets its turn later.
+A CPU core would try to avoid this with big caches and by guessing ahead. A GPU does something simpler. The warp scheduler skips the stalled warp and issues an instruction from another warp that is ready. When the data arrives, the first warp becomes ready again and gets its turn later.
 
 This switch costs nothing. Every resident warp keeps its own registers in the register file the whole time, so there is nothing to save or restore. On a CPU, switching between threads means saving registers to memory and loading others, which takes much longer.
 
@@ -38,7 +38,7 @@ The diagram below is a simplified model of one warp scheduler. Each warp issues 
 
 <latency-hiding></latency-hiding>
 
-With 1 warp the scheduler issues on only 2 of every 10 cycles, which is 20% busy. Each extra warp fills a gap. With (2 + 8) / 2 = 5 warps there is always one ready, and the scheduler is busy 100% of the time. A sixth warp adds nothing: it only waits its turn.
+With 1 warp the scheduler issues on only 2 of every 10 cycles, which is 20% busy. Each extra warp fills a gap. With (2 + 8) / 2 = 5 warps there is always one ready, and the scheduler is busy 100% of the time. A sixth warp adds nothing, because it only waits its turn.
 
 Real numbers are larger. A load from VRAM takes hundreds of cycles, so the scheduler needs many warps, and many independent instructions in each warp, to cover it.
 
@@ -46,17 +46,17 @@ Real numbers are larger. A load from VRAM takes hundreds of cycles, so the sched
 
 Latency hiding only works if there are other warps to switch to. That is why you launch far more threads than the GPU has cores.
 
-A worked example with the L40S:
+Here is a worked example with the L40S.
 
-- FP32 cores: 142 SMs × 128 = 18,176
-- resident threads: 142 SMs × 1,536 = 218,112
+- 142 SMs × 128 = 18,176 FP32 cores
+- 142 SMs × 1,536 = 218,112 resident threads
 - 218,112 / 18,176 = 12 threads that can be resident per core
 
 Most of those threads are waiting at any moment. That is fine. They are not wasted, they are the pool the schedulers pick from while the others wait for memory.
 
 ## Occupancy
 
-Occupancy measures how full an SM is with warps:
+Occupancy measures how full an SM is with warps.
 
 occupancy = active warps / maximum warps per SM
 
@@ -70,17 +70,17 @@ The SM gives each block registers, shared memory and a slot. When one of these r
 
 ### Registers per Thread
 
-An SM has 65,536 32-bit registers, shared by all its resident threads. For full occupancy, all 1,536 threads must fit:
+An SM has 65,536 32-bit registers, shared by all its resident threads. For full occupancy, all 1,536 threads must fit.
 
 65,536 / 1,536 = 42.7, so about 42 registers per thread
 
-A kernel that needs more registers per thread fits fewer warps:
+A kernel that needs more registers per thread fits fewer warps.
 
-- 64 registers: 64 × 32 = 2,048 registers per warp, and 65,536 / 2,048 = 32 warps, so 32 / 48 = 67%
-- 128 registers: 128 × 32 = 4,096 per warp, and 65,536 / 4,096 = 16 warps, so 16 / 48 = 33%
+- With 64 registers, 64 × 32 = 2,048 registers per warp, and 65,536 / 2,048 = 32 warps, so 32 / 48 = 67%
+- With 128 registers, 128 × 32 = 4,096 per warp, and 65,536 / 4,096 = 16 warps, so 16 / 48 = 33%
 
 > [!NOTE]
-> The hardware hands out registers in chunks of 256 per warp. A kernel with 42 registers needs 42 × 32 = 1,344 per warp, which rounds up to 1,536, and 48 × 1,536 = 73,728 is more than 65,536. So the real limit for 100% on the L40S is 40 registers: 40 × 32 = 1,280, and 48 × 1,280 = 61,440 fits.
+> The hardware hands out registers in chunks of 256 per warp. A kernel with 42 registers needs 42 × 32 = 1,344 per warp, which rounds up to 1,536, and 48 × 1,536 = 73,728 is more than 65,536. So the real limit for 100% on the L40S is 40 registers, because 40 × 32 = 1,280 and 48 × 1,280 = 61,440 fits.
 
 ### Shared Memory per Block
 
@@ -90,7 +90,7 @@ Take blocks of 256 threads (8 warps) that each use 40 KB of shared memory. Only 
 
 ### Block Size
 
-An SM on the L40S holds at most 24 blocks. Tiny blocks hit this limit first: with 32 threads per block (1 warp), 24 blocks give only 24 warps, which is 24 / 48 = 50%.
+An SM on the L40S holds at most 24 blocks. Tiny blocks hit this limit first. With 32 threads per block (1 warp), 24 blocks give only 24 warps, which is 24 / 48 = 50%.
 
 Large blocks can waste space too. A block of 1,024 threads is 32 warps. Only one fits, because two would need 64 warps, so the SM holds 32 / 48 = 67%. Blocks of 128, 256 or 512 threads divide 1,536 evenly and can reach 100% if registers and shared memory allow it.
 
@@ -132,25 +132,25 @@ A warp is 32 threads that run one instruction together. Each warp scheduler issu
 - thread: one instance of a kernel, with its own registers and data.
 - warp: a group of 32 threads that run the same instruction together.
 - lane: one thread's position inside its warp, from 0 to 31.
-- block: a group of threads launched together on one SM; it can use shared memory.
-- SM (Streaming Multiprocessor): the small processor a GPU is built from; the L40S has 142.
-- CC (compute capability): the version number of a GPU's features; the L40S is 8.9.
-- warp scheduler: the unit that picks a ready warp and issues its next instruction each clock cycle; an Ada SM has 4.
-- issue: to send a warp's next instruction off to run; each warp scheduler issues at most one per clock cycle.
-- resident warps: the warps an SM holds at the same time; at most 48 on the L40S.
-- register: the fastest storage in an SM; each thread keeps its own variables in registers.
+- block: a group of threads launched together on one SM. It can use shared memory.
+- SM (Streaming Multiprocessor): the small processor a GPU is built from. The L40S has 142.
+- CC (compute capability): the version number of a GPU's features. The L40S is 8.9.
+- warp scheduler: the unit that picks a ready warp and issues its next instruction each clock cycle. An Ada SM has 4.
+- issue: to send a warp's next instruction off to run. Each warp scheduler issues at most one per clock cycle.
+- resident warps: the warps an SM holds at the same time, at most 48 on the L40S.
+- register: the fastest storage in an SM. Each thread keeps its own variables in registers.
 - register file: all registers of an SM, 65,536 32-bit registers on the L40S.
 - FP32 (32-bit floating point): the standard number format for GPU math.
 - KB (kilobyte): 1,024 bytes.
-- VRAM (GPU memory): the large memory on the GPU card; a load from it takes hundreds of clock cycles.
+- VRAM (GPU memory): the large memory on the GPU card. A load from it takes hundreds of clock cycles.
 - stall: when a warp cannot issue its next instruction because it waits, for example for memory.
 - latency hiding: keeping the GPU busy during slow operations by issuing from other warps.
 - occupancy: active warps divided by the maximum warps per SM.
-- shared memory: fast memory inside an SM that the threads of one block share; up to 100 KB per SM on the L40S.
+- shared memory: fast memory inside an SM that the threads of one block share, up to 100 KB per SM on the L40S.
 - branch divergence: when lanes of one warp take different paths, so the warp runs the paths one after the other.
-- program counter: the address of the next instruction; since Volta each thread has its own.
+- program counter: the address of the next instruction. Since Volta each thread has its own.
 - ILP (instruction-level parallelism): independent instructions inside one thread that can be issued without waiting for each other.
 - spill: a value that no longer fits in registers and is moved to local memory in VRAM.
 - local memory: per-thread memory that lives in VRAM, used for spills.
 - CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
-- nvcc (NVIDIA CUDA Compiler): the compiler that turns CUDA code into GPU programs; `-Xptxas -v` makes it print register use.
+- nvcc (NVIDIA CUDA Compiler): the compiler that turns CUDA code into GPU programs. `-Xptxas -v` makes it print register use.

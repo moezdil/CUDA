@@ -9,7 +9,7 @@ NVIDIA Nisan 1993'te kuruldu. İlk ürünü NV1, 1995'te çıktı.
 > [!NOTE]
 > NVIDIA'yı Jensen Huang, Chris Malachowsky ve Curtis Priem kurdu. Jensen Huang hâlâ şirketin CEO'su.
 
-O ilk donanım bugünle kıyaslanınca çok basitti:
+O ilk donanım bugünle kıyaslanınca çok basitti.
 
 - çok küçük bellek  
 - çok sınırlı veri bant genişliği  
@@ -17,7 +17,7 @@ O ilk donanım bugünle kıyaslanınca çok basitti:
 
 ## Modern GPU'lar
 
-Bugünün GPU'ları bambaşka bir ölçekte. Bunlar:
+Bugünün GPU'ları bambaşka bir ölçekte ve üç açıdan öne çıkıyor.
 
 - binlerce, hatta on binlerce çekirdeğe sahip  
 - büyük miktarda belleğe sahip  
@@ -29,7 +29,7 @@ Rolleri de değişti.
 
 ## Grafikten Fazlası
 
-GPU'lar ilk başta görüntü oluşturmak için yapıldı. Bugün bu, yaptıkları işin küçük bir parçası. GPU'lar artık yaygın olarak şunlar için kullanılıyor:
+GPU'lar ilk başta görüntü oluşturmak için yapıldı. Bugün bu, yaptıkları işin küçük bir parçası. GPU'lar artık yaygın olarak pek çok alanda kullanılıyor.
 
 - yapay zekâ  
 - büyük ölçekli veri işleme  
@@ -48,11 +48,11 @@ Yani modern bir GPU sadece bir grafik cihazı değil, bir hesaplama platformudur
 
 ## İstikrarlı Büyüme
 
-Ondan sonra ilerleme hızlandı. NVIDIA 2007'de CUDA'yı çıkardı; böylece 2006'daki GeForce 8 serisinden itibaren GPU'ları sadece grafik değil, genel programlar da çalıştırabildi. Her yeni mimari performans, verimlilik ya da özellikler açısından bir adım attı: Fermi (2010), Kepler (2012), Maxwell (2014), Pascal (2016), Volta (2017, ilk Tensor Core'lar), Turing (2018), Ampere (2020), Ada Lovelace ve Hopper (2022), Blackwell (2024). Bu kazanımlar zamanla birikti. Modern GPU'lar tek bir büyük sıçrama sayesinde değil, yıllar boyunca atılan birçok adım sayesinde güçlü.
+Ondan sonra ilerleme hızlandı. NVIDIA 2007'de CUDA'yı çıkardı, böylece 2006'daki GeForce 8 serisinden itibaren GPU'ları sadece grafik değil, genel programlar da çalıştırabildi. Her yeni mimari performans, verimlilik ya da özellikler açısından bir adım attı. Sırasıyla Fermi (2010), Kepler (2012), Maxwell (2014), Pascal (2016), Volta (2017, ilk Tensor Core'lar), Turing (2018), Ampere (2020), Ada Lovelace ve Hopper (2022), Blackwell (2024) geldi. Bu kazanımlar zamanla birikti. Modern GPU'lar tek bir büyük sıçrama sayesinde değil, yıllar boyunca atılan birçok adım sayesinde güçlü.
 
 ## Bugün Neredeyiz
 
-Ekim 2026 itibarıyla NVIDIA şu alanlarda merkezi bir rol oynuyor:
+Ekim 2026 itibarıyla NVIDIA dört alanda merkezi bir rol oynuyor.
 
 - oyun  
 - yapay zekâ altyapısı  
@@ -70,7 +70,7 @@ Birçok durumda GPU'lar artık modern yapay zekâ sistemlerinin ana itici gücü
 
 ## CUDA'dan Önce Bu Neden Önemli
 
-GPU'ların nasıl geliştiğini bilmek şunları anlamana yardım eder:
+GPU'ların nasıl geliştiğini bilmek üç şeyi anlamana yardım eder.
 
 - mimarinin neden böyle tasarlandığını  
 - GPU'lar arasında performansın neden farklı olduğunu  
@@ -84,25 +84,25 @@ Bu da CUDA'ya geçişi kolaylaştırır.
 - NVIDIA: 1993'te kurulan, GeForce ve veri merkezi GPU'larını üreten ve CUDA'yı yaratan şirket.
 - NV1: NVIDIA'nın 1995'te çıkan ilk ürünü.
 - CEO (chief executive officer): bir şirketi günlük olarak yöneten kişi, üst yönetici.
-- veri bant genişliği (data bandwidth): bir GPU'nun saniyede ne kadar veri taşıyabildiği; ilk donanımlarda çok sınırlıydı.
-- paralellik (parallelism): birçok işi aynı anda yapmak; ilk GPU'larda neredeyse yoktu.
-- çekirdek (core): işi yapan birim; modern GPU'larda binlercesi var.
-- frekans (frequency): bir çipin saniyede kaç saat döngüsü çalıştığı; MHz (milyon) ya da GHz (milyar) ile ölçülür.
+- veri bant genişliği (data bandwidth): bir GPU'nun saniyede ne kadar veri taşıyabildiği. İlk donanımlarda çok sınırlıydı.
+- paralellik (parallelism): birçok işi aynı anda yapmak. İlk GPU'larda neredeyse yoktu.
+- çekirdek (core): işi yapan birim. Modern GPU'larda binlercesi var.
+- frekans (frequency): bir çipin saniyede kaç saat döngüsü çalıştığı. MHz (milyon) ya da GHz (milyar) ile ölçülür.
 - GeForce RTX 5090: 21.760 CUDA çekirdekli ve 32 GB bellekli, Blackwell tabanlı, 2025 çıkışlı bir GeForce GPU'su.
 - görüntü oluşturma (render): bir sahnenin tarifini (şekiller, renkler, ışık) ekranda gördüğün piksellere dönüştürmek.
-- yapay zekâ (AI): veriden öğrenen yazılım, örneğin görüntü tanıma ya da sohbet botları; eğitimi büyük ölçüde dev matris hesaplarıdır, bu da GPU'lara çok uyar.
+- yapay zekâ (AI): veriden öğrenen yazılım, örneğin görüntü tanıma ya da sohbet botları. Eğitimi büyük ölçüde dev matris hesaplarıdır, bu da GPU'lara çok uyar.
 - hesaplama platformu (compute platform): sadece grafik için değil, genel hesaplama için kullanılan bir cihaz.
-- 3D hızlandırma (3D acceleration): GPU'ların 3D grafik desteği; GPU'ları çok daha fazla insan için kullanışlı yaptı.
+- 3D hızlandırma (3D acceleration): GPU'ların 3D grafik desteği. GPU'ları çok daha fazla insan için kullanışlı yaptı.
 - RIVA 128: NVIDIA'nın 3D ile 2D'yi birleştiren ve şirketi tanınır yapan 1997 tarihli çipi.
 - GeForce 256: NVIDIA'nın 1999'da ilk GPU olarak tanıttığı, 32 MB bellekli ve 120 MHz saatli kart.
-- T&L (transform and lighting): 3D şekilleri yerleştiren ve aydınlatan hesap; GeForce 256 bunu CPU'dan GPU'ya taşıdı.
-- CPU (Central Processing Unit): bilgisayarın ana işlemcisi; GeForce 256'dan önce T&L hesabını o yapıyordu.
+- T&L (transform and lighting): 3D şekilleri yerleştiren ve aydınlatan hesap. GeForce 256 bunu CPU'dan GPU'ya taşıdı.
+- CPU (Central Processing Unit): bilgisayarın ana işlemcisi. GeForce 256'dan önce T&L hesabını o yapıyordu.
 - GeForce: GPU'ları ilk kez geniş kitlelere ulaştıran NVIDIA tüketici GPU serisi.
 - verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
-- Tensor Core: yapay zekânın matris hesapları için yapılmış birimler; ilk kez Volta'da (2017) geldi.
+- Tensor Core: yapay zekânın matris hesapları için yapılmış birimler. İlk kez Volta'da (2017) geldi.
 - bulut bilişim (cloud computing): donanımı satın almak yerine GPU'lar dahil bilgisayarları bir sağlayıcının veri merkezlerinden internet üzerinden kiralamak.
 - HPC (high-performance computing): hava tahmini ya da fizik simülasyonları gibi büyük problemler üzerinde birlikte çalışan çok sayıda güçlü işlemci.
 - Blackwell: RTX 50 serisinin, B200'ün ve B300'ün arkasındaki 2024 tarihli NVIDIA mimarisi.
-- Rubin: Blackwell'den sonraki NVIDIA mimarisi; ilk kez Eylül 2026'da Vera Rubin NVL72 kabinleriyle teslim edildi.
+- Rubin: Blackwell'den sonraki NVIDIA mimarisi. İlk kez Eylül 2026'da Vera Rubin NVL72 kabinleriyle teslim edildi.
 - mimari (architecture): bir GPU'nun genel tasarımı, yani çekirdeklerinin, belleğinin ve birimlerinin nasıl düzenlendiği.
-- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan genel programlar yazmak için sunduğu platform; ilk kez 2007'de çıktı.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan genel programlar yazmak için sunduğu platform. İlk kez 2007'de çıktı.

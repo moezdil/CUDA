@@ -1,6 +1,6 @@
 # 05 > The CUDA Platform Stack
 
-Lessons 00 to 04 used one small part of CUDA: a kernel written in C/C++ and compiled with `nvcc`. This lesson steps back and shows the whole platform as it ships with CUDA Toolkit 13. Knowing the layers helps you see where each new tool or library you meet later fits in.
+Lessons 00 to 04 used one small part of CUDA, a kernel written in C/C++ and compiled with `nvcc`. This lesson steps back and shows the whole platform as it ships with CUDA Toolkit 13. Knowing the layers helps you see where each new tool or library you meet later fits in.
 
 ## The Five Layers
 
@@ -8,17 +8,17 @@ The CUDA platform has five layers. The languages you write in sit at the top, th
 
 <cuda-stack></cuda-stack>
 
-1. Programming languages: how you write GPU code.
-2. Development tools: how you find slow parts and bugs.
-3. Compiler toolchain: how your source code becomes GPU instructions.
-4. Hardware capabilities: special units and features of the GPU itself.
-5. AI framework layer: ready-made libraries that deep learning frameworks use.
+1. Programming languages are how you write GPU code.
+2. Development tools find slow parts and bugs.
+3. The compiler toolchain turns your source code into GPU instructions.
+4. Hardware capabilities are the special units and features of the GPU itself.
+5. The AI framework layer holds ready-made libraries that deep learning frameworks use.
 
 ## Programming Languages
 
 - CUDA C/C++ is the main language for writing kernels. Lessons 00 to 04 all used it.
 - CUDA Fortran lets Fortran programmers write kernels in Fortran instead of C++.
-- OpenACC works the other way: you add short annotations to normal C, C++ or Fortran loops, and the compiler turns those loops into GPU code. You never write a kernel by hand.
+- OpenACC works the other way. You add short annotations to normal C, C++ or Fortran loops, and the compiler turns those loops into GPU code. You never write a kernel by hand.
 - Python reaches the GPU through libraries. CuPy gives you NumPy-style arrays that live on the GPU. Numba compiles Python functions into GPU kernels. NVIDIA's own CUDA Python packages (`cuda-python`) give Python direct access to the CUDA driver and runtime APIs.
 
 All of them end up running on the same GPU hardware, with the same blocks, threads and warps you met in Lessons 00 to 04.
@@ -34,16 +34,16 @@ All of them end up running on the same GPU hardware, with the same blocks, threa
 
 ## Compiler Toolchain
 
-`nvcc` compiles `.cu` files. Every lesson so far used it in the compile step. It splits the file in two:
+`nvcc` compiles `.cu` files. Every lesson so far used it in the compile step. It splits the file in two.
 
-- Host code, the part that runs on the CPU, goes to the normal C++ compiler: `gcc` or `clang` on Linux, MSVC on Windows.
+- Host code, the part that runs on the CPU, goes to the normal C++ compiler, which is `gcc` or `clang` on Linux and MSVC on Windows.
 - Device code, the kernels, is compiled by NVIDIA's own tools in two stages. First it becomes PTX, a virtual instruction set that is not tied to one GPU. Then PTX becomes SASS, the real machine instructions of one GPU generation.
 
 <nvcc-pipeline></nvcc-pipeline>
 
 The program file can hold both the SASS and the PTX. When the program starts, the driver picks the SASS that fits the GPU. If there is none, it compiles the PTX into SASS on the spot. This is called JIT compilation.
 
-A worked example: Lesson 06 builds with `-arch=sm_89`. That stores SASS and PTX for compute capability 8.9 in the program.
+As a worked example, Lesson 06 builds with `-arch=sm_89`. That stores SASS and PTX for compute capability 8.9 in the program.
 
 - On the L40S (CC 8.9), the driver runs the stored SASS directly.
 - On a newer GPU, for example one with CC 12.0, there is no SASS for 12.0. The driver compiles the stored PTX into SASS for CC 12.0 at startup, and the program still runs.
