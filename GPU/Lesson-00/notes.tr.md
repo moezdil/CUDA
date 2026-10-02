@@ -101,7 +101,7 @@ Yani GPU sadece "çok sayıda çekirdek" değildir. Uzmanlaşmış birimlerden o
 
 ## L2 Önbellek
 
-L2 önbellek, tüm GPU için ortak bir önbellek katmanıdır. L1 ya da paylaşımlı bellek gibi tek bir SM'ye bağlı değildir. Daha büyüktür ama daha yavaştır. Bellek erişiminin maliyetini azaltmaya yardım eder.
+L2 önbellek, tüm GPU için ortak bir önbellek katmanıdır. L1 ya da paylaşımlı bellek gibi tek bir SM'ye bağlı değildir. Daha büyüktür ama daha yavaştır. Bellek erişiminin maliyetini azaltmaya yardım eder. [Ders 07](../Lesson-07/notes.md) her bellek seviyesini gerçek boyutlarıyla gösteriyor.
 
 <gpu-anatomy></gpu-anatomy>
 

@@ -1,111 +1,144 @@
-# 05 > Mimari ve Çipler
+# 05 > Compute Capability
 
-Bir mimari tek bir çip değildir. Aynı temel tasarımı paylaşan bir çip ailesidir ve her çip de sonunda birkaç farklı ürüne girer. Bu derste mimarinin, çipin ve son GPU'nun (Graphics Processing Unit, grafik işlem birimi) nasıl birbirine bağlandığını Ada Lovelace ve Blackwell örnekleriyle göreceksin.
+Bu derste compute capability'nin ne olduğunu, numaralarının nasıl işlediğini ve hangi özellikleri, hangi CUDA (Compute Unified Device Architecture) araç seti sürümlerini kullanabileceğini nasıl belirlediğini göreceksin. Dersin sonunda herhangi bir GPU'ya (Graphics Processing Unit, grafik işlem birimi) bakıp neyi desteklediğini söyleyebileceksin.
 
-## Bir Mimari, Birçok Çip
+## Compute Capability Nedir
 
-Ada Lovelace mimarisini (2022) ele al. Şu gibi farklı çipleri içerir:
+Compute capability (CC), NVIDIA'nın bir GPU'nun özelliklerini tanımlamak için kullandığı sistemdir. Yazılımın değil, donanımın sürüm numarasıdır.
 
-- AD102  
-- AD103  
-- AD104  
+Bir pazarlama puanı ya da benchmark değildir. Bir GPU mimarisinin tam olarak neyi yapıp neyi yapamadığını söyler. Onu tek bir sayıya sığmış bir özellik tablosu gibi düşün.
 
-"AD" ön eki hepsini aynı mimariye bağlar. Daha hiçbir özelliğe bakmadan aynı aileden olduklarını bilirsin.
+## Numaralandırma Nasıl Çalışır
 
-Güncel tüketici nesli de aynı şekilde çalışır. Blackwell tüketici çipleri "GB" ile başlar: RTX 5090'da GB202, RTX 5080'de GB203, RTX 5070'te GB205.
+Compute capability, 7.5, 8.9 ya da 12.0 gibi bir sürüm numarasıdır. Kural bütün nesiller için aynıdır:
 
-## Aynı Tasarım, Farklı Ölçek
+- Noktadan önceki sayı büyük bir mimari değişikliği gösterir
+- Noktadan sonraki sayı küçük iyileştirmeleri ya da eklemeleri gösterir
 
-Aynı mimariden gelen çipler farklı şekillerde kullanılır. Bazıları üst seviye GPU'lar içindir, bazıları orta seviye ya da daha küçük sistemler için.
-
-Bir çipin büyüklüğü, çekirdekleri barındıran yapı taşları olan SM'lerle (Streaming Multiprocessor) sayılır. Tam bir AD102'de 144 SM, tam bir AD103'te 80, tam bir AD104'te 60 SM vardır. Bu yüzden AD102 en üst seviye GPU'lara, AD104 ise RTX 4070 Ti gibi daha küçük ve daha verimli kartlara girer. Nvidia tek bir tasarımı farklı boyutlara ve yeteneklere ölçekler.
-
-## Farklı Mimariler, Farklı İşler
-
-Her mimari aynı tür iş için yapılmaz. Ada Lovelace ile Hopper'ı karşılaştır:
-
-- Ada çoğunlukla oyun, masaüstü ve yaratıcı işler gibi tüketici GPU'ları içindir; L40S gibi birkaç sunucu kartı da vardır.  
-- Hopper veri merkezleri, yapay zekâ (AI, artificial intelligence) eğitimi ve büyük ölçekli hesaplama içindir.  
-
-Yani fark yalnızca performansta değil, amaçtadır. Bazı mimariler grafik ve etkileşimli işleri hedefler, bazıları ise çok büyük paralel hesaplamayı. Normal PC'lerde Hopper tabanlı GPU görmemenin nedeni budur.
-
-> [!NOTE]
-> Blackwell iki dünyayı da kapsar ama farklı çiplerle. B200 veri merkezi GPU'su ve RTX 5090 ikisi de Blackwell'dir, yine de farklı çipler kullanırlar ve CUDA'ya (Compute Unified Device Architecture) farklı CC (Compute Capability, hesaplama yeteneği) numaraları bildirirler: B200 için 10.0, RTX 5090 için 12.0.
-
-## Görsel Bir İpucu
-
-Veri merkezi GPU'ları genelde çok sade görünür, görünür bir fanları yoktur. Sunucuların içinde dururlar; soğutma hava akışından, kabinlerden ve sistemin tamamından gelir.
-
-Tüketici GPU'larının büyük soğutma sistemleri ve birkaç fanı vardır. Normal bir PC (Personal Computer, kişisel bilgisayar) kasasında çalıştıkları için kendi ısılarıyla kendileri başa çıkmak zorundadır.
-
-Bir kartın görünüşü yararlı bir ipucudur, katı bir kural değil.
-
-## Aynı Çip Farklı Davranabilir
-
-Bir çip tek bir amaç demek değildir. Aynı çip farklı biçimlerde karşına çıkabilir. Bir üretici:
-
-- bazı çekirdekleri kapatabilir  
-- güç sınırlarını değiştirebilir  
-- saat hızını ayarlayabilir  
-
-Yani aynı çipe sahip iki GPU aynı davranmayabilir. AD102 gerçek bir örnek:
-
-- RTX 4090: 144 SM'den 128'i açık, 450 W güç sınırı, 24 GB GDDR6X bellek.  
-- L40S: 144 SM'den 142'si açık, 350 W güç sınırı, 48 GB GDDR6 bellek.  
-
-RTX 4090'da 144 − 128 = 16 SM kapalıdır, bu da çipin 16 / 144 ≈ %11'i eder. Birkaç SM'si arızalı çipler, o SM'ler kapatılarak bu şekilde yine satılabilir.
-
-## Kart Üreticisi Ortaklar
-
-Nvidia her son GPU'yu kendisi üretmez. ASUS, MSI ya da Gigabyte gibi şirketler aynı çipi alıp kendi sürümlerini yapar. Şunları değiştirirler:
-
-- soğutma tasarımı  
-- güç yapılandırması  
-- boost davranışı  
-
-Temel çip aynı, sonuç biraz farklı.
-
-<arch-family></arch-family>
-
-## Resmin Tamamı
-
-Mimari bir temel tasarımdır. Farklı kullanımlar için ölçeklenmiş birkaç çip içerir. Üreticiler de üstüne kendi değişikliklerini ekler. Yani bir GPU şunlardan oluşur:
-
-- bir mimari  
-- belirli bir çip  
-- üreticiye özgü bir uygulama  
+Yani 7.x'ten 8.x'e geçmek sadece bir hız artışı değildir. Yeni donanım birimleri ve yeni yetenekleri olan farklı bir mimari demektir. Somut bir örnek: RTX 4090 CC 8.9, A100 ise CC 8.0'dır. İkisi de 8.x ailesindendir, yani temel tasarımı paylaşırlar; ama 8.9, A100'de olmayan özellikler ekler, örneğin FP8 Tensor Core'ları.
 
 > [!TIP]
-> Herhangi bir GPU'yu çözmek için şu üç soruyu sırayla sor: hangi mimari, hangi çip, hangi kart. RTX 5090 için cevap Blackwell, GB202 ve Nvidia'nın ya da kart üreticisi ortaklarından birinin yaptığı bir kart.
+> Makinendeki GPU'nun CC değerini görmek için `nvidia-smi --query-gpu=name,compute_cap --format=csv` komutunu çalıştır. NVIDIA'nın "CUDA GPUs" web sayfası her kartın CC değerini listeler.
 
-## Bu Neden Önemli
+## Mimariler
 
-Bu bilgi GPU adlarını okumayı kolaylaştırır. İki GPU'nun neden farklı davrandığını ve bir GPU'nun nereye oturduğunu görmeni sağlar. Bunu bilmeden CUDA'da derinleştikçe performansı ve donanım davranışını yanlış anlamak çok kolaydır.
+### Volta → CC 7.0
+
+Volta, Tensor Core'ları getirdi. Bunlar yapay zekâda (AI, artificial intelligence) ve derin öğrenmede kullanılan matris işlemlerini hızlandıran özel birimlerdir. Volta'dan önce bu işlemler genel amaçlı CUDA çekirdeklerinde çalışıyordu. Volta'dan sonra kendilerine ayrılmış bir donanımları oldu.
+
+### Turing ve Ampere → CC 7.5 ve 8.x
+
+Turing (CC 7.5, RTX 20 serisi), Tensor Core'ları tüketici kartlarına taşıdı. Ampere (A100 için CC 8.0, RTX 30 serisi için 8.6) daha güçlü ve verimli Tensor Core'lar, daha yüksek bellek bant genişliği ve daha iyi enerji verimliliği getirdi. Ada Lovelace (CC 8.9, RTX 40 serisi ve L40S) ise FP8 (8 bit kayan noktalı sayı) desteği ekledi.
+
+### Hopper → CC 9.0
+
+Hopper (H100 ve H200) bir başka büyük adımdı. Çok büyük yapay zekâ modelleri için yeni yürütme modelleri getirdi ve yapay zekâ performansını ileri taşıdı.
+
+### Blackwell → CC 10.x, 11.0 ve 12.x
+
+Blackwell, 2026'da sevkiyatı yapılan ana nesildir. 5. nesil Tensor Core'lara ve NVFP4 (NVIDIA 4 bit kayan noktalı sayı) adlı yeni bir duyarlık biçimine sahiptir. NVFP4, büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkarır. FP4 hızlandırması önceki mimarilerde yoktur.
+
+Blackwell, her çip ailesi için bir tane olmak üzere birkaç farklı compute capability ile gelir:
+
+| CC | Ürünler |
+|---|---|
+| 10.0 | B200, GB200 (veri merkezi) |
+| 10.3 | B300, GB300 (Blackwell Ultra, veri merkezi) |
+| 11.0 | Jetson Thor (robotik) |
+| 12.0 | GeForce RTX 50 serisi, RTX PRO Blackwell |
+| 12.1 | GB10 (DGX Spark masaüstü) |
+
+> [!NOTE]
+> Bir sonraki mimari olan Rubin, CC 10.7'dir. B200 ve B300 ile aynı 10.x ailesine aittir. İlk Vera Rubin NVL72 rack'lerinin sevkiyatı Eylül 2026'da başladı.
+
+## Özellik Desteği
+
+Resmî CUDA dokümantasyonunda özellikleri compute capability sürümleriyle eşleştiren tablolar vardır. Bu tablolarda net örüntüler görülür:
+
+- CC 5.0'daki GPU'lar yarım duyarlıklı (FP16) işlemleri desteklemez
+- Tensor Core'lar sadece CC 7.0'dan itibaren vardır
+- FP8 Tensor Core'lar CC 8.9 (Ada Lovelace) ve 9.0 (Hopper) ile gelir
+- NVFP4, CC 10.0 ya da üstünü gerektirir
+
+Eksik bir donanım özelliği sonradan eklenemez. GPU'nda Tensor Core yoksa onları kullanamazsın. Yazılım bazen eksik bir birimi taklit edebilir (emülasyon), ama bu çok daha yavaştır ve çoğu Tensor Core özelliği için böyle bir yol yoktur. Donanımda ya o birim vardır ya da yoktur.
+
+Bu yüzden performansa duyarlı CUDA kodu yazmadan önce "GPU'm ihtiyacım olanı destekliyor mu?" diye sor. Bu soru, "GPU'm yeterince hızlı mı?" sorusundan önce gelir.
+
+## Yazılım Uyumluluğu
+
+Compute capability, hangi CUDA araç seti sürümlerini kullanabileceğini de belirler. Yeni bir mimari, onu tanıyan bir araç setine ihtiyaç duyar; eski mimariler de birkaç yıl sonra yeni araç setlerinden çıkarılır.
+
+Bazı örnekler:
+
+- Hopper (CC 9.0): CUDA 11.8 ya da üstünü gerektirir
+- Blackwell (CC 10.0 ve 12.0): yerel cubin desteği için CUDA 12.8 ya da üstünü gerektirir
+- Blackwell Ultra (CC 10.3): CUDA 12.9 ya da üstünü gerektirir
+- Rubin (CC 10.7): CUDA 13.4'te destekleniyor
+- Maxwell, Pascal ve Volta (CC 5.x ile 7.0 arası): CUDA 13 bunları hiç desteklemez; onlar için son araç setleri CUDA 12.x'tir
+
+> [!WARNING]
+> CUDA 13 (güncel ana sürüm, Eylül 2026 itibarıyla 13.4) sadece CC 7.5 (Turing) ve üstünü destekler. GTX 1080 (CC 6.1) gibi bir Pascal kartında CUDA 12.x'te kalman gerekir.
+
+Mimarin için gereken en düşük sürümün altındaki ya da mimarini artık desteklemeyen bir araç seti kesin bir hata verir. Kod ya derlenmez ya da çalışma zamanında hata verir.
+
+İş akışı hep aynıdır:
+
+1. GPU'nun compute capability değerini bul.
+2. CUDA sürümünü seç.
+3. Kodunu yaz.
+
+<cc-explorer></cc-explorer>
+
+## Alt Seviye Katman (PTX)
+
+CUDA kodu doğrudan GPU'da çalışmaz. Önce PTX'e (Parallel Thread Execution) derlenir. PTX, NVIDIA GPU'ları için bir assembly dili gibi düşük seviyeli bir ara dildir.
+
+Bazı PTX komutları, sadece belirli bir compute capability'den itibaren var olan donanım birimlerine ihtiyaç duyar. Warp shuffle fonksiyonları buna bir örnektir.
+
+> [!NOTE]
+> Warp shuffle fonksiyonları, bir warp'taki thread'lerin paylaşımlı bellek ya da global bellek kullanmadan veri paylaşmasını sağlar. Warp shuffle, CC 3.0'dan (Kepler) beri vardır.
+
+GPU'n en düşük sürümün altındaysa bu komutlar çalışamaz. Onlar için gereken donanım çipte yoktur.
+
+## Özet
+
+Aynı kural makine öğrenmesi hatlarında, fizik simülasyonlarında ve özel CUDA kernel'larında da geçerlidir. GPU'nun compute capability değeri, donanımın ile kodun arasındaki sözleşmedir.
+
+CC numaranı bil. Onu CUDA dokümantasyonuyla karşılaştır. Doğru araç seti sürümünü seç. Sonra derle. Performans ayarı, optimizasyon ve özellik seçimi hep buradan başlar.
+
+> Compute capability sadece bir sürüm numarası değildir. GPU'nun gerçekte neler yapabildiğinin tanımıdır.
 
 ## Sözlük
 
-- mimari (architecture): bir çip ailesinin paylaştığı temel tasarım.
-- ön ek (prefix): çip adının ilk harfleri, örneğin AD ya da GB; çipi mimarisine bağlar.
-- GPU (Graphics Processing Unit): bir çipin etrafına kurulmuş, belleği, güç parçaları ve soğutmasıyla birlikte ürünün tamamı.
-- Ada Lovelace: 2022'den kalma, çoğunlukla tüketici GPU'larında kullanılan, AD102 gibi çiplere sahip bir Nvidia mimarisi.
-- AD102: Ada Lovelace'in 144 SM'li en büyük çipi; GeForce RTX 4090'da ve L40S'te kullanılır.
-- AD104: Ada Lovelace'in 60 SM'li daha küçük çiplerinden biri; RTX 4070 Ti gibi kartlarda kullanılır.
-- Blackwell: Nvidia'nın güncel mimarisi; veri merkezi çipleri (B200) ve tüketici çipleri (RTX 5090'daki GB202) vardır.
-- GB202: en büyük tüketici Blackwell çipi; RTX 5090'da kullanılır.
-- SM (Streaming Multiprocessor): Nvidia GPU'sunun çekirdekleri barındıran yapı taşı; çip büyüklüğü SM sayısıyla ölçülür.
-- Hopper: veri merkezleri, yapay zekâ eğitimi ve büyük ölçekli hesaplama için bir Nvidia mimarisi; H100 bunu kullanır.
-- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitimi çoğunlukla dev matris hesabıdır, bu da GPU'lara çok uygundur.
-- veri merkezi (data center): GPU'ların, sistemin tamamının hava akışıyla soğutulduğu, sunucularla dolu bina.
-- performans (performance): bir GPU'nun gerçek işi ne kadar hızlı bitirdiği; sadece mimariye değil, çipe, saat hızına, güce ve soğutmaya da bağlıdır.
-- CC (Compute Capability): bir GPU'nun CUDA'ya bildirdiği sürüm numarası, örneğin Ada Lovelace için 8.9, RTX 5090 için 12.0.
-- soğutma (cooling): GPU'nun ürettiği ısıyı kartın kendi fanlarıyla ya da sunucunun hava akışıyla uzaklaştırmak.
-- hava akışı (airflow): sunucunun kendi fanlarıyla içinden geçirdiği hava; içerideki fansız GPU'ları soğutur.
-- kabin (rack): veri merkezinde çok sayıda sunucuyu üst üste tutan uzun bir çerçeve.
-- PC (Personal Computer) kasası: masaüstü bilgisayarın parçalarını tutan kutu; tüketici GPU'su içinde kendini soğutmak zorundadır.
-- çekirdek (core): çip üzerindeki bir hesaplama birimi; üretici bazılarını kapatabilir, örneğin birkaç çekirdeği arızalı çipleri de satabilmek için.
-- güç sınırı (power limit): bir GPU'nun en fazla kaç watt çekebileceği; sınır düştükçe ısı azalır ama hız da düşer.
-- saat hızı (clock speed): üreticinin ayarlayabildiği bir değer; bu yüzden aynı çipe sahip GPU'lar farklı davranabilir.
-- kart üreticisi ortak (board partner): Nvidia çipinden kendi GPU'sunu yapan ASUS, MSI ya da Gigabyte gibi bir şirket.
-- boost (boost clock): güç ve sıcaklık izin verdiği sürece GPU'nun kendiliğinden çıktığı daha yüksek saat hızı.
-- üreticiye özgü (vendor-specific implementation): bir üreticinin, bir çipin etrafına kurduğu kendi GPU sürümü.
-- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform; aynı CUDA kodu yeni mimarilerin hepsinin çiplerinde çalışır.
+- compute capability (CC): NVIDIA'nın, bir GPU mimarisinin neyi yapıp neyi yapamadığını söyleyen sürüm numarası.
+- GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
+- benchmark: hızı ölçen bir test programı; compute capability bir hız puanı değildir.
+- mimari: bir GPU ailesinin donanım tasarımı; her mimari kendi ana CC numarasını alır.
+- noktadan önceki sayı (ana numara): büyük bir mimari değişikliği gösterir; Ampere için 8, Hopper için 9 gibi.
+- noktadan sonraki sayı (alt numara): küçük iyileştirmeleri ya da eklemeleri gösterir; 8.x ailesinde 8.6 ya da 8.9 gibi.
+- `nvidia-smi`: NVIDIA'nın komut satırı aracı; `--query-gpu=compute_cap` ile her GPU'nun CC değerini yazdırır.
+- Tensor Core: yapay zekâ için matris işlemlerini hızlandıran özel birimler; CC 7.0'dan itibaren vardır.
+- CUDA çekirdekleri: bir NVIDIA GPU'sunun genel amaçlı aritmetik birimleri; çekirdek sayısında sayılanlar bunlardır.
+- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitilmesi büyük ölçüde dev matris hesabıdır.
+- Turing: NVIDIA'nın 2018 mimarisi (RTX 20 serisi), CC 7.5; CUDA 13'ün desteklediği en eski mimari.
+- Ada Lovelace: NVIDIA'nın 2022 mimarisi (RTX 40 serisi, L40S), CC 8.9.
+- Hopper: NVIDIA'nın 2022 veri merkezi mimarisi (H100, H200), CC 9.0.
+- Blackwell: NVIDIA'nın 2026'daki ana mimarisi; farklı çipleri için CC 10.0, 10.3, 11.0, 12.0 ve 12.1.
+- Blackwell Ultra: B300 ve GB300; veri merkezleri için geliştirilmiş Blackwell, CC 10.3.
+- Rubin: Blackwell'den sonraki mimari, CC 10.7; Eylül 2026'dan beri veri merkezi rack'lerinde sevk ediliyor.
+- NVFP4 (NVIDIA 4 bit kayan noktalı sayı): büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkaran Blackwell duyarlık biçimi.
+- FP8 (8 bit kayan noktalı sayı): FP16'dan daha az hassas, ama onu destekleyen Tensor Core'larda iki kat hızlı bir sayı biçimi.
+- çıkarım (inference): eğitilmiş bir yapay zekâ modelini cevap almak için çalıştırmak; model eğitiminin tersi.
+- FP16: yarım duyarlıklı işlemler; CC 5.0'daki GPU'lar bunları desteklemez.
+- emülasyon: eksik donanımı yazılımla taklit etmek; genelde çok daha yavaştır ya da hiç mümkün değildir.
+- araç seti (CUDA Toolkit): nvcc derleyicisini, kütüphaneleri ve araçları içeren NVIDIA paketi; her sürüm belirli bir compute capability aralığını destekler.
+- CUDA 13: güncel ana CUDA sürümü; sadece CC 7.5 ve üstünü destekler.
+- Maxwell / Pascal / Volta: CUDA 13'ün artık desteklemediği 2014, 2016 ve 2017 NVIDIA mimarileri (CC 5.x ile 7.0 arası).
+- cubin: tek bir compute capability için derlenmiş GPU ikili dosyası; daha yeni GPU'lar için yeniden derlenebilen PTX'in aksine.
+- çalışma zamanı (runtime): programın çalıştığı an; derleme zamanının tersi.
+- PTX (Parallel Thread Execution): NVIDIA GPU'ları için assembly gibi düşük seviyeli bir ara dil; CUDA kodu önce buna derlenir.
+- assembly dili: bir işlemcinin çalıştırdığı temel komutların insanın okuyabileceği biçimi; her komut bir satır.
+- warp shuffle: bir warp'taki thread'lerin paylaşımlı ya da global belleği kullanmadan veri paylaşmasını sağlayan fonksiyonlar.
+- warp: aynı komutu birlikte çalıştıran 32 thread'lik grup.
+- global bellek: GPU'nun ana belleği (VRAM); her thread görür, ama paylaşımlı bellekten çok daha yavaştır.
+- kernel: GPU'da çalışan, CPU'daki koddan başlatılan fonksiyon.

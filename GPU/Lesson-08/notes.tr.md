@@ -1,96 +1,155 @@
-# 08 > Gerçek Bir GPU'yu Tanımak
+# 08 > Warp'lar ve Gecikme Gizleme
 
-Bu derste gerçek bir GPU'nun (Graphics Processing Unit, grafik işlem birimi) mimarisini ve kategorisini birkaç dakikada nasıl bulacağını göreceksin. Çekirdek sayılarının neden yanıltabildiğini ve tek bir özelliğe bakmadan önce kartın fiziksel tasarımının sana nasıl ipucu verdiğini de öğreneceksin.
+Bir GPU (Graphics Processing Unit, grafik işlem birimi) thread'lerini tek tek çalıştırmaz. Onları warp denen 32'lik gruplar hâlinde çalıştırır ve yavaş belleği beklemek yerine warp'lar arasında geçiş yaparak gizler. Bu derste bunun nasıl çalıştığını, bir GPU'nun neden çekirdek sayısından çok daha fazla thread istediğini ve doluluk oranının (occupancy) ne demek olduğunu göreceksin.
 
-## GPU'yu Araştır
+## SIMT: Tek Komut, Çok Thread
 
-GPU'nun adını "TechPowerUp" ile birlikte ara, örneğin "RTX 5090 TechPowerUp" ya da "B200 TechPowerUp", ve çıkan sonucu aç. TechPowerUp, GPU özelliklerinden oluşan büyük bir veritabanı tutar.
+NVIDIA kendi çalışma modeline SIMT (Single Instruction, Multiple Threads, tek komut çok thread) der. Kernel'i tek bir thread için yazıyormuş gibi yazarsın, GPU da aynı kodla çok sayıda thread çalıştırır. Her thread'in kendi register'ları ve kendi verisi vardır, örneğin bir dizideki kendi elemanı.
 
-Sayfada bir sürü sayı ve özellik göreceksin. Hepsini anlamaya çalışma. İki şeye odaklan: mimariye ve ürün kategorisine.
+Donanım komutu her thread için ayrı ayrı getirip çözmez. Bunu bir thread grubu için bir kez yapar ve gruptaki bütün thread'ler komutu birlikte, her biri kendi verisi üzerinde çalıştırır. Bu, çip alanından ve güçten çok tasarruf sağlar; GPU'ya bu kadar çok çekirdek sığabilmesinin nedeni budur.
 
-> [!TIP]
-> Bir GPU'nun compute capability değerini (CC, [Ders 09](../Lesson-09/notes.md) anlatıyor) bulmak için NVIDIA'nın kendi "CUDA GPUs" sayfasına bak; orada her kart CC numarasıyla listelenir.
+SIMT, bir CPU'daki (Central Processing Unit, merkezi işlem birimi) SIMD'ye (Single Instruction, Multiple Data, tek komut çok veri) benzer; SIMD'de tek bir komut kısa bir vektör üzerinde çalışır. Fark şu: SIMT'de her thread için sıradan skaler kod yazarsın, thread'leri gruplamayı donanım senin yerine yapar.
 
-## Mimari ve Kategori
+## Warp
 
-Güncel iki GPU'yu ele al. GeForce RTX 5090, Blackwell mimarisini kullanır ve GeForce ailesindendir; yani oyun ya da kişisel iş istasyonu gibi tüketici kullanımı için yapılmıştır. B200 de Blackwell kullanır, ama o bir veri merkezi GPU'sudur; sunucularda yapay zekâ (AI, artificial intelligence) eğitimi ve çıkarımı için yapılmıştır.
+Bir komutu birlikte çalıştıran gruba warp denir. Bugüne kadarki bütün NVIDIA GPU'larında bir warp 32 thread'dir. 256 thread'lik bir block 256 / 32 = 8 warp'tır; 100 thread'lik bir block ise yine 4 warp tutar, çünkü son warp yalnızca kısmen doludur (100 = 3 × 32 + 4).
 
-- Mimari, GPU'nun nasıl yapıldığını söyler.
-- Kategori, nerede kullanıldığını söyler.
+Bir warp'ın içindeki thread'lere lane denir ve 0'dan 31'e kadar numaralanır. CUDA (Compute Unified Device Architecture) Pratik serisinde [Ders 07](../../cuda/Lesson-07/notes.md), bir thread'in kendi warp ID'sini ve lane ID'sini nasıl bulduğunu gösteriyor.
 
-Aynı mimari, iki farklı dünya. Özellikleri bunu gösterir:
+## Warp Zamanlayıcıları
 
-| | RTX 5090 | B200 |
-|---|---|---|
-| Mimari | Blackwell | Blackwell |
-| Kategori | GeForce (tüketici) | Veri merkezi |
-| CUDA çekirdeği | 21.760 | 18.944 |
-| Bellek | 32 GB GDDR7 | 180 GB HBM3e |
-| Bellek bant genişliği | 1.792 GB/s | 8 TB/s |
-| Transistör | yaklaşık 92 milyar | 208 milyar (iki kalıp) |
+[Ders 00](../Lesson-00/notes.md), GPU'yu oluşturan küçük işlemci olan SM'yi (Streaming Multiprocessor, akış çoklu işlemcisi) tanıttı. L40S'in (Ada Lovelace, CC (compute capability, hesaplama yeteneği) 8.9) bir SM'si 4 bölüme ayrılır. Her bölümde bir warp zamanlayıcı (warp scheduler), register dosyasının 64 KB'lık (kilobyte, kilobayt) bir dilimi ve 32 FP32 (32-bit floating point, 32 bit kayan nokta) lane bulunur.
 
-Tüketici kartında daha çok CUDA çekirdeği var, ama veri merkezi GPU'sunun belleği beş kattan fazla, bant genişliği de yaklaşık dört kat. Büyük yapay zekâ modellerinde bellek ve bant genişliği, çekirdek sayısından daha belirleyicidir. Bir nesil önce de durum aynıydı: RTX 3090 ile A100 ikisi de Ampere'di.
+Her saat döngüsünde her warp zamanlayıcı hazır olan bir warp seçer ve onun bir sonraki komutunu gönderir (issue). Yani bir SM döngü başına en fazla 4 warp komutu başlatabilir, her zamanlayıcıdan bir tane.
+
+L40S'te bir SM aynı anda en fazla 48 warp tutabilir, bu da 48 × 32 = 1.536 thread eder. Bunlar SM'nin yerleşik (resident) warp'larıdır. 4 zamanlayıcıya bölününce her zamanlayıcının seçebileceği 48 / 4 = 12 warp olur.
+
+## Bir Warp Belleği Beklediğinde
+
+VRAM'den (GPU belleği) bir okuma yüzlerce saat döngüsü sürer. [Ders 07](../Lesson-07/notes.md) bunun arkasındaki bellek hiyerarşisini anlatıyor. Bir warp henüz gelmemiş bir değere ihtiyaç duyarsa bir sonraki komutunu çalıştıramaz. Warp durur (stall).
+
+Bir CPU çekirdeği bunu büyük önbelleklerle ve önceden tahmin yürüterek önlemeye çalışır. GPU daha basit bir şey yapar: warp zamanlayıcı duran warp'ı atlar ve hazır olan başka bir warp'tan komut gönderir. Veri gelince ilk warp yeniden hazır olur ve sırası daha sonra gelir.
+
+Bu geçişin hiçbir maliyeti yoktur. Her yerleşik warp kendi register'larını her zaman register dosyasında tutar, yani kaydedilecek ya da geri yüklenecek hiçbir şey yoktur. Bir CPU'da thread'ler arasında geçiş yapmak, register'ları belleğe yazıp başkalarını okumak demektir ve çok daha uzun sürer.
+
+Buna gecikme gizleme (latency hiding) denir. Bellek yine yavaştır, ama bir warp beklerken diğerleri işe yarar bir şey yapar ve zamanlayıcı meşgul kalır.
+
+Aşağıdaki diyagram tek bir warp zamanlayıcının basitleştirilmiş bir modelidir. Her warp 2 döngü komut gönderir, sonra bellek için 8 döngü bekler. Kaç warp'ın yerleşik olduğunu değiştirmek için kaydırıcıyı oynat.
+
+<latency-hiding></latency-hiding>
+
+1 warp'la zamanlayıcı her 10 döngünün yalnızca 2'sinde komut gönderir, yani %20 meşguldür. Her ek warp bir boşluğu doldurur. (2 + 8) / 2 = 5 warp olduğunda her zaman hazır bir warp vardır ve zamanlayıcı zamanın %100'ünde meşguldür. Altıncı bir warp hiçbir şey katmaz: yalnızca sırasını bekler.
+
+Gerçek sayılar daha büyüktür. VRAM'den bir okuma yüzlerce döngü sürer, bu yüzden zamanlayıcının bunu örtmesi için çok sayıda warp'a ve her warp'ta birbirinden bağımsız çok sayıda komuta ihtiyacı vardır.
+
+## GPU Neden Çekirdekten Fazla Thread İster
+
+Gecikme gizleme ancak geçilecek başka warp'lar varsa işe yarar. Bu yüzden GPU'nun çekirdek sayısından çok daha fazla thread başlatırsın.
+
+L40S ile hesaplanmış bir örnek:
+
+- FP32 çekirdekleri: 142 SM × 128 = 18.176
+- yerleşik thread'ler: 142 SM × 1.536 = 218.112
+- 218.112 / 18.176 = çekirdek başına yerleşik olabilen 12 thread
+
+Bu thread'lerin çoğu her an bekliyordur. Bunda sorun yok. Boşa gitmiyorlar; diğerleri belleği beklerken zamanlayıcıların seçim yaptığı havuz onlardır.
+
+## Doluluk Oranı
+
+Doluluk oranı (occupancy), bir SM'nin warp'larla ne kadar dolu olduğunu ölçer:
+
+doluluk oranı = aktif warp'lar / SM başına en fazla warp
+
+L40S'te en fazla değer 48'dir. Bir kernel'in SM başına 32 aktif warp'ı varsa doluluk oranı 32 / 48 = %67'dir. 48'in hepsi varsa %100'dür.
+
+Doluluk oranı yükseldikçe her zamanlayıcının seçebileceği warp sayısı artar, böylece hazır bir warp bulma şansı da artar.
+
+## Doluluk Oranını Ne Sınırlar
+
+SM her block'a register, shared memory ve bir yuva verir. Bunlardan biri bittiğinde, warp sınırına ulaşılmamış olsa bile daha fazla block sığmaz. L40S'te en önemli üç sınır şunlardır.
+
+### Thread Başına Register
+
+Bir SM'de 65.536 tane 32 bitlik register vardır ve bütün yerleşik thread'ler bunları paylaşır. Tam doluluk için 1.536 thread'in hepsi sığmalıdır:
+
+65.536 / 1.536 = 42,7, yani thread başına yaklaşık 42 register
+
+Thread başına daha fazla register isteyen bir kernel'e daha az warp sığar:
+
+- 64 register: 64 × 32 = warp başına 2.048 register ve 65.536 / 2.048 = 32 warp, yani 32 / 48 = %67
+- 128 register: 128 × 32 = warp başına 4.096 ve 65.536 / 4.096 = 16 warp, yani 16 / 48 = %33
 
 > [!NOTE]
-> Eski kaynaklar veri merkezi kategorisine çoğu zaman "Tesla" der. Bugün NVIDIA sadece veri merkezi GPU'su diyor ve ürünleri H100, B200 ya da B300 gibi çip adlarıyla adlandırıyor.
+> Donanım register'ları warp başına 256'lık parçalar hâlinde dağıtır. 42 register kullanan bir kernel warp başına 42 × 32 = 1.344 register ister; bu 1.536'ya yuvarlanır ve 48 × 1.536 = 73.728, 65.536'dan fazladır. Yani L40S'te %100 için gerçek sınır 40 register'dır: 40 × 32 = 1.280 ve 48 × 1.280 = 61.440 sığar.
 
-## Sadece Çekirdek Sayılarını Karşılaştırma
+### Block Başına Shared Memory
 
-7.000 ya da 21.760 gibi çekirdek sayıları ikna edici görünür, ama yanıltır. Genelde tek bir birim türünü, FP32 (32 bit kayan noktalı sayı) CUDA çekirdeklerini sayarlar. Yapay zekânın arkasındaki matris hesabını yapan Tensor Core'ları ve diğer özel birimleri dışarıda bırakırlar.
+Shared memory, SM'nin içinde bulunan ve bir block'un thread'lerinin paylaştığı hızlı bellektir. L40S'te bir SM'de bundan en fazla 100 KB vardır ve tek bir block en fazla 99 KB kullanabilir.
 
-Modern GPU'lar, özellikle Hopper ve Blackwell, güçlerinin büyük bir kısmını bu diğer birimlere ayırır. Somut bir örnek: yukarıdaki B200'de RTX 5090'dan daha az CUDA çekirdeği var, ama büyük yapay zekâ modellerini eğitmede çok daha hızlıdır, çünkü Tensor Core'ları ve bellek sistemi tam olarak bu iş için yapılmıştır. Çekirdek sayısı tek başına hikâyenin tamamını anlatmaz.
+Her biri 40 KB shared memory kullanan 256 thread'lik (8 warp) block'lar düşün. 100 KB'a yalnızca 2 block sığar, yani SM 2 × 8 = 16 warp tutar; bu da 16 / 48 = %33 eder.
 
-## Fiziksel Tasarım İpucu Verir
+### Block Boyutu
 
-A100, H100 ya da B200 gibi veri merkezi GPU'larında çoğu zaman görünür bir fan yoktur. Birçoğu SXM modülüdür (Server PCI Express Module): sunucunun ana kartına doğrudan oturan düz kartlar. Sunucuların içinde çalışırlar ve soğutmayı sunucu üstlenir.
+L40S'te bir SM en fazla 24 block tutar. Çok küçük block'lar önce bu sınıra takılır: block başına 32 thread (1 warp) ile 24 block yalnızca 24 warp verir, yani 24 / 48 = %50.
 
-GeForce kartlarında büyük fanlar ve soğutma sistemleri bulunur. Masaüstü bilgisayarlar ve iş istasyonları için yapıldıklarından kendi ısılarını kendileri yönetmek zorundadırlar.
+Büyük block'lar da yer israf edebilir. 1.024 thread'lik bir block 32 warp'tır. Yalnızca biri sığar, çünkü iki tanesi 64 warp ister; böylece SM 32 / 48 = %67 tutar. 128, 256 ya da 512 thread'lik block'lar 1.536'yı tam böler ve register'lar ile shared memory izin verirse %100'e ulaşabilir.
 
-Buradan basit bir kısayol çıkar:
+Üç sınırdan en düşüğü kazanır.
 
-- Büyük ve görünür bir soğutma varsa GPU büyük ihtimalle tüketici kullanımı içindir.
-- Fansız, kompakt bir modül büyük ihtimalle bir veri merkezi GPU'sudur.
+## Dallanma Ayrışması
+
+Bir warp'ın 32 thread'i tek bir komut akışını paylaşır. Bir `if` bazı lane'leri bir yöne, geri kalanları öbür yöne gönderirse warp iki yolu art arda çalıştırır ve her yolda o yolu seçmeyen lane'ler boşta bekler. Buna dallanma ayrışması (branch divergence) denir. Volta'dan beri her thread'in kendi program sayacı vardır; böylece ayrışan thread'ler sırayla iç içe çalışabilir ve birbirini güvenle bekleyebilir, ama yollar yine de aynı anda çalışmaz. Ayrışma yalnızca aynı warp'taki lane'ler farklı yol seçtiğinde zaman kaybettirir. Bir warp'ın bütün lane'leri aynı dalı seçerse hiçbir maliyet yoktur.
+
+## Daha Yüksek Doluluk Her Zaman Daha Hızlı Değildir
+
+Doluluk oranı bir araçtır, amaç değil. Zamanlayıcıların bekleyişi örtecek kadar hazır warp'ı olduğunda, diyagramdaki altıncı warp'ın gösterdiği gibi, daha fazla warp hiçbir şeyi değiştirmez.
+
+Bir warp gecikmeyi kendi başına da gizleyebilir. Sonraki komutları hâlâ yolda olan değere bağlı değilse zamanlayıcı onları göndermeye devam edebilir. Buna ILP (instruction-level parallelism, komut düzeyinde paralellik) denir. Daha fazla veriyi register'larda tutan ve her thread'e daha fazla bağımsız iş veren bir kernel, %33 doluluk oranında %100'deki daha basit bir kernel'den daha hızlı çalışabilir.
 
 > [!WARNING]
-> Bu bir kural değil, pratik bir ipucudur. Bazı veri merkezi kartları normal PCIe (Peripheral Component Interconnect Express) kartı olarak gelir, en yeni rack'ler de GPU'ları hava yerine sıvıyla soğutur. Her zaman ürün adıyla doğrula.
+> Doluluk oranını artırmak için bir kernel'i daha az register'a zorlamak onu yavaşlatabilir. Artık sığmayan değerler local memory'ye taşar (spill); local memory VRAM'dedir ve her taşma, gizlemek istediğin bellek trafiğinin ta kendisini ekler.
 
-<spec-reader></spec-reader>
+## Bunun CUDA İçin Önemi
 
-## Doğru Soruları Sor
+Bir kernel'de yaptığın her seçim buna etki eder. Başlatırken seçtiğin block boyutu, derleyicinin kernel'ine verdiği register'lar ve tanımladığın shared memory, her SM'ye kaç warp sığacağını belirler. Belleği bekleyen bir kernel'in bu bekleyişi gizleyecek kadar warp'a ihtiyacı vardır; bir kernel'in bellek mi yoksa hesap mı sınırlı olduğunu nasıl anlayacağını [Ders 09](../Lesson-09/notes.md) gösteriyor.
 
-Her sayıyı anlaman gerekmez. Bunun yerine şu soruları sor:
+Block boyutunu 32'nin katı seç, böylece hiçbir warp kısmen boş kalmaz. L40S'te 128 ya da 256 iyi bir varsayılandır. Elinden geldiğince aynı warp'taki lane'leri aynı dalda tut.
 
-- Bu GPU hangi mimariyi kullanıyor?  
-- Hangi kategoriye ait?  
-- Hangi tür problemi çözmek için tasarlanmış?  
+> [!TIP]
+> `nvcc -arch=sm_89 -Xptxas -v -o NAME NAME.cu` ile derlersen nvcc (NVIDIA CUDA Compiler, NVIDIA CUDA derleyicisi) her kernel'in kullandığı register'ları ve shared memory'yi yazdırır. Bu sayılarla doluluk oranını yukarıdaki gibi elle hesaplayabilirsin.
 
-Bu cevaplarla özelliklerin geri kalanı daha anlamlı hâle gelir. CUDA (Compute Unified Device Architecture) ve GPU çalışmasında bir GPU'nun amacını bilmek, özelliklerini bilmek kadar önemlidir.
+## Özet
+
+Bir warp, tek bir komutu birlikte çalıştıran 32 thread'dir. Her warp zamanlayıcı döngü başına bir warp komutu gönderir ve belleği bekleyen warp'ları hiçbir maliyet olmadan atlar, çünkü her warp kendi register'larını tutar. GPU'nun çekirdekten çok daha fazla thread istemesinin nedeni budur. Doluluk oranı kaç warp'ın yerleşik olduğunu ölçer; register'lar, shared memory ve block boyutu onu sınırlar. Gecikmeyi gizlemek için yeterli doluluk gerekir, ama daha fazlası kendiliğinden daha hızlı demek değildir.
 
 ## Sözlük
 
-- GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
-- TechPowerUp: büyük bir GPU özellik veritabanı olan web sitesi; sayfasını bulmak için GPU adını "TechPowerUp" ile ara.
-- özellik: bir GPU'nun yayımlanmış teknik sayılarından biri; çekirdek sayısı, bellek boyutu ya da saat hızı gibi.
-- compute capability (CC): NVIDIA'nın bir GPU'nun neler yapabildiğini gösteren sürüm numarası; Ders 09'da anlatılıyor.
-- RTX 5090: 2025'te çıkan, Blackwell tabanlı, 21.760 CUDA çekirdekli ve 32 GB GDDR7 bellekli bir GeForce GPU'su.
-- B200: iki kalıplı, 208 milyar transistörlü ve 180 GB HBM3e bellekli bir Blackwell veri merkezi GPU'su.
-- RTX 3090 / A100: 2020'den iki Ampere GPU'su, biri GeForce kartı biri veri merkezi GPU'su; bir nesil önceki aynı ikili.
-- mimari: GPU'nun nasıl yapıldığı; RTX 5090 ile B200 ikisi de Blackwell kullanır.
-- Blackwell: RTX 50 serisinde, RTX PRO kartlarında ve B200'de kullanılan 2024-2025 NVIDIA mimarisi.
-- kategori: GPU'nun nerede kullanıldığı; tüketici kullanımı ya da veri merkezi gibi.
-- GeForce: NVIDIA'nın oyun ya da kişisel iş istasyonu gibi tüketici kullanımı için yaptığı GPU ailesi.
-- iş istasyonu: 3D tasarım ya da mühendislik gibi profesyonel işler için güçlü bir masaüstü bilgisayar.
-- veri merkezi GPU'su: yapay zekâ, bulut ve büyük sistemler için yapılmış GPU; eski kaynaklar bu kategoriye "Tesla" der.
-- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitilmesi büyük ölçüde dev matris hesabıdır.
-- CUDA çekirdeği: GPU'nun genel amaçlı FP32 birimleri; çekirdek sayısı genelde bunları sayar.
-- GDDR7: RTX 50 serisinin grafik belleği; hızlıdır, ama veri merkezi GPU'larındaki HBM'den çok daha küçük ve yavaştır.
-- HBM3e (High Bandwidth Memory): veri merkezi GPU'larında çipin yanına üst üste yığılmış çok hızlı bellek.
-- bant genişliği: belleğin saniyede ne kadar veri verebildiği; örneğin B200'de 8 TB/s.
-- çekirdek sayısı: çekirdeklerin sayısı, çoğu zaman tek bir türün; hikâyenin tamamını anlatmaz.
-- FP32 (32 bit kayan noktalı sayı): tek duyarlıklı hesap; çekirdek sayısının genelde saydığı birim türü.
-- Tensor Core: yapay zekâ için matris hesabı yapan birimler; çekirdek sayısı bunları dışarıda bırakır.
-- Hopper / Blackwell: 2022 ve 2024'ten, Tensor Core'larla dolu NVIDIA veri merkezi mimarileri.
-- SXM (Server PCI Express Module): PCIe yuvası yerine sunucu kartına düz oturan, sunucu tarafından soğutulan veri merkezi GPU biçimi.
-- PCIe (Peripheral Component Interconnect Express): bir kartı bilgisayarın geri kalanına bağlayan standart yuva ve bağlantı.
-- soğutma: GPU'nun ürettiği ısıyı uzaklaştırmak; kartın kendi fanlarıyla, sunucunun hava akışıyla ya da sıvıyla.
-- CUDA (Compute Unified Device Architecture): NVIDIA'nın, hem GeForce hem veri merkezi GPU'larında çalışan programlar yazmak için sunduğu platform.
+- GPU (Graphics Processing Unit, grafik işlem birimi): bu serinin konusu olan, thread'leri paralel çalıştıran çok sayıda SM'den oluşan işlemci.
+- CPU (Central Processing Unit, merkezi işlem birimi): bilgisayarın birkaç hızlı çekirdeği olan ana işlemcisi.
+- SIMT (Single Instruction, Multiple Threads, tek komut çok thread): kodu tek bir thread için yazdığın, donanımın ise onu bir thread grubu için aynı anda çalıştırdığı NVIDIA çalışma modeli.
+- SIMD (Single Instruction, Multiple Data, tek komut çok veri): CPU vektör birimlerindeki gibi, kısa bir değer vektörü üzerinde çalışan tek bir komut.
+- kernel: GPU'da her thread için bir kez çalışan fonksiyon.
+- thread: bir kernel'in kendi register'ları ve verisi olan tek bir örneği.
+- warp: aynı komutu birlikte çalıştıran 32 thread'lik grup.
+- lane: bir thread'in warp'ı içindeki 0'dan 31'e kadar olan konumu.
+- block: aynı SM'de birlikte başlatılan ve shared memory kullanabilen thread grubu.
+- SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'yu oluşturan küçük işlemci; L40S'te 142 tane vardır.
+- CC (compute capability, hesaplama yeteneği): bir GPU'nun özelliklerinin sürüm numarası; L40S'te 8.9.
+- warp zamanlayıcı: her saat döngüsünde hazır bir warp seçip bir sonraki komutunu gönderen birim; bir Ada SM'sinde 4 tane vardır.
+- yerleşik warp: bir SM'nin aynı anda tuttuğu warp'lar; L40S'te en fazla 48.
+- register: SM'deki en hızlı depolama; her thread kendi değişkenlerini register'larda tutar.
+- register dosyası: bir SM'nin bütün register'ları; L40S'te 65.536 tane 32 bitlik register.
+- FP32 (32-bit floating point, 32 bit kayan nokta): GPU hesaplarının standart sayı biçimi.
+- KB (kilobyte, kilobayt): 1.024 bayt.
+- VRAM (GPU belleği): GPU kartındaki büyük bellek; ondan bir okuma yüzlerce saat döngüsü sürer.
+- stall: bir warp'ın, örneğin belleği beklediği için bir sonraki komutunu gönderememesi.
+- gecikme gizleme: yavaş işlemler sürerken başka warp'lardan komut göndererek GPU'yu meşgul tutmak.
+- doluluk oranı: aktif warp'ların SM başına en fazla warp sayısına bölümü.
+- shared memory: SM'nin içinde, bir block'un thread'lerinin paylaştığı hızlı bellek; L40S'te SM başına en fazla 100 KB.
+- dallanma ayrışması: bir warp'ın lane'lerinin farklı yollar seçmesi, böylece warp'ın bu yolları art arda çalıştırması.
+- program sayacı: bir sonraki komutun adresi; Volta'dan beri her thread'in kendine ait bir tane vardır.
+- ILP (instruction-level parallelism, komut düzeyinde paralellik): tek bir thread içinde birbirini beklemeden gönderilebilen bağımsız komutlar.
+- spill: register'lara artık sığmayan ve VRAM'deki local memory'ye taşınan değer.
+- local memory: VRAM'de bulunan, thread'e özel bellek; taşan değerler için kullanılır.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın kendi GPU'larında çalışan programlar yazmak için sunduğu platform.
+- nvcc (NVIDIA CUDA Compiler, NVIDIA CUDA derleyicisi): CUDA kodunu GPU programlarına çeviren derleyici; `-Xptxas -v` ona register kullanımını yazdırır.

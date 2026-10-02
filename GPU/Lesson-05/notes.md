@@ -1,111 +1,144 @@
-# 05 > Architectures and Chips
+# 05 > Compute Capability
 
-An architecture is not one chip. It is a family of chips that share the same base design, and each chip then ends up in several different products. This lesson shows how architecture, chip and final GPU (Graphics Processing Unit) fit together, with Ada Lovelace and Blackwell as examples.
+This lesson explains compute capability, how its numbers work, and how it decides which features and which CUDA (Compute Unified Device Architecture) toolkit versions you can use. By the end you can look at any GPU (Graphics Processing Unit) and tell what it supports.
 
-## One Architecture, Many Chips
+## What Compute Capability Is
 
-Take the Ada Lovelace architecture (2022). It includes different chips such as:
+Compute capability (CC) is NVIDIA's system for describing the features of a GPU. It is a version number for the hardware, not for the software.
 
-- AD102  
-- AD103  
-- AD104  
+It is not a marketing score or a benchmark. It says exactly what a GPU architecture can and cannot do. Think of it as a specification sheet in a single number.
 
-The prefix "AD" links all of them to the same architecture. You know they belong together before you read any specs.
+## How the Numbering Works
 
-The current consumer generation works the same way. Blackwell consumer chips start with "GB": GB202 in the RTX 5090, GB203 in the RTX 5080 and GB205 in the RTX 5070.
+Compute capability is a version number, like 7.5, 8.9 or 12.0. The rule is the same for all generations:
 
-## Same Design, Different Scale
+- The number before the dot signals a major architectural change
+- The number after the dot represents minor improvements or extensions
 
-Chips from the same architecture are used in different ways. Some are for high-end GPUs. Others are for mid-range or smaller systems.
-
-The size of a chip is counted in SMs (Streaming Multiprocessors), the building blocks that hold the cores. A full AD102 has 144 SMs, a full AD103 has 80 and a full AD104 has 60. So AD102 goes into top-tier GPUs, and AD104 into smaller, more efficient cards such as the RTX 4070 Ti. Nvidia scales one design to different sizes and capabilities.
-
-## Different Architectures, Different Work
-
-Not all architectures are built for the same type of work. Compare Ada Lovelace and Hopper:
-
-- Ada is mostly for consumer GPUs, such as gaming, desktops and creative work, with some server cards like the L40S.  
-- Hopper is for data centers, AI (artificial intelligence) training and large-scale computation.  
-
-So the difference is about purpose, not only performance. Some architectures target graphics and interactive work. Others target massive parallel computation. This is why you do not see Hopper-based GPUs in normal PCs.
-
-> [!NOTE]
-> Blackwell covers both worlds, but with different chips. The B200 data center GPU and the RTX 5090 are both Blackwell, yet they use different chips and even report different CC (Compute Capability) numbers to CUDA (Compute Unified Device Architecture): 10.0 for the B200 and 12.0 for the RTX 5090.
-
-## A Visual Clue
-
-Data center GPUs often look very plain, with no visible fans. They live inside servers, where cooling comes from airflow, racks and the whole system.
-
-Consumer GPUs have large cooling systems and several fans. They run inside a normal PC (Personal Computer) case, so they must handle their own heat.
-
-The look of a card is a helpful clue, not a strict rule.
-
-## One Chip Can Behave Differently
-
-One chip does not mean one purpose. The same chip can appear in different forms. A manufacturer can:
-
-- disable some cores  
-- change power limits  
-- tune clock speeds  
-
-So two GPUs with the same chip may not behave the same. The AD102 is a real example:
-
-- RTX 4090: 128 of 144 SMs turned on, 450 W power limit, 24 GB of GDDR6X memory.  
-- L40S: 142 of 144 SMs turned on, 350 W power limit, 48 GB of GDDR6 memory.  
-
-On the RTX 4090, 144 − 128 = 16 SMs are off, which is 16 / 144 ≈ 11% of the chip. Chips with a few faulty SMs can still be sold this way, with those SMs turned off.
-
-## Board Partners
-
-Nvidia does not build every final GPU itself. Companies like ASUS, MSI or Gigabyte take the same chip and build their own versions. They change things like:
-
-- cooling design  
-- power configuration  
-- boost behavior  
-
-Same base chip, slightly different result.
-
-<arch-family></arch-family>
-
-## The Full Picture
-
-An architecture is a base design. It contains several chips, scaled for different uses. Manufacturers then add their own variations. So a GPU is made of:
-
-- an architecture  
-- a specific chip  
-- a vendor-specific implementation  
+So going from 7.x to 8.x is not just a speed bump. It means a different architecture with new hardware units and new capabilities. A worked example: the RTX 4090 is CC 8.9 and the A100 is CC 8.0. Both belong to the 8.x family, so they share the core design, but 8.9 adds features the A100 does not have, such as FP8 Tensor Cores.
 
 > [!TIP]
-> To decode any GPU, ask three questions in this order: which architecture, which chip, which card. For the RTX 5090 that is Blackwell, GB202, and a card from Nvidia or one of its board partners.
+> To see the CC of the GPU in your machine, run `nvidia-smi --query-gpu=name,compute_cap --format=csv`. NVIDIA's "CUDA GPUs" web page lists the CC of every card.
 
-## Why This Matters
+## The Architectures
 
-This makes GPU names easier to read. It helps you see why two GPUs behave differently and where a GPU fits. Without it, it is easy to misunderstand performance and hardware behavior when you go deeper into CUDA.
+### Volta → CC 7.0
+
+Volta introduced Tensor Cores. These are special units that speed up the matrix operations used in AI (artificial intelligence) and deep learning. Before Volta, these operations ran on general-purpose CUDA cores. After Volta, they had dedicated hardware.
+
+### Turing and Ampere → CC 7.5 and 8.x
+
+Turing (CC 7.5, the RTX 20 series) brought Tensor Cores to consumer cards. Ampere (CC 8.0 for the A100, 8.6 for the RTX 30 series) brought more powerful and efficient Tensor Cores, higher memory bandwidth and better energy efficiency. Ada Lovelace (CC 8.9, the RTX 40 series and the L40S) added FP8 (8-bit floating point) support.
+
+### Hopper → CC 9.0
+
+Hopper (the H100 and H200) was another major step. It introduced new execution models for very large AI models and pushed AI performance forward.
+
+### Blackwell → CC 10.x, 11.0 and 12.x
+
+Blackwell is the main shipping generation in 2026. It has 5th-generation Tensor Cores and a new precision format called NVFP4 (NVIDIA 4-bit floating point). NVFP4 doubles throughput compared to FP8 for large model inference. FP4 acceleration does not exist on earlier architectures.
+
+Blackwell comes in several compute capabilities, one per chip family:
+
+| CC | Products |
+|---|---|
+| 10.0 | B200, GB200 (data center) |
+| 10.3 | B300, GB300 (Blackwell Ultra, data center) |
+| 11.0 | Jetson Thor (robotics) |
+| 12.0 | GeForce RTX 50 series, RTX PRO Blackwell |
+| 12.1 | GB10 (DGX Spark desktop) |
+
+> [!NOTE]
+> The next architecture, Rubin, is CC 10.7. It belongs to the same 10.x family as the B200 and the B300. The first Vera Rubin NVL72 racks started shipping in September 2026.
+
+## Feature Support
+
+The official CUDA documentation has tables that map features to compute capability versions. These tables show clear patterns:
+
+- GPUs at CC 5.0 do not support half-precision (FP16) operations
+- Tensor Cores appear only from CC 7.0 onward
+- FP8 Tensor Cores arrive with CC 8.9 (Ada Lovelace) and 9.0 (Hopper)
+- NVFP4 requires CC 10.0 or higher
+
+A missing hardware feature cannot be added later. If your GPU has no Tensor Cores, you cannot use them. Software can sometimes imitate a missing unit (emulation), but it is far slower, and for most Tensor Core features there is no such path. The hardware either has the unit or it does not.
+
+So before writing performance-sensitive CUDA code, ask "Does my GPU support what I need?" This comes before "Is my GPU fast enough?"
+
+## Software Compatibility
+
+Compute capability also decides which CUDA toolkit versions you can use. A new architecture needs a toolkit that knows it, and old architectures are dropped from new toolkits after some years.
+
+Some examples:
+
+- Hopper (CC 9.0): requires CUDA 11.8 or higher
+- Blackwell (CC 10.0 and 12.0): requires CUDA 12.8 or higher for native cubin support
+- Blackwell Ultra (CC 10.3): requires CUDA 12.9 or higher
+- Rubin (CC 10.7): supported in CUDA 13.4
+- Maxwell, Pascal and Volta (CC 5.x to 7.0): not supported by CUDA 13 at all; the last toolkits for them are CUDA 12.x
+
+> [!WARNING]
+> CUDA 13 (the current major version, 13.4 as of September 2026) supports CC 7.5 (Turing) and newer only. On a Pascal card such as a GTX 1080 (CC 6.1), you must stay on CUDA 12.x.
+
+A toolkit below the minimum for your architecture, or a toolkit that has dropped your architecture, gives a hard error. The code will not compile, or it will fail at runtime.
+
+The workflow is always the same:
+
+1. Find your GPU's compute capability.
+2. Choose your CUDA version.
+3. Write your code.
+
+<cc-explorer></cc-explorer>
+
+## The Low-Level Layer (PTX)
+
+CUDA code does not run directly on the GPU. It compiles to PTX (Parallel Thread Execution) first. PTX is a low-level intermediate language, similar to an assembly language for NVIDIA GPUs.
+
+Some PTX instructions need hardware units that exist only from a certain compute capability onward. Warp shuffle functions are one example.
+
+> [!NOTE]
+> Warp shuffle functions let threads in a warp share data without using shared or global memory. Warp shuffle exists since CC 3.0 (Kepler).
+
+If your GPU is below the minimum, these instructions cannot run. The hardware for them is not on the chip.
+
+## Summary
+
+The same rule applies to machine learning pipelines, physics simulations and custom CUDA kernels. Your GPU's compute capability is the contract between your hardware and your code.
+
+Know your CC number. Check it against the CUDA documentation. Choose the right toolkit version. Then build. Performance tuning, optimization and feature choice all start from there.
+
+> Compute capability is not just a version number. It is the definition of what your GPU can actually do.
 
 ## Glossary
 
-- architecture: a base design shared by a family of chips.
-- prefix: the first letters of a chip name, like AD or GB, which link the chip to its architecture.
-- GPU (Graphics Processing Unit): the full product built around a chip, with memory, power parts and cooling.
-- Ada Lovelace: an Nvidia architecture from 2022, mostly for consumer GPUs, with chips like AD102.
-- AD102: the largest Ada Lovelace chip, with 144 SMs, used in the GeForce RTX 4090 and the L40S.
-- AD104: a smaller Ada Lovelace chip with 60 SMs, used in cards such as the RTX 4070 Ti.
-- Blackwell: Nvidia's current architecture, with data center chips (B200) and consumer chips (GB202 in the RTX 5090).
-- GB202: the largest consumer Blackwell chip, used in the RTX 5090.
-- SM (Streaming Multiprocessor): the building block of an Nvidia GPU that holds its cores; chip size is counted in SMs.
-- Hopper: an Nvidia architecture for data centers, AI training and large-scale computation, used in the H100.
-- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math, which suits GPUs.
-- data center: a building full of servers, where GPUs are cooled by the airflow of the whole system.
-- performance: how fast a GPU finishes real work; it depends on the chip, clocks, power and cooling, not only the architecture.
-- CC (Compute Capability): the version number a GPU reports to CUDA, such as 8.9 for Ada Lovelace or 12.0 for the RTX 5090.
-- cooling: removing the heat a GPU makes, with the card's own fans or with the server's airflow.
-- airflow: air pushed through a server by its own fans, which cools the fanless GPUs inside.
-- rack: a tall frame that holds many servers stacked on top of each other in a data center.
-- PC (Personal Computer) case: the box that holds a desktop computer's parts; a consumer GPU must cool itself inside it.
-- core: one compute unit on the chip; a manufacturer can turn some off, for example to sell chips that have a few faulty cores.
-- power limit: the most power, in watts, a GPU may draw; a lower limit means less heat but also less speed.
-- clock speed: a setting a manufacturer can tune, so GPUs with the same chip may behave differently.
-- board partner: a company like ASUS, MSI or Gigabyte that builds its own GPU from an Nvidia chip.
-- boost (boost clock): a higher clock speed the GPU reaches on its own while power and temperature allow it.
-- vendor-specific implementation: one manufacturer's own version of a GPU built around a chip.
-- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs; the same CUDA code runs on chips of every recent architecture.
+- compute capability (CC): NVIDIA's version number that says what a GPU architecture can and cannot do.
+- GPU (Graphics Processing Unit): a processor built to run many simple tasks in parallel.
+- benchmark: a test program that measures speed; compute capability is not a speed score.
+- architecture: the hardware design of a GPU family; each architecture gets its own major CC number.
+- number before the dot (major number): it signals a major architectural change, such as 8 for Ampere and 9 for Hopper.
+- number after the dot (minor number): it stands for minor improvements or extensions, such as 8.6 or 8.9 within the 8.x family.
+- `nvidia-smi`: NVIDIA's command-line tool; with `--query-gpu=compute_cap` it prints the CC of each GPU.
+- Tensor Cores: special units that speed up matrix operations for AI. They appear from CC 7.0 onward.
+- CUDA cores: the general-purpose arithmetic units of an NVIDIA GPU, the ones counted in its core count.
+- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math.
+- Turing: NVIDIA's 2018 architecture (RTX 20 series), CC 7.5, the oldest one CUDA 13 supports.
+- Ada Lovelace: NVIDIA's 2022 architecture (RTX 40 series, L40S), CC 8.9.
+- Hopper: NVIDIA's 2022 data center architecture (H100, H200), CC 9.0.
+- Blackwell: NVIDIA's main shipping architecture in 2026, with CC 10.0, 10.3, 11.0, 12.0 and 12.1 for its different chips.
+- Blackwell Ultra: the B300 and GB300, an upgraded Blackwell for data centers, CC 10.3.
+- Rubin: the architecture after Blackwell, CC 10.7, shipping in data center racks since September 2026.
+- NVFP4 (NVIDIA 4-bit floating point): a Blackwell precision format that doubles throughput compared to FP8 for large model inference.
+- FP8 (8-bit floating point): a number format less exact than FP16, but twice as fast on Tensor Cores that support it.
+- inference: running a trained AI model to get answers, as opposed to training it.
+- FP16: half-precision operations. GPUs at CC 5.0 do not support them.
+- emulation: imitating missing hardware in software, which is usually far slower or not possible at all.
+- toolkit (CUDA Toolkit): NVIDIA's package with the nvcc compiler, libraries and tools; each version supports a range of compute capabilities.
+- CUDA 13: the current major CUDA version; it supports CC 7.5 and newer only.
+- Maxwell / Pascal / Volta: NVIDIA architectures from 2014, 2016 and 2017 (CC 5.x to 7.0) that CUDA 13 no longer supports.
+- cubin: a compiled GPU binary for one specific compute capability, unlike PTX, which can still be compiled for newer GPUs.
+- runtime: the time when the program is running, as opposed to compile time.
+- PTX (Parallel Thread Execution): a low-level intermediate language, like assembly for NVIDIA GPUs. CUDA code compiles to it first.
+- assembly language: a human-readable form of the basic instructions a processor runs, one line per instruction.
+- warp shuffle: functions that let threads in a warp share data without using shared or global memory.
+- warp: a group of 32 threads that run the same instruction together.
+- global memory: the GPU's main memory (VRAM), visible to every thread but much slower than shared memory.
+- kernel: a function that runs on the GPU, started from code on the CPU.

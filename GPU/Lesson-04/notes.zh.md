@@ -1,127 +1,162 @@
-# 04 > GPU 与 GPU 芯片
+# 04 > NVIDIA GPU 架构
 
-人们说 “GPU”（Graphics Processing Unit，图形处理器）时，其实指的是两样东西：一块负责计算的硅片，以及你装进机器里的整张显卡或整个模块。这一课把两者分开讲清楚。分得清它们，规格表、芯片名称和数据中心硬件都会好读得多。
+Fermi、Ampere、Hopper、Blackwell 和 Rubin 都是 NVIDIA GPU（Graphics Processing Unit，图形处理器）架构的名字。这一课按时间顺序把它们走一遍，从 2010 年一直到 2028 年的路线图，看看 GPU 是怎样从图形走向通用计算、再走向大规模 AI（artificial intelligence，人工智能）的。你还会看到，当前的 CUDA（Compute Unified Device Architecture，统一计算设备架构）版本还支持其中哪些架构。
 
-## GPU 芯片
+## 为什么架构很重要
 
-GPU 芯片就是实实在在的那块硅片，所有计算都在这里完成。它本身没有散热装置和接口，也没有外接的显存模块。
+Fermi、Ampere、Hopper 这些名字不只是标签。目的不是把它们背下来，而是理解 GPU 是怎样随时间变化的。
 
-芯片内部包括：
+## “架构”是什么意思
 
-- 执行并行任务的计算单元  
-- 管理数据流动的控制器  
-- 协调一切的内部逻辑  
+GPU 架构就是 GPU 的蓝图，它规定了芯片内部的一切如何构建。
 
-芯片才是真正的 “引擎”。比如 A100 里的 GA100 芯片，就是一块集成了大约 540 亿个晶体管的硅片。
+它涵盖的不只是核心，还规定了：
 
-## 芯片名称
+- 数据如何流动  
+- 显存如何访问  
+- 哪类运算比较快  
+- GPU 针对什么做了优化  
 
-Nvidia 的芯片名称把芯片和它的架构联系在一起。第一个字母是 G（代表 GPU），后面一两个字母代表架构，数字表示这块芯片在家族里的位置：
+新架构通常不是小修小补，而往往意味着设计重点的转变。
 
-- GF100 → Fermi  
-- GA100 → Ampere  
-- AD102 → Ada Lovelace（RTX 4090、L40S）  
-- GB202 → Blackwell（RTX 5090）  
+## 早期现代阶段
 
-GB202 可以这样拆开读：G（GPU）+ B（Blackwell）+ 202（Blackwell 家族中的一块芯片）。所以不用看任何规格，前缀就告诉了你架构。
+把时间线当成一个故事来读会更容易。早期的现代 GPU 侧重通用计算和图形。
+
+这些架构一步步提升了性能和能效：
+
+- Fermi（2010 年）  
+- Kepler（2012 年）  
+- Maxwell（2014 年）  
+- Pascal（2016 年）  
+
+这一阶段的目标，是让 GPU 在通用工作负载上更快、更高效。
+
+## AI 成为核心
+
+Volta（2017 年，V100）标志着一次明确的转向。从 Volta 开始，NVIDIA 大力推进 AI 专用硬件：第一代 Tensor Core，也就是每个 SM（Streaming Multiprocessor，流式多处理器）里一步就能完成小矩阵乘法的单元。
+
+在那之后：
+
+- Turing（2018 年，RTX 20 系列）把 Tensor Core 和光线追踪单元带到了消费级显卡上  
+- Ampere（2020 年，A100 和 RTX 30 系列）把这个思路进一步放大  
+- Ada Lovelace（2022 年，RTX 40 系列和 L40S）与 Hopper 同年，把这些单元带到消费级和工作站显卡上  
+- Hopper（2022 年，H100）针对 AI 工作负载做了深度优化，尤其是 Transformer，并支持 FP8（8-bit floating point，8 位浮点）运算  
+
+从这里开始，GPU 不再只是图形硬件，而成了完整的计算平台。
+
+## 近期架构
+
+### Blackwell（2024 至 2025 年）
+
+Blackwell 于 2024 年发布，围绕大规模 AI 工作负载设计。B200 数据中心 GPU 把两颗芯片封装在一起，使用 HBM3e（High Bandwidth Memory，高带宽显存），带宽最高 8 TB/s。它还新增了 NVFP4，一种面向 AI 的 4 位数值格式。Blackwell Ultra（B300，2025 年）把每块 GPU 的显存提高到 288 GB。在消费级市场，RTX 50 系列（2025 年）同样采用 Blackwell。
+
+实际的性能提升并不是在所有情况下都一样，它取决于：
+
+- 工作负载  
+- 精度  
+- 系统配置  
+
+所以 “更快的 GPU” 并不总是一句简单的话。
+
+### Rubin（2026 年，已开始出货）
+
+Rubin 是 Blackwell 之后的架构。它已全面投产，首批 Vera Rubin 系统（把 Rubin GPU 和 NVIDIA 的 Vera CPU（Central Processing Unit，中央处理器）配在一起）已于 2026 年 9 月开始出货，CUDA 13.4 也已支持它的计算能力 10.7。
+
+每块 Rubin GPU 带来：
+
+- 更新的 Tensor Core 设计  
+- 最高 288 GB 的 HBM4 显存  
+- 最高 22 TB/s 的显存带宽  
+
+和 Blackwell 比一下：22 / 8 = 2.75，所以一块 Rubin GPU 每秒能搬运的字节数接近 Blackwell 的 3 倍。
+
+### Rubin Ultra 和 Feynman（已公布）
+
+> [!NOTE]
+> 这些是路线图上的项目，还不是能买到的产品。Rubin Ultra 计划于 2027 年下半年推出，Feynman 计划于 2028 年推出，细节仍可能变化。
+
+方向始终不变：一切都在朝更大、更专门化的 AI 系统发展。
+
+<arch-timeline focus="Volta"></arch-timeline>
+
+## 计算能力
+
+CUDA 不使用架构名称。每块 GPU 都会报告一个 CC（Compute Capability，计算能力），这是一个像 8.9 这样的版本号。主版本号通常跟着架构走，但并不总是一一对应：
+
+- Ampere：8.0（A100）和 8.6（RTX 30 系列）  
+- Ada Lovelace：8.9（RTX 40 系列、L40S）  
+- Hopper：9.0（H100）  
+- Blackwell：10.0（B200）、10.3（B300）和 12.0（RTX 50 系列）  
+- Rubin：10.7（CUDA 13.4 已支持）  
+
+所以 Ada（8.9）和 Ampere 共用主版本号 8，而 Blackwell 用了两个不同的主版本号。
 
 > [!WARNING]
-> 并不是带这些字母的名字都指一块 GPU 芯片。GB200 是一个 “超级芯片”：一块板上有一颗 Grace CPU（Central Processing Unit，中央处理器）和两块 Blackwell GPU。GH200 是同样的思路，只是换成了 Hopper。名字看起来不对劲时，先查清它到底是什么。
+> 当前的 CUDA 13 系列版本（CUDA 13.4 于 2026 年 9 月发布）只支持 Turing（CC 7.5）及更新的架构。Maxwell、Pascal 和 Volta GPU 需要使用较早的 CUDA 12 工具包。
 
-## GPU
+## 性能取决于具体情况
 
-GPU 是你实际使用的完整产品，是围绕芯片搭建起来的一整套系统。它包括：
+简单的数字很难用来比较，比如：
 
-- 芯片本身  
-- VRAM，也就是显存：GPU 自己的内存，紧挨着芯片  
-- 供电部件  
-- 输出接口（比如 HDMI（High-Definition Multimedia Interface，高清多媒体接口）或 DisplayPort）  
-- 散热系统  
+- TFLOPS（trillions of floating-point operations per second，每秒万亿次浮点运算）  
+- 时钟频率  
 
-所以，GPU 就是芯片加上让它能用起来的一切。
+这些数字说明不了全部。性能取决于：
 
-## 消费级 GPU
+- 你运行的是哪类工作负载  
+- 你使用的是什么精度  
+- 显存的表现如何  
+- 架构是怎样设计的  
 
-GeForce GPU，比如 RTX 40 和 RTX 50 系列，是为普通环境打造的：
+一块 GPU 在纸面上可能非常强大，在某个具体任务上却表现很差；另一块纸面数字更低的 GPU，在实际使用中反而可能更好。
 
-- 台式机  
-- 笔记本电脑  
-- 个人工作站  
+## 命名也变了
 
-这些机器没有专门的散热设施，GPU 必须自己处理发热，而且热量不小：RTX 5090 的额定功耗高达 575 W。所以大多数消费级 GPU 都有：
+V100 及之前的数据中心 GPU 都带有 “Tesla” 品牌，比如 Tesla V100。从 2020 年的 A100 开始，NVIDIA 不再使用这个品牌，改称 Data Center GPU（数据中心 GPU）。
 
-- 大块散热片  
-- 多个风扇  
-- 显眼的散热设计  
+这反映了重点的转变：从通用计算转向 AI 和云系统。
 
-它们是自成一体的，必须能在普通的 PC（Personal Computer，个人电脑）机箱里正常工作。
+## 架构是设计决策
 
-## 数据中心 GPU
+与其把架构看成一个个版本，不如把它们看成设计决策。每一种架构都在回答同一个问题：我们现在想解决什么样的问题？
 
-A100 基于 Ampere 架构，芯片是 GA100。但完整的 A100 看起来和 GeForce 显卡截然不同：它没有风扇，也没有显示输出接口。
+从这个角度看，GPU 的名字更有意义，性能差异也变得合乎逻辑，CUDA 的概念更容易串起来。
 
-数据中心 GPU 安装在服务器机架里，散热由 GPU 之外的系统负责：
+## 总结
 
-- 气流来自服务器的风扇  
-- 散热在机架层面解决  
-- 最新的机架，比如装有 72 块 Blackwell GPU 的 GB200 NVL72，采用液冷  
-
-这让 GPU 更简单、更紧凑，也更适合大规模部署。
-
-<chip-vs-gpu></chip-vs-gpu>
-
-## 在网上查芯片
-
-> [!TIP]
-> TechPowerUp 这样的规格网站能把这一点讲得很清楚。搜索 “A100 TechPowerUp”，你会看到芯片名称 → GA100。点进这个链接，就能看到芯片本身，没有散热，也没有其他附件。
-
-## 一句话总结区别
-
-GPU 芯片是大脑，GPU 是完整的系统。
-
-芯片 = 引擎  
-GPU = 整台机器  
-
-同一块芯片甚至可以出现在截然不同的 GPU 里。AD102 芯片既用在 RTX 4090 上，这是一张带风扇和 HDMI 接口的 GeForce 显卡；也用在 L40S 上，这是一张没有风扇的数据中心显卡。
-
-## 为什么这很重要
-
-- 架构描述的是芯片，而不是整个产品  
-- 性能从芯片层面开始  
-- 实际表现取决于完整的 GPU 系统  
-
-如果把两者混为一谈，你可能会误解：
-
-- 规格  
-- 性能对比  
-- 甚至 CUDA（Compute Unified Device Architecture，统一计算设备架构）的行为  
-
-分清它们，后面更深入的 CUDA 内容会更容易理解。
+GPU 架构展示了计算本身正在怎样变化。这条路从图形走到计算，再走到大规模 AI，而且数据中心架构差不多每年更新一代：Hopper、Blackwell、Rubin。理解这个转变，是深入学习 CUDA 之前重要的一步。
 
 ## 术语表
 
-- GPU 芯片（GPU chip）：实实在在的那块硅片，所有计算都在这里完成，没有散热装置也没有接口。
-- 硅片（silicon）：制造芯片的材料；GA100 就是一块集成了大约 540 亿个晶体管的硅片。
-- 架构（architecture）：芯片的设计，也就是它的各种单元、显存通路和控制器是怎样组织的。
-- 前缀（chip name prefix）：芯片名称开头的几个字母，代表它的架构，比如 GA 代表 Ampere，GB 代表 Blackwell。
-- Fermi：Nvidia 2010 年推出的架构，芯片名称形如 GF100。
-- Ampere：Nvidia 2020 年推出的架构，芯片名称以 GA 开头，比如 A100 里的 GA100。
-- GA100：A100 里的芯片；G 代表 GPU，A 代表 Ampere。
-- AD102：Ada Lovelace 架构中最大的芯片，用在 RTX 4090 和 L40S 上。
-- GB202：消费级 Blackwell 芯片中最大的一块，用在 RTX 5090 上。
-- 超级芯片（superchip）：把 CPU 和 GPU 组合在一块板上的产品，比如 GB200（一颗 Grace CPU 加两块 Blackwell GPU）。
-- GPU（Graphics Processing Unit，图形处理器）：围绕芯片搭建的完整产品，带有显存、供电部件、输出接口和散热。
-- VRAM（显存）：GPU 自己的内存，紧挨着芯片；RTX 5090 有 32 GB 显存。
-- 供电部件（power delivery）：显卡上的一组部件，把电源送来的电转换成芯片所需的稳定电压。
-- 输出接口（output interfaces）：GPU 上的端口，比如 HDMI 或 DisplayPort。
-- 散热（cooling）：把芯片产生的热量带走，可以靠显卡上的风扇、服务器里的气流，或者液体。
-- GeForce：Nvidia 的消费级 GPU，比如 RTX 5090，自带散热片和风扇。
-- 散热片（heatsink）：消费级 GPU 用来给自己散热的部件。
-- PC（Personal Computer，个人电脑）机箱（PC case）：容纳台式电脑各个部件的箱子；消费级 GPU 必须在机箱里自己散热。
-- A100：Nvidia 的数据中心 GPU，使用 GA100 芯片，自己没有风扇。
-- 服务器机架（server rack）：安装数据中心 GPU 的地方，散热在机架层面解决，而不是靠 GPU 自己。
-- 气流（airflow）：服务器自身风扇吹过机身的空气，用来给里面无风扇的 GPU 散热。
-- 液冷（liquid cooling）：让液体流过贴在芯片上的冷板来散热，用在 GB200 NVL72 这类高密度机架里。
-- 规格（spec）：GPU 公开的技术参数，比如芯片名称、核心数量或显存大小。
-- TechPowerUp：列出 GPU 规格的网站，每款 GPU 的页面都链接到它所用的芯片。
-- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台，用来编写在 NVIDIA GPU 上运行的程序。
+- 架构（architecture）：GPU 的蓝图，规定了芯片内部的一切如何构建。
+- GPU（Graphics Processing Unit，图形处理器）：这些课讲的处理器，由许多并行工作的小核心组成。
+- Fermi：NVIDIA 2010 年推出的架构，也是第一个专为通用 GPU 计算设计的架构，引入了真正的 L1/L2 缓存层次结构。
+- Ampere：NVIDIA 2020 年推出的架构（A100、RTX 30 系列），大幅扩充了用于 AI 的 Tensor Core。
+- Hopper：NVIDIA 2022 年为 AI 打造的架构（H100），配有能使用 8 位数值的 Transformer Engine。
+- 核心（core）：执行算术运算的单元；核心数量只是架构的一个方面。
+- 能效（efficiency）：GPU 每消耗一瓦电能完成多少工作。
+- Kepler / Maxwell / Pascal：NVIDIA 分别于 2012、2014 和 2016 年推出的架构，让 GPU 稳步变得更快、更省电。
+- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练模型或渲染游戏。
+- AI（artificial intelligence，人工智能）：从数据中学习的软件；训练它主要是海量的矩阵运算，正适合 GPU。
+- Volta：2017 年推出的架构（V100），NVIDIA 从它开始大力推进 AI 专用硬件，首次加入了 Tensor Core。
+- Turing：2018 年推出的架构（RTX 20 系列），把 Tensor Core 和光线追踪单元带到了消费级 GPU 上；CC 7.5。
+- Ada Lovelace：2022 年推出的消费级和工作站架构（RTX 40 系列、L40S）；CC 8.9。
+- Transformer：现代语言模型背后的神经网络结构；它主要由大型矩阵乘法组成。
+- FP8 / NVFP4：面向 AI 的 8 位和 4 位数值格式；Hopper 加入了 FP8，Blackwell 加入了 NVFP4。
+- Blackwell：2024 至 2025 年推出的架构（B200、B300、RTX 50 系列），围绕大规模 AI 工作负载设计。
+- Blackwell Ultra：Blackwell 在 2025 年的升级版（B300），每块 GPU 配有 288 GB HBM3e。
+- 带宽（bandwidth）：每秒能在显存和芯片之间搬运多少字节。
+- 精度（precision）：每个数用多少位来存储，比如 FP32、FP16 或 FP8；位数越少，运算越快，但精确度越低。
+- Rubin：Blackwell 之后的架构，已全面投产，2026 年下半年开始交付给云服务商。
+- Tensor Core：每个 SM 里一步就能完成小矩阵乘法的单元，是 AI 计算速度的关键。
+- HBM（High Bandwidth Memory，高带宽显存）/ HBM3e / HBM4：紧挨着芯片堆叠的显存；Blackwell 使用 HBM3e，Rubin 使用 HBM4。
+- SM（Streaming Multiprocessor，流式多处理器）：NVIDIA GPU 的基本构件，里面有核心、Tensor Core 和共享内存。
+- 云（cloud）：通过互联网从服务商的数据中心租用的计算机。
+- Rubin Ultra / Feynman：Rubin 之后已公布的架构，计划分别于 2027 年和 2028 年推出。
+- CC（Compute Capability，计算能力）：GPU 向 CUDA 报告的版本号，比如 Ada Lovelace 是 8.9，B200 是 10.0。
+- TFLOPS（trillions of floating-point operations per second，每秒万亿次浮点运算）：一个简单的性能数字，反映不了全貌。
+- 时钟频率（clock speed）：另一个简单的数字，单独拿来比较并不靠谱。
+- Tesla：NVIDIA 数据中心 GPU 在 V100 及之前使用的旧品牌，从 A100 开始不再使用。
+- Data Center GPU（数据中心 GPU）：NVIDIA 现在给服务器 GPU 用的名字，比如 A100、H100 和 Blackwell 系列产品。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台，用来编写在 NVIDIA GPU 上运行的程序；CUDA 13 支持 Turing 及之后的所有架构。

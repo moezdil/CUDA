@@ -1,144 +1,165 @@
-# 09 > Compute Capability
+# 09 > Compute or Memory Bound
 
-This lesson explains compute capability, how its numbers work, and how it decides which features and which CUDA (Compute Unified Device Architecture) toolkit versions you can use. By the end you can look at any GPU (Graphics Processing Unit) and tell what it supports.
+Every kernel is held back by one of two things: how fast the GPU (Graphics Processing Unit) can do math, or how fast it can move data. This lesson shows how to tell which one with a single number, arithmetic intensity, and a simple chart called the roofline. All examples use the NVIDIA L40S that runs the programs in these lessons.
 
-## What Compute Capability Is
+## Two Limits on Every Kernel
 
-Compute capability (CC) is NVIDIA's system for describing the features of a GPU. It is a version number for the hardware, not for the software.
+A kernel needs two things to finish. It needs its math done by the cores, and it needs its data moved between memory and the cores.
 
-It is not a marketing score or a benchmark. It says exactly what a GPU architecture can and cannot do. Think of it as a specification sheet in a single number.
+Both take time, and both happen at the same time on a GPU. While some warps wait for data, others compute (see [Lesson 08](../Lesson-08/notes.md)). So the kernel takes about as long as the slower of the two:
 
-## How the Numbering Works
+- time for math = FLOPs / peak FLOPS
+- time for data = bytes moved / memory bandwidth
 
-Compute capability is a version number, like 7.5, 8.9 or 12.0. The rule is the same for all generations:
+Whichever is bigger sets the time. If the data part is bigger, the kernel is memory bound. If the math part is bigger, it is compute bound.
 
-- The number before the dot signals a major architectural change
-- The number after the dot represents minor improvements or extensions
+## Counting FLOPs
 
-So going from 7.x to 8.x is not just a speed bump. It means a different architecture with new hardware units and new capabilities. A worked example: the RTX 4090 is CC 8.9 and the A100 is CC 8.0. Both belong to the 8.x family, so they share the core design, but 8.9 adds features the A100 does not have, such as FP8 Tensor Cores.
+A FLOP (floating-point operation) is one add, subtract, multiply or divide on floating-point numbers. FLOPS (floating-point operations per second) is a speed: how many of them happen every second.
+
+[Lesson 06](../Lesson-06/notes.md) showed where the peak comes from: cores × clock × 2, because one FMA (fused multiply-add) counts as 2 FLOPs. For the L40S: 18,176 FP32 (32-bit floating point) cores × 2.52 GHz × 2 ≈ 91.6 TFLOPS (trillions of FLOPS), which is the FP32 number on NVIDIA's spec sheet.
+
+> [!NOTE]
+> FLOPs (lowercase s) is a count of work. FLOPS (capital S) is a speed. A kernel that does 1,000 FLOPs on a GPU that reaches 91.6 TFLOPS needs at least 1,000 / 91.6 trillion seconds for its math.
+
+To count the FLOPs of a kernel, count the math in one thread and multiply by the number of threads. `c[i] = a[i] + b[i]` is 1 FLOP per element. `y[i] = a * x[i] + y[i]` is 2 FLOPs per element, a multiply and an add.
+
+## Counting Bytes
+
+Bytes moved means the bytes that travel between GPU memory and the chip. One `float` is 4 bytes. Count every value a thread reads from memory and every value it writes back.
+
+For `c[i] = a[i] + b[i]` each thread reads `a[i]` and `b[i]` and writes `c[i]`: 3 floats × 4 bytes = 12 bytes per element.
+
+The speed limit for this side is the memory bandwidth from [Lesson 06](../Lesson-06/notes.md). The L40S has 48 GB of GDDR6 (Graphics Double Data Rate 6) memory with a bandwidth of 864 GB/s (gigabytes per second).
+
+## Arithmetic Intensity
+
+Put the two counts together and you get the most useful number in this lesson:
+
+arithmetic intensity = FLOPs / bytes moved
+
+It is measured in FLOP/byte and says how much math a kernel does for every byte it brings in. It depends only on the kernel, not on the GPU. A kernel with low intensity spends most of its time waiting for data. A kernel with high intensity reuses each byte many times.
+
+Vector add has 1 FLOP per 12 bytes: 1 / 12 ≈ 0.083 FLOP/byte. That is very low.
+
+## The Ridge Point
+
+The GPU has its own number to compare against. Divide peak FLOPS by memory bandwidth:
+
+ridge point = peak FLOPS / memory bandwidth
+
+For the L40S: 91,600 GFLOPS / 864 GB/s ≈ 106 FLOP/byte. To keep its FP32 cores busy, a kernel must do about 106 FLOPs for every byte it loads. With less, the cores wait for memory.
 
 > [!TIP]
-> To see the CC of the GPU in your machine, run `nvidia-smi --query-gpu=name,compute_cap --format=csv`. NVIDIA's "CUDA GPUs" web page lists the CC of every card.
+> The quick test: compare the kernel's arithmetic intensity with the GPU's ridge point. Below the ridge point it is memory bound, above it is compute bound.
 
-## The Architectures
+Different GPUs have very different ridge points:
 
-### Volta → CC 7.0
+| GPU | Peak FP32 | Bandwidth | Ridge point |
+|---|---|---|---|
+| L40S | 91.6 TFLOPS | 864 GB/s | ≈ 106 FLOP/byte |
+| H100 SXM | 67 TFLOPS | 3,350 GB/s | ≈ 20 FLOP/byte |
+| RTX 5090 | 104.8 TFLOPS | 1,792 GB/s | ≈ 58 FLOP/byte |
 
-Volta introduced Tensor Cores. These are special units that speed up the matrix operations used in AI (artificial intelligence) and deep learning. Before Volta, these operations ran on general-purpose CUDA cores. After Volta, they had dedicated hardware.
+The H100 has far more bandwidth for its FP32 compute, so even fairly light kernels reach its FP32 roof. The L40S has a lot of FP32 compute but GDDR6 memory, so many kernels hit its memory limit first.
 
-### Turing and Ampere → CC 7.5 and 8.x
+## The Roofline Model
 
-Turing (CC 7.5, the RTX 20 series) brought Tensor Cores to consumer cards. Ampere (CC 8.0 for the A100, 8.6 for the RTX 30 series) brought more powerful and efficient Tensor Cores, higher memory bandwidth and better energy efficiency. Ada Lovelace (CC 8.9, the RTX 40 series and the L40S) added FP8 (8-bit floating point) support.
+The roofline model draws all of this as one chart. The x axis is arithmetic intensity, the y axis is attainable GFLOPS (billions of FLOPS). Both axes are logarithmic, so each step is a multiple.
 
-### Hopper → CC 9.0
+attainable GFLOPS = min(peak GFLOPS, arithmetic intensity × bandwidth)
 
-Hopper (the H100 and H200) was another major step. It introduced new execution models for very large AI models and pushed AI performance forward.
+The chart has two lines that meet at the ridge point. On the left is a slanted line: bandwidth × intensity, the memory roof. On the right is a flat line: the peak, the compute roof. A kernel is a dot under the roof. It can never go above it.
 
-### Blackwell → CC 10.x, 11.0 and 12.x
+<roofline-chart></roofline-chart>
 
-Blackwell is the main shipping generation in 2026. It has 5th-generation Tensor Cores and a new precision format called NVFP4 (NVIDIA 4-bit floating point). NVFP4 doubles throughput compared to FP8 for large model inference. FP4 acceleration does not exist on earlier architectures.
+Pick a GPU and a kernel. A dot on the slanted part is memory bound, a dot on the flat part is compute bound.
 
-Blackwell comes in several compute capabilities, one per chip family:
+## Worked Example: Vector Add
 
-| CC | Products |
-|---|---|
-| 10.0 | B200, GB200 (data center) |
-| 10.3 | B300, GB300 (Blackwell Ultra, data center) |
-| 11.0 | Jetson Thor (robotics) |
-| 12.0 | GeForce RTX 50 series, RTX PRO Blackwell |
-| 12.1 | GB10 (DGX Spark desktop) |
+Take vector add on the L40S with 100 million floats per array (N = 100,000,000).
 
-> [!NOTE]
-> The next architecture, Rubin, is CC 10.7. It belongs to the same 10.x family as the B200 and the B300. The first Vera Rubin NVL72 racks started shipping in September 2026.
+- FLOPs: 1 per element, so 100,000,000 FLOPs.
+- Bytes: 12 per element, so 1,200,000,000 bytes = 1.2 GB.
+- Time for math: 100,000,000 / 91.6 trillion ≈ 0.0011 ms (about 1.1 µs).
+- Time for data: 1.2 GB / 864 GB/s ≈ 1.39 ms.
 
-## Feature Support
+The data part is about 1,270 times longer. The roofline gives the same answer: 0.083 × 864 ≈ 72 GFLOPS attainable, under 0.1% of the 91,600 GFLOPS peak. Vector add is deeply memory bound on every GPU. It is the program from the vector addition lesson in the CUDA (Compute Unified Device Architecture) Practice track ([CUDA Lesson 08](../../cuda/Lesson-08/notes.md)).
 
-The official CUDA documentation has tables that map features to compute capability versions. These tables show clear patterns:
+## Worked Example: SAXPY and Dot Product
 
-- GPUs at CC 5.0 do not support half-precision (FP16) operations
-- Tensor Cores appear only from CC 7.0 onward
-- FP8 Tensor Cores arrive with CC 8.9 (Ada Lovelace) and 9.0 (Hopper)
-- NVFP4 requires CC 10.0 or higher
+SAXPY (Single-precision A times X Plus Y) computes `y[i] = a * x[i] + y[i]`. Per element it does 2 FLOPs (one FMA) and moves 12 bytes: it reads `x[i]` and `y[i]` and writes `y[i]`. Arithmetic intensity: 2 / 12 ≈ 0.167 FLOP/byte. On the L40S: 0.167 × 864 ≈ 144 GFLOPS attainable.
 
-A missing hardware feature cannot be added later. If your GPU has no Tensor Cores, you cannot use them. Software can sometimes imitate a missing unit (emulation), but it is far slower, and for most Tensor Core features there is no such path. The hardware either has the unit or it does not.
+A dot product computes `s += x[i] * y[i]` over two arrays. Per element it does 2 FLOPs and reads 8 bytes, with nothing written per element. Arithmetic intensity: 2 / 8 = 0.25 FLOP/byte. On the L40S: 0.25 × 864 = 216 GFLOPS attainable.
 
-So before writing performance-sensitive CUDA code, ask "Does my GPU support what I need?" This comes before "Is my GPU fast enough?"
+Both are a little better than vector add, and both are still far below the ridge point of 106. They are memory bound. Doing the math faster would not change their time at all.
 
-## Software Compatibility
+## Worked Example: Matrix Multiply
 
-Compute capability also decides which CUDA toolkit versions you can use. A new architecture needs a toolkit that knows it, and old architectures are dropped from new toolkits after some years.
+A matrix multiply `C = A × B` of two N × N matrices is different. Every element of C is a sum of N products, so it takes N multiplies and N adds:
 
-Some examples:
+- FLOPs: N × N elements × 2N = 2N³.
+- Bytes, if each matrix travels only once: A and B are read, C is written, so 3 × N² floats × 4 bytes = 12N².
+- Arithmetic intensity: 2N³ / 12N² = N / 6.
 
-- Hopper (CC 9.0): requires CUDA 11.8 or higher
-- Blackwell (CC 10.0 and 12.0): requires CUDA 12.8 or higher for native cubin support
-- Blackwell Ultra (CC 10.3): requires CUDA 12.9 or higher
-- Rubin (CC 10.7): supported in CUDA 13.4
-- Maxwell, Pascal and Volta (CC 5.x to 7.0): not supported by CUDA 13 at all; the last toolkits for them are CUDA 12.x
+The intensity grows with N, because each loaded number is used N times. For N = 4,096:
+
+- FLOPs: 2 × 4,096³ = 137,438,953,472 (about 137 billion).
+- Bytes: 12 × 4,096² = 201,326,592 (about 201 MB).
+- Arithmetic intensity: 4,096 / 6 ≈ 683 FLOP/byte.
+
+683 is far above 106, so on the L40S this matrix multiply is compute bound. Time for math: 137.4 billion / 91.6 trillion ≈ 1.5 ms. Time for data: 201 MB / 864 GB/s ≈ 0.23 ms. For N = 256 the intensity is only 256 / 6 ≈ 43: memory bound on the L40S (ridge 106), but compute bound on the H100 (ridge 20).
 
 > [!WARNING]
-> CUDA 13 (the current major version, 13.4 as of September 2026) supports CC 7.5 (Turing) and newer only. On a Pascal card such as a GTX 1080 (CC 6.1), you must stay on CUDA 12.x.
+> N / 6 is the best case, where every matrix crosses memory once. A naive kernel loads the same rows and columns again and again and moves far more bytes, which pulls its real intensity down. Reusing data from on-chip memory, such as shared memory and caches ([Lesson 07](../Lesson-07/notes.md)), is what lets a real kernel get close to N / 6.
 
-A toolkit below the minimum for your architecture, or a toolkit that has dropped your architecture, gives a hard error. The code will not compile, or it will fail at runtime.
+## What the Result Means
 
-The workflow is always the same:
+The answer tells you where to spend your effort:
 
-1. Find your GPU's compute capability.
-2. Choose your CUDA version.
-3. Write your code.
+- Memory bound: optimize data movement. Read each byte once, read it in large aligned chunks (coalesced access), keep reused data in shared memory or registers, use smaller number formats so fewer bytes travel, and fuse kernels so data is not written out and read back in between.
+- Compute bound: optimize the math. Use Tensor Cores, use cheaper formats where accuracy allows, and remove work that does not need to happen.
 
-<cc-explorer></cc-explorer>
+Optimizing the wrong side does nothing. Making vector add do its math twice as fast leaves its time at about 1.39 ms, because the math was never the limit.
 
-## The Low-Level Layer (PTX)
+## A Higher Roof: Tensor Cores
 
-CUDA code does not run directly on the GPU. It compiles to PTX (Parallel Thread Execution) first. PTX is a low-level intermediate language, similar to an assembly language for NVIDIA GPUs.
+The roofs above are FP32 on the regular cores. Tensor Cores give a much higher compute roof for matrix math. The L40S reaches 362 TFLOPS in FP16 (16-bit floating point) on its Tensor Cores without sparsity, about 4 times its FP32 peak. With the same 864 GB/s, the ridge point moves up to about 362,000 / 864 ≈ 419 FLOP/byte.
 
-Some PTX instructions need hardware units that exist only from a certain compute capability onward. Warp shuffle functions are one example.
+A higher roof only helps kernels that are compute bound. Vector add stays at 72 GFLOPS whatever the roof. [Lesson 10](../Lesson-10/notes.md) explains number formats and Tensor Cores.
 
-> [!NOTE]
-> Warp shuffle functions let threads in a warp share data without using shared or global memory. Warp shuffle exists since CC 3.0 (Kepler).
+## Why This Matters for CUDA
 
-If your GPU is below the minimum, these instructions cannot run. The hardware for them is not on the chip.
+Before you tune a kernel, count its FLOPs and bytes. One line of arithmetic tells you whether to work on memory access or on math, and how far the kernel is from the best this GPU can do.
 
-## Summary
-
-The same rule applies to machine learning pipelines, physics simulations and custom CUDA kernels. Your GPU's compute capability is the contract between your hardware and your code.
-
-Know your CC number. Check it against the CUDA documentation. Choose the right toolkit version. Then build. Performance tuning, optimization and feature choice all start from there.
-
-> Compute capability is not just a version number. It is the definition of what your GPU can actually do.
+Most simple kernels you write first, such as vector add, scaling, copying and reductions, are memory bound. For those, the goal is to reach the memory bandwidth, not the TFLOPS. A vector add that moves its 1.2 GB at close to 864 GB/s is already a very good kernel, even though it uses less than 0.1% of the peak FLOPS.
 
 ## Glossary
 
-- compute capability (CC): NVIDIA's version number that says what a GPU architecture can and cannot do.
-- GPU (Graphics Processing Unit): a processor built to run many simple tasks in parallel.
-- benchmark: a test program that measures speed; compute capability is not a speed score.
-- architecture: the hardware design of a GPU family; each architecture gets its own major CC number.
-- number before the dot (major number): it signals a major architectural change, such as 8 for Ampere and 9 for Hopper.
-- number after the dot (minor number): it stands for minor improvements or extensions, such as 8.6 or 8.9 within the 8.x family.
-- `nvidia-smi`: NVIDIA's command-line tool; with `--query-gpu=compute_cap` it prints the CC of each GPU.
-- Tensor Cores: special units that speed up matrix operations for AI. They appear from CC 7.0 onward.
-- CUDA cores: the general-purpose arithmetic units of an NVIDIA GPU, the ones counted in its core count.
-- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math.
-- Turing: NVIDIA's 2018 architecture (RTX 20 series), CC 7.5, the oldest one CUDA 13 supports.
-- Ada Lovelace: NVIDIA's 2022 architecture (RTX 40 series, L40S), CC 8.9.
-- Hopper: NVIDIA's 2022 data center architecture (H100, H200), CC 9.0.
-- Blackwell: NVIDIA's main shipping architecture in 2026, with CC 10.0, 10.3, 11.0, 12.0 and 12.1 for its different chips.
-- Blackwell Ultra: the B300 and GB300, an upgraded Blackwell for data centers, CC 10.3.
-- Rubin: the architecture after Blackwell, CC 10.7, shipping in data center racks since September 2026.
-- NVFP4 (NVIDIA 4-bit floating point): a Blackwell precision format that doubles throughput compared to FP8 for large model inference.
-- FP8 (8-bit floating point): a number format less exact than FP16, but twice as fast on Tensor Cores that support it.
-- inference: running a trained AI model to get answers, as opposed to training it.
-- FP16: half-precision operations. GPUs at CC 5.0 do not support them.
-- emulation: imitating missing hardware in software, which is usually far slower or not possible at all.
-- toolkit (CUDA Toolkit): NVIDIA's package with the nvcc compiler, libraries and tools; each version supports a range of compute capabilities.
-- CUDA 13: the current major CUDA version; it supports CC 7.5 and newer only.
-- Maxwell / Pascal / Volta: NVIDIA architectures from 2014, 2016 and 2017 (CC 5.x to 7.0) that CUDA 13 no longer supports.
-- cubin: a compiled GPU binary for one specific compute capability, unlike PTX, which can still be compiled for newer GPUs.
-- runtime: the time when the program is running, as opposed to compile time.
-- PTX (Parallel Thread Execution): a low-level intermediate language, like assembly for NVIDIA GPUs. CUDA code compiles to it first.
-- assembly language: a human-readable form of the basic instructions a processor runs, one line per instruction.
-- warp shuffle: functions that let threads in a warp share data without using shared or global memory.
-- warp: a group of 32 threads that run the same instruction together.
-- global memory: the GPU's main memory (VRAM), visible to every thread but much slower than shared memory.
-- kernel: a function that runs on the GPU, started from code on the CPU.
+- GPU (Graphics Processing Unit): the processor this track is about, built from many cores that work in parallel.
+- kernel: a function that runs on the GPU, one copy per thread.
+- warp: a group of 32 threads that run together; while some warps wait for data, others compute.
+- memory bound: a kernel whose time is set by moving data, not by math; it sits on the slanted part of the roofline.
+- compute bound: a kernel whose time is set by math, not by moving data; it sits on the flat part of the roofline.
+- FLOP (floating-point operation): one add, subtract, multiply or divide on floating-point numbers; FLOPs (lowercase s) counts them.
+- FLOPS (floating-point operations per second): a speed; GFLOPS is billions and TFLOPS trillions of FLOPs every second.
+- FMA (fused multiply-add): one instruction that computes a × b + c and counts as 2 FLOPs.
+- FP32 (32-bit floating point): the standard number format for GPU math; one `float` is 4 bytes.
+- peak FLOPS: cores × clock × 2; for the L40S, 91.6 TFLOPS in FP32.
+- bytes moved: the bytes that travel between GPU memory and the chip, counting every read and every write.
+- memory bandwidth: how many bytes per second memory can deliver; 864 GB/s on the L40S.
+- GDDR6 (Graphics Double Data Rate 6): the memory type on the L40S, slower than the HBM (High Bandwidth Memory) of data center GPUs like the H100.
+- arithmetic intensity: FLOPs divided by bytes moved, in FLOP/byte; it depends on the kernel, not the GPU.
+- ridge point: peak FLOPS divided by memory bandwidth; about 106 FLOP/byte on the L40S, 20 on the H100 SXM.
+- roofline model: a log-log chart of attainable FLOPS against arithmetic intensity, with a slanted memory roof and a flat compute roof.
+- attainable GFLOPS: the most a kernel can reach, min(peak, intensity × bandwidth).
+- vector add: `c[i] = a[i] + b[i]`, 1 FLOP per 12 bytes.
+- SAXPY (Single-precision A times X Plus Y): `y[i] = a * x[i] + y[i]`, 2 FLOPs per 12 bytes.
+- dot product: the sum of `x[i] * y[i]` over two arrays, 2 FLOPs per 8 bytes.
+- matrix multiply: `C = A × B`; 2N³ FLOPs over at least 12N² bytes for N × N FP32 matrices, so intensity N / 6.
+- shared memory: fast on-chip memory that the threads of one block share; it lets a kernel reuse data instead of loading it again.
+- coalesced access: neighbouring threads reading neighbouring addresses, so memory serves them in a few large transfers.
+- Tensor Cores: units built for matrix math with a much higher roof; 362 TFLOPS in FP16 on the L40S without sparsity.
+- FP16 (16-bit floating point): a 2-byte number format; Tensor Cores run it far faster than FP32 cores run FP32.
+- sparsity: a Tensor Core feature that skips zeros in a fixed pattern; spec sheets often quote numbers with it, which are twice the dense numbers.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.

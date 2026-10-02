@@ -1,112 +1,150 @@
-# 11 > Volta White Paper'ını Okumak
+# 11 > CPU'dan GPU'ya Veri Yolu
 
-Bu derste V100 white paper'ını adım adım inceleyeceğiz. Volta'nın neyi değiştirdiğini ve bunun bugünün GPU'ları (Graphics Processing Unit, grafik işlem birimi) için neden önemli olduğunu göreceksin.
+Bir kernel yalnızca zaten GPU (Graphics Processing Unit, grafik işlem birimi) belleğinde duran veriyle çalışabilir, o veri ise neredeyse her zaman CPU belleğinde başlar. Bu ders baytları yol boyunca takip ediyor: PCIe bağlantısı, sabitlenmiş host belleği, asenkron kopyalar, birleşik bellek ve Grace Hopper ile Grace Blackwell'deki daha hızlı bağlantılar. [Ders 00](../Lesson-00/notes.md) kısa halini anlatmıştı; burada bu yolun neden yavaş olduğunu ve bununla ilgili neler yapabileceğini göreceksin.
 
-## Neden Gerçek Bir White Paper Okumalı
+## İki Bellek, Tek Bağlantı
 
-White paper (teknik rapor), donanım tasarımını basitleştirmeden gösterir. Volta bunun en önemli örneklerinden biri, çünkü V100 white paper'ı GPU'ların yön değiştirdiği anı belgeler.
+Sıradan bir GPU sunucusunda birbirinden ayrı iki bellek vardır:
 
-## Key Features ile Başla
+- host belleği (host memory): anakarttaki, CPU'nun (Central Processing Unit, merkezi işlem birimi) yanındaki sistem RAM'i (Random Access Memory, rastgele erişimli bellek)
+- device belleği (device memory): GPU kartının üzerindeki, GPU'nun kendi belleği; GDDR (Graphics Double Data Rate) ya da HBM (High Bandwidth Memory, yüksek bant genişlikli bellek)
 
-Hemen diyagramlara ya da sayılara dalma; "Key Features" (Temel Özellikler) bölümüyle başla. Kısadır ve mimarinin ne yapmaya çalıştığını gösterir.
+CPU, device belleğini kendi RAM'i gibi okuyamaz; bir kernel de host belleğini tam hızda öylece okuyamaz. Aralarında bir bağlantı vardır, çoğu makinede PCIe (Peripheral Component Interconnect Express). GPU'nun işlediği her bayt bu bağlantıdan en az bir kez geçer.
 
-Volta'da odak çok net: mimari yapay zekâ (AI, artificial intelligence) için tasarlanmış. Bu, önceki nesle göre sadece bir iyileştirme değil, amaçta bir değişim.
+Bu derslerde kullanılan L40S'te iki taraf çok dengesizdir. 48 GB'lık GDDR6 belleği SM'leri (Streaming Multiprocessor, akış çoklu işlemcisi) 864 GB/s ile besler. CPU'ya giden PCIe 4.0 x16 bağlantısı ise her yönde yaklaşık 31,5 GB/s taşır. [Ders 07](../Lesson-07/notes.md) verinin GPU'ya girdikten sonra başına geleni anlatır; bu ders onu oraya ulaştırmakla ilgili.
 
-## Tensor Core'lar
+## PCIe Bağlantısı
 
-Volta'daki en önemli değişiklik Tensor Core'lardır.
+PCIe, lane'lerden oluşur. Her lane, her yön için bir tane olmak üzere iki tel çiftidir; bu yüzden bağlantı aynı anda hem gönderir hem alır (full duplex). Bir GPU yuvasında 16 lane vardır, x16 diye yazılır. Her yeni nesil bir lane'in hızını ikiye katlar; bu hız GT/s (gigatransfers per second, saniyede milyar aktarım) ile ölçülür:
 
-Volta'dan önce GPU'lar matris işlemlerini genel amaçlı CUDA core'larında çalıştırıyordu. Bu işe yarıyordu ama verimli değildi. Volta, matris işlemlerine kendilerine ayrılmış donanım veriyor: V100'de, 80 SM'nin her birinde 8 tane olmak üzere 640 Tensor Core var.
+| Nesil | Lane başına | x16, yön başına | Kullanan GPU'lar |
+|---|---|---|---|
+| PCIe 3.0 | 8 GT/s | 15,8 GB/s | V100 |
+| PCIe 4.0 | 16 GT/s | 31,5 GB/s | A100, L40S |
+| PCIe 5.0 | 32 GT/s | 63 GB/s | H100, B200, RTX 5090 |
+| PCIe 6.0 | 64 GT/s | yaklaşık 121 GB/s | Blackwell Ultra (B300) |
 
-Bu noktadan sonra GPU artık sadece genel bir hesaplama cihazı değil; en baştan yapay zekâ iş yükleri düşünülerek tasarlanıyor.
-
-## Streaming Multiprocessor (SM)
-
-Streaming Multiprocessor (SM), GPU'nun temel yapı taşıdır. Volta'da SM yeniden tasarlandı ve her biri kendi warp zamanlayıcısına sahip dört işlem bloğuna bölündü.
-
-Önemli bir iyileştirme, farklı türdeki işlemlerin aynı anda çalışabilmesi. Pascal'da tam sayı ve kayan noktalı sayı işlemleri tek bir yürütme yolunu paylaşıyor ve sırayla çalışmak zorunda kalıyordu; Volta'da paralel çalışıyorlar.
-
-Modern iş yükleri çoğu zaman farklı türdeki işlemleri bir arada kullanır. Bu yüzden bu değişiklik donanımın daha iyi kullanılmasını sağlıyor.
-
-<volta-shift></volta-shift>
-
-## Komut Hızı
-
-Yeni bir mimari sadece çekirdek eklemez, var olan işlemleri de hızlandırır.
-
-Volta'da birçok komut Pascal'dakinden daha az döngüde (cycle) tamamlanır. Ampere ve Hopper bunu daha da ileri götürüyor ve bu eğilim 2026'da da sürüyor. İlerleme sadece ölçekle değil, verimlilikle de ilgili.
-
-## Bellek
-
-Volta, HBM2 (High Bandwidth Memory 2) bellek kullanır: V100'de 16 ya da 32 GB, 900 GB/s hızla. Bu, önceki nesillerden daha yüksek bir bellek bant genişliğidir.
-
-Modern GPU iş yükleri çoğu zaman sadece verinin ne kadar hızlı işlendiğiyle değil, ne kadar hızlı taşındığıyla da sınırlıdır. Daha yüksek bant genişliği, hesaplama birimlerine beklemeden daha fazla veri ulaştırır.
-
-## NVLink
-
-Volta, NVLink'in ikinci neslini getiriyor. NVLink, GPU'ları birbirine yüksek hızda bağlar.
-
-Volta hem bağlantı sayısını hem de bağlantı hızını artırıyor: V100'de toplam 300 GB/s taşıyan altı NVLink bağlantısı var; bu da çoklu GPU sistemlerini çok daha verimli hâle getiriyor.
+x16 sayıları yön başınadır. "PCIe Gen4 x16: 64 GB/s" diyen bir veri sayfası iki yönü toplar. GPU'ya yapılan bir kopya yalnızca tek yönü kullanır, bu yüzden tek bir kopya için işe yarayan sayı yön başına olanıdır.
 
 > [!NOTE]
-> 2026'da Hopper ve Blackwell tabanlı büyük yapay zekâ sistemleri bu fikre daha da fazla dayanıyor. Volta bu yöndeki ilk adımlardan biriydi.
+> Spec sayfaları yuvarlar: PCIe 4.0 x16 yön başına 31,5 GB/s'dir, çoğu zaman 32 GB/s diye yazılır. Gerçek bir kopya biraz daha azına ulaşır, çünkü her paket ayrıca başlık ve kontrol bilgisi taşır. PCIe 7.0 (lane başına 128 GT/s) Haziran 2025'te kesinleşti, ama henüz onu kullanan bir GPU yok.
 
-## Transistör Sayısı
+<data-path></data-path>
 
-Transistör sayısı, bir GPU'nun içinde ne kadar donanım olduğunu gösterir. V100'de yaklaşık 21 milyar transistör var.
+## Örnek Hesap: L40S'e 4 GB
 
-> [!NOTE]
-> Hopper, H100'de yaklaşık 80 milyar transistöre ulaşıyor. Blackwell daha da ileri gidiyor: B200, tek bir GPU gibi çalışan iki kalıpta 208 milyar transistör barındırıyor.
+Bir programın L40S üzerinde 4 GB girdiye ihtiyacı olsun. Bu yolculuk ne kadar sürer ve aynı baytları GPU'ya vardıktan sonra okumakla nasıl karşılaştırılır?
 
-Bu büyüme sadece boyutla ilgili değil; yeni birimleri, yeni bellek sistemlerini ve daha gelişmiş yürütme modellerini yansıtıyor.
+- PCIe 4.0 x16 üzerinden: 4 GB / 31,5 GB/s = 0,127 s, yaklaşık 127 ms
+- L40S'in kendi belleğinden: 4 GB / 864 GB/s = 0,0046 s, yaklaşık 4,6 ms
+- oran: 864 / 31,5 = 27,4, yani kopya, GPU üzerinde tam bir okumadan yaklaşık 27 kat uzun sürer
 
-## Her Seferinde Aynı Yapı
+H100 PCIe ya da RTX 5090 gibi PCIe 5.0 bir kartta kopya yarıya iner: 4 / 63 = 0,063 s, yaklaşık 63 ms. Bu yine de o GPU'ların kendi belleklerinden okuduğu 1,8 TB/s ve üzeri hızdan çok daha yavaştır.
 
-Farklı mimarilerin white paper'ları benzer bir yapı izler:
+## Kopya Ne Zaman Baskın Olur
 
-1. Yeni özellikler
-2. SM tasarımı
-3. Performans karşılaştırmaları
-4. Teknik özellikler
+Şimdi bir kernel ekle. 4 GB'ı bir kez okuyan ve 4 GB sonuç yazan basit bir kernel düşün. Device belleği üzerinden 8 GB taşır, yani L40S'te en az 8 / 864 = 0,0093 s, yaklaşık 9,3 ms sürer. Girdiyi içeri, sonucu dışarı kopyalamak ise 127 + 127 = 254 ms tutar. Kernel toplam sürenin %4'ünden azıdır: 9,3 / (254 + 9,3) = 0,035.
 
-Bir white paper'ı okuyabildiğinde diğerleri çok daha kolaylaşır.
+Kopya ancak GPU aldığı her bayt başına çok iş yaptığında baskın olmaktan çıkar:
 
-## Volta'nın Rolü
+- kernel veriyi matris çarpımındaki gibi defalarca yeniden kullanır; böylece çalışma süresi uzar ama kopya aynı kalır
+- veri birçok kernel boyunca GPU'da kalır; kopyayı bir kez ödersin, sonra 864 GB/s ile okursun
+- programın CPU kısmı zaten kopyadan da uzun sürerdi
 
-2026'dan geriye bakınca Volta, kendi döneminin güçlü bir GPU'sundan fazlasıdır: GPU'ların yapay zekâ odaklı hâle geldiği noktadır. Ampere, Hopper ve şimdi Blackwell hep bu fikrin üzerine kurulup onu daha ileri taşıyor.
+[Ders 09](../Lesson-09/notes.md) "bayt başına iş" fikrini arithmetic intensity (aritmetik yoğunluk) olarak ölçer. Aynı fikir bağlantı için de geçerli: bir PCIe 4.0 kopyasını gizlemek için, L40S belleğinden bir okumayı gizlemekten yaklaşık 27 kat fazla bayt başına iş gerekir.
 
-V100 white paper'ını okumak, GPU'ların bugün neden böyle göründüğünü anlamana yardım eder.
+> [!WARNING]
+> Asla yalnızca kernel'i ölçüp bunu programının hızlanması diye sunma. Veri CPU'dan gelmek zorundaysa, içeri ve dışarı kopyalar da ölçüme dahildir ve basit kernel'lerde sürenin çoğu onlardır.
+
+## Pageable ve Pinned Host Belleği
+
+Kopyanın kendisini GPU üzerindeki bir DMA (Direct Memory Access, doğrudan bellek erişimi) motoru yapar: CPU her baytı tek tek taşımadan, host belleğini PCIe üzerinden kendi başına okuyan bir donanım. DMA motorunun sabit bir fiziksel adrese ihtiyacı vardır ve host belleğinin türü tam burada önem kazanır.
+
+- pageable bellek (pageable memory): `malloc` ya da `new` ile aldığın bellek. OS (operating system, işletim sistemi) bu sayfaları her an RAM'de başka bir yere taşıyabilir ya da diske atabilir (swap), bu yüzden DMA motoru onları güvenle okuyamaz.
+- pinned bellek (pinned memory, page-locked memory): OS'in asla taşımayacağına söz verdiği host belleği. CUDA'da (Compute Unified Device Architecture) onu `cudaMallocHost` ya da `cudaHostAlloc` ile alırsın veya var olan bir tamponu `cudaHostRegister` ile kilitlersin.
+
+Pageable bellekten kopyaladığında sürücü bu sorunun etrafından dolaşır. Verini önce CPU ile kendine ait pinned bir ara tampona kopyalar, sonra DMA motorunun o tamponu parça parça GPU'ya göndermesini sağlar. Her bayt iki kez kopyalanır: bir kez CPU tarafından, bir kez PCIe üzerinden. Pinned bellekten ise DMA motoru doğrudan senin tamponunu okur; ara kopya ortadan kalkar ve bağlantı tepe hızına yakın çalışabilir.
 
 > [!TIP]
-> Bir örnek: https://images.nvidia.com/content/volta-architecture/pdf/volta-architecture-whitepaper.pdf
+> Sık kopyaladığın tamponları pinned yap ve onları bir kez ayır. Sabitlemenin kurulumu yavaştır ve OS'ten RAM alır; bu yüzden "ne olur ne olmaz" diye gigabaytlarca bellek sabitlemek tüm makineyi yavaşlatabilir.
+
+## Senkron ve Asenkron Kopyalar
+
+`cudaMemcpy`, [CUDA Ders 08](../../cuda/Lesson-08/notes.md)'in kullandığı düz kopyadır. Senkrondur: CPU thread'i kopya bitene kadar bekler ve bu sırada GPU programından başka bir iş çalıştırmaz. Kopyala, hesapla, geri kopyala adımları kesinlikle sırayla olur.
+
+`cudaMemcpyAsync` kopyayı yalnızca kuyruğa koyar ve hemen döner. Stream'lerle birlikte kopyaların ve kernel'lerin örtüşmesini sağlar. Stream, sırayla çalışan bir GPU iş kuyruğudur; farklı stream'lerdeki işler aynı anda çalışabilir. GPU'nun ayrı copy engine'leri olduğu için, SM'ler bir parça üzerinde hesap yaparken başka bir parçayı kopyalayabilir.
+
+4 stream'li bir boru hattı şöyle görünür. 4 GB'ı 1 GB'lık 4 parçaya böl. Her parçanın kopyası 1 / 31,5 = 0,032 s (32 ms) sürer. Kernel'in parça başına 12 ms'ye ihtiyacı olsun. Sırayla yapılırsa: 4 × 32 + 4 × 12 = 176 ms. Örtüştürülürse 1. parçanın kernel'i 2. parça kopyalanırken çalışır ve toplam yaklaşık 4 × 32 + 12 = 140 ms'ye düşer. Kopya süresi hâlâ oradadır; yalnızca kernel süresi onun arkasına saklanır.
+
+Asenkron kopyalar pinned host belleği ister. Pageable bellekten `cudaMemcpyAsync` yine sürücünün tamponundan geçmek zorundadır ve genelde asenkron olmaktan çıkar.
+
+## Birleşik Bellek
+
+Birleşik bellek (unified memory) sana iki tarafta da çalışan tek bir pointer verir. Onu `cudaMallocManaged` ile ayırırsın, CPU'da içine yazarsın, bir kernel'e verirsin ve sonucu CPU'da okursun; kodunda hiç `cudaMemcpy` olmaz.
+
+Veri yine de bağlantıdan geçmek zorundadır. Pascal'dan beri GPU'lar page fault (sayfa hatası) alabilir: bir kernel hâlâ host belleğinde duran bir sayfaya dokunduğunda GPU o erişimi durdurur, sürücü sayfayı device belleğine taşır ve erişim devam eder. Bu isteğe bağlı page migration (sayfa taşıma) rahattır, ama çok sayıda küçük fault tek büyük bir kopyadan yavaştır. `cudaMemPrefetchAsync` sürücüye sayfaları önceden taşımasını söyler ve açık bir kopyanın hızının çoğunu geri getirir.
+
+## Coherent Bağlantılar: Grace Hopper ve Grace Blackwell
+
+NVIDIA'nın süper çipleri CPU ile GPU arasındaki PCIe'yi kaldırır. GH200 Grace Hopper Superchip, bir Grace CPU'yu (Arm, 480 GB'a kadar LPDDR5X (Low-Power Double Data Rate 5X) bellekle) ve bir Hopper GPU'yu tek kartta birleştirir ve NVLink-C2C (NVLink Chip-to-Chip) ile bağlar. GB200 Grace Blackwell Superchip de bir Grace CPU'yu iki B200 GPU'ya aynı şekilde bağlar.
+
+NVLink-C2C toplamda 900 GB/s, her yönde 450 GB/s taşır; bu, PCIe 5.0 x16'nın yaklaşık 7 katıdır. Ayrıca coherent'tır (tutarlı): CPU ve GPU tek bir ortak adres alanı görür ve önbelleklerini uyumlu tutar; bu sayede GPU, CPU belleğini doğrudan okuyabilir, `malloc` ile alınmış sıradan belleği bile, ara kopya olmadan. GPU'nun tekrar tekrar okuduğu veriyi kopyalamak yine de kazandırır, çünkü HBM daha da hızlıdır; ama bağlantı artık PCIe'deki gibi en dar nokta değildir.
+
+## GPUDirect
+
+GPUDirect, NVIDIA'nın host belleğini tamamen atlayan yollara verdiği addır. GPUDirect P2P (peer to peer, eşten eşe) aynı makinedeki iki GPU'nun doğrudan birbirine kopyalamasını sağlar. GPUDirect RDMA (Remote Direct Memory Access, uzak doğrudan bellek erişimi) bir NIC'in (Network Interface Card, ağ kartı) GPU belleğini doğrudan okuyup yazmasını sağlar; böylece başka bir sunucudan gelen veri CPU RAM'inde durmadan GPU'ya ulaşır. GPUDirect Storage aynısını NVMe (Non-Volatile Memory Express) sürücüler ve ağ depolaması için yapar. [Ders 12](../Lesson-12/notes.md) birçok GPU'nun bu yolları birlikte nasıl kullandığını gösterir.
+
+## Bunun CUDA İçin Önemi
+
+En hızlı kernel bile yavaş bir veri yolunu telafi edemez. CUDA yazarken:
+
+- bir kez kopyala, veriyi olabildiğince çok kernel boyunca GPU'da tut ve yalnızca sonucu geri kopyala
+- sık kopyaladığın tamponlar için pinned host belleği (`cudaMallocHost`) kullan
+- veri "bir kez kopyala" kalıbına uymuyorsa kopyaları ve kernel'leri `cudaMemcpyAsync` ve stream'lerle örtüştür
+- `cudaMallocManaged` kullanırken page fault'lara güvenmek yerine prefetch yap
+- kopya süresini kernel süresinin yanında ölç ve ikisini de bağlantının bant genişliğiyle karşılaştır: L40S'te 4 GB / 31,5 GB/s = 127 ms alt sınırdır
 
 ## Sözlük
 
-- white paper: bir GPU mimarisinin nasıl kurulduğunu basitleştirmeden gösteren resmî teknik belge.
-- Volta: Nvidia'nın 2017 mimarisi (V100, CC 7.0); Tensor Core'ları olan ilk mimari.
-- V100: bu derste white paper'ı incelenen Volta GPU'su.
-- Key Features: mimarinin ne yapmaya çalıştığını gösteren kısa bir white paper bölümü.
-- mimari (architecture): bir GPU ailesinin donanım tasarımı; Volta, Ampere ve Hopper birer mimaridir.
-- yapay zekâ (AI): veriden öğrenen yazılım; eğitimi büyük ölçüde dev matris hesaplarıdır.
-- nesil (generation): GPU sürümlerindeki bir adım; Volta, Pascal neslinin ardından geldi.
-- Tensor Core'lar: matris işlemleri için ayrılmış donanım; ilk kez Volta'da geldi.
-- matris işlemleri (matrix operations): bütün bir sayı tablosu üzerinde yapılan hesaplar, özellikle matris çarpımı; yapay zekâdaki işin çoğu budur.
-- CUDA core: GPU'nun genel amaçlı aritmetik birimleri; Tensor Core'lardan önce matris hesapları bunlarda çalışıyordu.
-- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir sinir ağı eğitmek.
-- Streaming Multiprocessor (SM): GPU'nun temel yapı taşı; Volta'da SM yeniden tasarlandı.
-- Pascal: Nvidia'nın 2016 mimarisi (P100); Volta'dan önceki nesil.
-- tam sayı (integer): 7 ya da -3 gibi ondalıksız bir sayı; GPU kodu indeksler ve adresler için sürekli tam sayı hesabı yapar.
-- kayan noktalı sayı (floating point): 3,14 gibi ondalıklı bir sayı; grafik ve yapay zekâ hesaplarının çoğu bununla yapılır.
-- paralel (parallel): aynı anda çalışmak; burada tam sayı ve kayan noktalı sayı işlemlerinin yan yana çalışması.
-- komut (instruction): GPU'nun çalıştırdığı temel bir emir, örneğin bir toplama ya da bir çarpma.
-- döngü (cycle): GPU saatinin bir tıkı; 1,5 GHz'de saniyede 1,5 milyar döngü olur.
-- verimli (efficient): aynı donanımla, aynı sürede ya da aynı güçle daha fazla iş çıkaran.
-- Ampere / Hopper / Blackwell: Volta'dan sonra gelen Nvidia mimarileri (2020, 2022, 2024); hepsi onun Tensor Core'ları üzerine kurulur.
-- HBM2 (High Bandwidth Memory 2): Volta'nın kullandığı bellek; V100'de 900 GB/s, önceki nesillerden daha yüksek.
-- GB/s: saniyede gigabayt; bellek ve bağlantı hızının birimi.
-- warp zamanlayıcısı (warp scheduler): sıradaki 32 thread'lik grubu seçen birim; her Volta SM'sinde dört tane var.
-- GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
-- bellek bant genişliği (memory bandwidth): verinin hesaplama birimlerine ne kadar hızlı taşındığı; daha yüksek bant genişliği daha az bekleme demektir.
-- NVLink: GPU'ları birbirine bağlayan yüksek hızlı bağlantı; Volta'da ikinci nesli var.
-- çoklu GPU (multi-GPU): aynı makinede tek bir iş üzerinde çalışan ve sürekli veri alışverişi yapan birkaç GPU.
-- transistör sayısı (transistor count): bir GPU'nun içinde ne kadar donanım olduğu; V100'de yaklaşık 21 milyar, B200'de 208 milyar transistör var.
+- host belleği (host memory): CPU'nun yanındaki sistem RAM'i; CUDA kodunda host tamponları genelde `h_` ile başlar.
+- device belleği (device memory): GPU'nun kendi belleği (GDDR ya da HBM); CUDA kodunda device tamponları genelde `d_` ile başlar.
+- RAM (Random Access Memory): bir bilgisayarın ana belleği; CPU'nun RAM'i host belleğidir.
+- CPU (Central Processing Unit): ana işlemci; CUDA'da veriyi hazırlayan ve kernel'leri başlatan host'tur.
+- GPU (Graphics Processing Unit): binlerce basit çekirdeği olan işlemci; CUDA'da device'tır.
+- GDDR (Graphics Double Data Rate): oyun ve iş istasyonu GPU'larındaki bellek, örneğin L40S'teki 48 GB GDDR6.
+- HBM (High Bandwidth Memory): H100 ve B200 gibi veri merkezi GPU'larında, GPU çipinin hemen yanındaki yığılmış bellek.
+- PCIe (Peripheral Component Interconnect Express): CPU ile GPU gibi takılan kartlar arasındaki standart bağlantı.
+- SM (Streaming Multiprocessor): GPU'nun işlem birimi; L40S'te 142 tane vardır.
+- lane: her yön için bir tel çifti olan tek bir PCIe bağlantısı; bir GPU yuvası 16 lane (x16) kullanır.
+- x16: 16 lane'li PCIe bağlantısı, GPU yuvasının standart genişliği.
+- full duplex: aynı anda, her yönde tam hızla hem göndermek hem almak.
+- GT/s (gigatransfers per second): tek bir PCIe lane'inin ham sinyal hızı; PCIe 4.0'da 16 GT/s.
+- yön başına (per direction): yalnızca tek yöndeki bant genişliği; GPU'ya kopya tek yön kullanır, yani PCIe 4.0 x16'da 31,5 GB/s.
+- L40S: bu derslerde kullanılan NVIDIA Ada Lovelace veri merkezi GPU'su; 864 GB/s bellek ve PCIe 4.0 x16.
+- kernel: GPU'da çalışan, CPU tarafından başlatılan fonksiyon.
+- arithmetic intensity (aritmetik yoğunluk): taşınan bayt başına yapılan iş; bayt başına iş arttıkça yavaş bir kopya daha iyi gizlenir.
+- DMA (Direct Memory Access): CPU her baytı kopyalamadan, veriyi PCIe üzerinden kendi başına taşıyan GPU donanımı.
+- pageable bellek (pageable memory): `malloc` ya da `new` ile alınan, OS'in taşıyabileceği ya da diske atabileceği sıradan host belleği.
+- OS (operating system): belleği yöneten ve sayfaların nerede duracağına karar veren yazılım, örneğin Linux.
+- pinned bellek (pinned memory): yerine kilitlenmiş (page-locked) host belleği; DMA motoru onu doğrudan okuyabilir; `cudaMallocHost` ile alınır.
+- ara tampon (staging buffer): sürücünün, pageable veriyi GPU'ya göndermeden önce içine kopyaladığı pinned tampon.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform.
+- `cudaMallocHost`: pinned host belleği ayıran CUDA çağrısı; `cudaFreeHost` ile serbest bırakılır.
+- `cudaMemcpy`: senkron CUDA kopyası; CPU thread'i o bitene kadar bekler.
+- `cudaMemcpyAsync`: bir stream'de kuyruğa alınan ve hemen dönen kopya; gerçekten asenkron olması için pinned bellek ister.
+- stream: sırayla çalışan bir GPU iş kuyruğu; farklı stream'lerdeki işler örtüşebilir.
+- copy engine: SM'ler kernel çalıştırırken kopyaları yürüten, GPU üzerindeki DMA motoru.
+- birleşik bellek (unified memory): CPU'dan da GPU'dan da tek bir pointer ile erişilen bellek; sayfaları sürücü taşır.
+- `cudaMallocManaged`: birleşik bellek ayıran CUDA çağrısı.
+- page fault (sayfa hatası): gereken yerde olmayan bir sayfaya erişim; erişim, sayfa taşınana ya da eşlenene kadar bekler.
+- page migration (sayfa taşıma): bir bellek sayfasını host belleğinden device belleğine ya da tersine taşımak.
+- `cudaMemPrefetchAsync`: birleşik bellek sayfalarını önceden taşır, böylece kernel page fault'larda durmaz.
+- Grace Hopper (GH200): bir Grace CPU ile bir Hopper GPU'nun NVLink-C2C ile bağlandığı süper çip.
+- Grace Blackwell (GB200): bir Grace CPU ile iki B200 GPU'nun NVLink-C2C ile bağlandığı süper çip.
+- LPDDR5X (Low-Power Double Data Rate 5X): Grace CPU'nun enerji verimli belleği.
+- NVLink-C2C (NVLink Chip-to-Chip): NVIDIA'nın coherent CPU-GPU bağlantısı; toplam 900 GB/s, yön başına 450 GB/s.
+- coherent (tutarlı): CPU ve GPU tek bir adres alanını paylaşır ve önbelleklerini uyumlu tutar, böylece her biri diğerinin belleğini okuyabilir.
+- GPUDirect: veriyi host belleğinde durdurmadan GPU belleğine taşıyan ya da oradan alan NVIDIA yolları ailesi.
+- RDMA (Remote Direct Memory Access): başka bir makinenin belleğini, onun CPU'su olmadan ağ üzerinden okumak ya da yazmak.
+- NIC (Network Interface Card): bir sunucuyu ağa bağlayan kart.
+- NVMe (Non-Volatile Memory Express): PCIe üzerindeki SSD (solid state drive) depolaması için hızlı arayüz.

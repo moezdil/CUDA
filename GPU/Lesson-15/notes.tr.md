@@ -1,148 +1,94 @@
-# 15 > Linux'ta CUDA Toolkit Kurmak
+# 15 > CUDA Geliştirme Ortamını Kurmak (JetBrains ile Modern Bir İş Akışı)
 
-Bu derste WSL'deki (Windows Subsystem for Linux) Linux'a CUDA Toolkit'i nasıl kuracağını göreceksin. Bundan sonra sistemin GPU (Graphics Processing Unit, grafik işlemci) üzerinde kod derleyip çalıştırabilir. Adımlar, NVIDIA'nın Ekim 2026 itibarıyla geçerli kurulum kılavuzunu izliyor.
+Bu derste bir CUDA çalışma ortamının nasıl kurulacağını göreceksin: CUDA Toolkit'in üzerine JetBrains araçları, özellikle CLion. CLion, Mayıs 2025'ten beri öğrenme ve açık kaynak gibi ticari olmayan kullanımlar için ücretsiz.
 
-## Platformuna uygun olanı seç
+## Neden JetBrains ve CLion
 
-Bir CUDA kurulumu platformuna tam olarak uymalı. WSL'de NVIDIA'nın WSL-Ubuntu deposunu (repository) kullan. Bu depodaki paketlerde toolkit var ama Linux driver'ı yok, bu yüzden Windows'tan gelen driver'ın üzerine yazamazlar. Doğrudan kurulu Ubuntu'da (native Ubuntu) ise Ubuntu sürümüne ait depoyu kullanırsın, örneğin Ubuntu 24.04 için `ubuntu2404`.
+Araçlarla boğuşmadan her gün kullanabileceğin bir kuruluma ihtiyacın var. Bu repo o kurulumu bir IDE (Integrated Development Environment, tümleşik geliştirme ortamı) olan CLion etrafında kuruyor.
 
-## Önce GPU'yu kontrol et
+Nedeni, modern geliştirmenin işleyiş biçimi. GPU (Graphics Processing Unit, grafik işlemci) mimarileri ve toolkit'ler hızlı değişiyor ve projeler tek bir platforma bağlı değil. Linux'ta geliştirip uzaktaki bir GPU'da test edebilir, başka bir yerde de devreye alabilirsin. Visual Studio gibi tek bir sisteme bağlı bir IDE bu tür çalışmayı kısıtlar.
 
-CUDA'yı kurmadan önce sisteminin GPU'yu görebildiğinden emin ol:
+JetBrains araçları CMake (Cross-platform Make) üzerine kurulu. CMake, bir projenin nasıl derleneceğini tarif eden bir araçtır ve bir CMake projesi tek bir ortama bağlı değildir. Onu farklı sistemlerde, farklı derleyicilerle derleyip aynı yapıyı koruyabilirsin. Gerçek GPU sistemleri de böyle kurulur.
 
-```bash
-nvidia-smi
+## Önce CUDA Toolkit gelir
+
+CUDA Toolkit her şeyin temelidir; o olmadan hiçbir şey derlenmez. Sana derleyiciyi (compiler), runtime'ı ve GPU ile konuşan kütüphaneleri verir. Bir editör değil, GPU'da çalıştırmayı mümkün kılan katmandır.
+
+Bu katman donanıma bağlı. Hopper ve Blackwell yeni komutlar, yeni duyarlılık formatları ve yeni yürütme davranışları getiriyor; bunları kullanmak için güncel bir CUDA sürümüne ihtiyacın var. Ekim 2026 itibarıyla en yenisi CUDA 13.4. Eski sürümler yine çalışabilir ama donanımın yapabildiklerinden yararlanamaz. Yani seçtiğin CUDA sürümü, kodunun neler yapabileceğini belirler.
+
+## CLion'un yeri
+
+CLion toolkit'in üzerinde durur; onun yerini almaz ya da onu gizlemez. Kod yazman ve projeni düzenlemen için sana temiz bir alan sunar. Derleme yaptığında CLion CMake'i, CMake de CUDA derleyicisi `nvcc`'yi çağırır. Hiçbir şey gizli kalmaz, bu yüzden neler olup bittiğini her zaman bilirsin.
+
+<toolchain-stack></toolchain-stack>
+
+CMake, CUDA'yı bir dil olarak tanır. Tek bir CUDA dosyası için en küçük `CMakeLists.txt` şöyle görünür:
+
+```cmake
+cmake_minimum_required(VERSION 3.24)
+project(hello LANGUAGES CXX CUDA)
+set(CMAKE_CUDA_ARCHITECTURES 89)
+add_executable(hello hello.cu)
 ```
 
-- `nvidia-smi`, driver'a (sürücüye) GPU hakkında soru soran NVIDIA komut satırı aracıdır. GPU'nun adını, driver sürümünü ve bellek kullanımını yazdırır.
-- WSL'de de çalışır, çünkü driver Windows tarafında durur. WSL bu aracı Windows'tan `/usr/lib/wsl/lib` altına eşler.
+`CMAKE_CUDA_ARCHITECTURES 89`, `nvcc -arch=sm_89` ile aynı hedeftir: compute capability 8,9, yani bu derslerde kullanılan L40S. Hopper H100 için `90`, Blackwell B200 için `100` yazarsın.
 
-Bu komut hata verirse dur ve önce GPU kurulumunu düzelt. O olmadan CUDA çalışmaz, çünkü toolkit GPU ile driver üzerinden konuşur.
-
-## NVIDIA deposundan kur
-
-WSL için resmî NVIDIA deposunu kullan. Bu depoda, ortak driver ile çalışacak şekilde hazırlanmış güncel toolkit'ler bulunur.
-
-> [!WARNING]
-> `apt install nvidia-cuda-toolkit` kullanma. O, Ubuntu'nun kendi paketidir ve çok geriden gelir: Ubuntu 24.04'te CUDA 12.0'dır.
-
-Şu komutları çalıştır. Önce paket yöneticisine NVIDIA'nın deposunu tanıtır, sonra toolkit'i oradan kurarlar.
-
-```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt-get update
-sudo apt-get -y install cuda-toolkit-13-3
-```
-
-- `wget` bir URL'den dosya indirir. Adresteki `wsl-ubuntu/x86_64` kısmı, 64 bitlik Intel ya da AMD CPU (Central Processing Unit, merkezi işlemci) üzerindeki WSL için olan depoyu seçer.
-- `cuda-keyring_1.1-1_all.deb` küçük bir pakettir. NVIDIA'nın imza anahtarını ve deponun adresini içerir; böylece sistemin NVIDIA'nın paketlerine güvenir.
-- `sudo` bir komutu yönetici yetkileriyle çalıştırır. Paket kurmak sistemi değiştirir, bu yüzden bu yetkiler gerekir.
-- `dpkg -i` yerel bir `.deb` dosyasını kurar; burada keyring'i kurar.
-- `apt-get update` paket listelerini yeniler. Bu adım olmadan apt yeni depodaki paketlerden haberdar olmaz.
-- `apt-get -y install` bir paket kurar. `-y`, onay sorusuna kendiliğinden "evet" der.
-- `cuda-toolkit-13-3`, CUDA 13.3'ün toolkit paketidir. Sürüm adın içinde yazar: `13-3`, 13.3 demektir ve dosyalar `/usr/local/cuda-13.3` altına kurulur. Yalnızca toolkit'i içerir, bu yüzden hiçbir driver kurulmaz.
-
-Bu komutlar CUDA Toolkit 13.3'ü kurar. İçinde şunlar var:
-
-* CUDA compiler (nvcc)
-* CUDA runtime
-* temel kütüphaneler
+## Windows'ta Visual Studio
 
 > [!NOTE]
-> En yeni CUDA 13.4, ama Ekim 2026'da NVIDIA'nın WSL-Ubuntu deposu 13.3'e kadar gidiyor. Bu sayfanın `cuda-toolkit-13-3` kurmasının nedeni bu. Orada `cuda-toolkit-13-4` çıktığında sadece numarayı değiştir. WSL'de asla `cuda` ya da `cuda-drivers` paketlerini kurma: bunlar bir Linux driver'ı kurmaya çalışır.
+> Windows'ta, Visual Studio'yu hiç açmasan bile `nvcc` MSVC (Microsoft Visual C++) derleyicisine ihtiyaç duyar. CUDA 13.4, Visual Studio 2019, 2022 ve 2026 ile çalışır. Yani Visual Studio senin çalışma alanın değil, bir bağımlılık: bir kez kurarsın, sonra unutursun.
 
-## Kurulumu doğrula
+Asıl işinin hepsini CLion'da yaparsın.
 
-Derleyicinin (compiler) kurulu olduğunu ve shell'in onu bulabildiğini kontrol et:
+## GPU driver'ı
 
-```bash
-nvcc --version
-```
+CUDA, GPU driver'ına (sürücüsüne) bağlıdır. Windows'ta CUDA 13.1'den, Linux'ta CUDA 13.4'ten beri toolkit kurulumu driver içermiyor. Driver'ı kendin kurar ve güncel tutarsın.
 
-- `nvcc`, CUDA derleyicisidir.
-- `--version`, hiçbir şey derlemeden sürüm bilgisini yazdırıp çıkmasını sağlar.
+Her CUDA sürümünün bir driver dalı vardır. 580 veya daha yeni daldan bir driver, herhangi bir CUDA 13.x ile derlenmiş programları çalıştırır. CUDA 13.4'ün yeni özelliklerini kullanmak için 615 veya daha yeni dal gerekir. Yani 575 driver'ı bir CUDA 13 programını çalıştıramaz, 580 driver'ı çalıştırır, 615 driver'ı ise sana 13.4'teki bütün yenilikleri de verir.
 
-Çıktının son satırlarında release 13.3 yazmalı, çünkü `cuda-toolkit-13-3` kurdun.
+> [!WARNING]
+> Driver çok eskiyse açıklaması zor sorunlarla karşılaşabilirsin: kod derlenip çalışırken hata verebilir ya da bazı özellikler kullanılamayabilir.
 
-Komut bulunamazsa PATH doğru ayarlanmamış demektir. PATH, shell'in programları aradığı klasörlerin listesidir; CUDA klasörünü ona ekle:
+## İş akışı
 
-```bash
-export PATH=/usr/local/cuda/bin:$PATH
-```
+Her şey yerindeyse iş akışı basittir:
 
-- `export`, bu shell ve onun başlattığı programlar için bir değişken ayarlar.
-- `/usr/local/cuda/bin`, `nvcc`'nin bulunduğu klasördür. `/usr/local/cuda` ise kurulu sürüme giden bir bağlantıdır, burada `/usr/local/cuda-13.3`.
-- `:$PATH`, eski listeyi yeni klasörün arkasına ekler; böylece hiçbir şey kaybolmaz ve shell önce CUDA klasörüne bakar.
+- CLion'u açar ve kodunu yazarsın.
+- CMake ile derlersin.
+- CUDA Toolkit kodu derler.
+- GPU onu çalıştırır.
 
-> [!TIP]
-> Bu ayar yalnızca açık olan terminal için geçerlidir. Kalıcı olmasını istiyorsan satırı `.bashrc` ya da `.zshrc` dosyana ekle. Bir de `sudo apt-get -y install build-essential` ile bir host derleyicisi kur: `nvcc` her programın CPU kısmını `g++`'ya verir ve yeni kurulmuş bir Ubuntu'da o yoktur.
+Kurulum doğruysa bu adımlar sorunsuz bir şekilde birlikte çalışır.
 
-<install-steps></install-steps>
+## Özet
 
-## Sürüm neden önemli
-
-CUDA, GPU mimarisine sıkı sıkıya bağlıdır. Her yeni mimari, onu tanıyan bir CUDA sürümü ister:
-
-* Hopper'da FP8 (8 bit kayan nokta), CUDA 11.8'den beri
-* Blackwell'de FP4 (4 bit kayan nokta), CUDA 12.8'den beri
-* Rubin (compute capability 10,7) için kütüphane desteği, CUDA 13.4'ten beri
-
-Kullandığın CUDA sürümü bunları desteklemiyorsa kodun yine çalışır, ama donanımdan tam olarak yararlanamaz ya da en yeni GPU'yu hiç hedefleyemez.
-
-## Diğer araçların altındaki CUDA
-
-CUDA nadiren tek başına kullanılır; şu gibi sistemlerin altında çalışır:
-
-* PyTorch
-* TensorFlow
-* Triton
-* özel CUDA kernel'ları
-
-`pip` ile kurulan PyTorch, CUDA kütüphanelerinin kendi kopyasını getirir, bu yüzden yalnızca driver'a ihtiyaç duyar. Kendi kernel'ların ise bu sayfadaki toolkit'e ihtiyaç duyar.
-
-## Hazır
-
-Sistemin artık hazır. Elinde şunlar var:
-
-* bir Linux ortamı (WSL)
-* GPU erişimi
-* CUDA Toolkit 13.3
-* çalışan bir CUDA derleyicisi
-
-Artık gerçek CUDA programları yazıp çalıştırabilirsin. Bu sayfadaki komutlar [NVIDIA'nın WSL-Ubuntu indirme sayfasından](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_network) geliyor.
+CUDA geliştirmek bir editör seçmekle değil, toolchain'i anlamakla ilgili. JetBrains araçları bu yüzden iyi uyuyor: sistemin her parçasının kendi işini yapmasına izin veriyor. Bu da kurulumu daha temiz, daha kararlı ve canlı ortama (production) daha yakın kılıyor. Bu repo da bu kurulumu kullanıyor.
 
 ## Sözlük
 
-- Linux: ücretsiz, açık kaynaklı bir işletim sistemi; burada WSL üzerinden Windows'un içinde çalışıyor.
-- WSL (Windows Subsystem for Linux): Windows'un içinde gerçek bir Linux sistemi çalıştırır; GPU driver'ı ise Windows tarafında kalır.
+- JetBrains: CLion, PyCharm, IntelliJ IDEA ve başka geliştirme araçlarını yapan şirket.
+- CLion: C, C++ ve CUDA için bir JetBrains IDE'si; CUDA Toolkit'in üzerinde durur ve ticari olmayan kullanım için ücretsizdir.
+- IDE (Integrated Development Environment): editörü, derleme araçlarını ve hata ayıklayıcıyı bir araya getiren tek bir uygulama.
 - GPU (Graphics Processing Unit): CUDA programlarının üzerinde çalıştığı, binlerce küçük çekirdeği olan işlemci.
-- Ubuntu: popüler bir Linux dağıtımı; NVIDIA'nın WSL içinde çalışan Ubuntu için ayrı bir CUDA deposu var (wsl-ubuntu).
-- depo (NVIDIA repository): çevrim içi bir paket kaynağı; NVIDIA'nın WSL için olan deposunda driver'sız toolkit bulunur.
-- doğrudan kurulu Ubuntu (native Ubuntu): WSL içinde değil, doğrudan makineye kurulu Ubuntu; `ubuntu2404` gibi bir depo kullanır.
-- `nvidia-smi`: driver'a GPU adını, driver sürümünü ve bellek kullanımını soran NVIDIA komut satırı aracı.
-- driver (GPU driver): sistemin GPU ile konuşmasını sağlayan yazılım; WSL'de Windows'tan gelir, bu yüzden Linux içine asla driver kurmazsın.
-- apt (paket yöneticisi): Ubuntu'nun, paketleri depolardan indirip bağımlılıklarıyla birlikte kuran aracı.
-- `cuda-keyring_1.1-1_all.deb`: NVIDIA'nın imza anahtarını ve depo adresini içeren küçük paket; sistemin NVIDIA paketlerine güvenmesini sağlar.
-- `sudo`: bir komutu yönetici yetkileriyle çalıştırır. Paket kurmak bu yetkileri gerektirir.
-- `apt-get update`: paket listelerini yeniler, böylece apt yeni depodaki paketlerden haberdar olur.
-- `cuda-toolkit-13-3`: driver içermeyen, yalnızca CUDA 13.3 toolkit'ini kuran paket; WSL'de güvenli seçim.
-- CPU (Central Processing Unit): ana işlemci; `x86_64`, 64 bitlik bir Intel ya da AMD CPU demektir.
-- CUDA Toolkit: NVIDIA'nın CUDA programları derlemek için derleyicisi, runtime'ı ve temel kütüphaneleri; bu sayfada 13.3 sürümü.
-- derleyici (compiler): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program.
-- `nvcc`: CUDA derleyicisi. `nvcc --version` hiçbir şey derlemeden sürümünü yazdırır.
-- shell: terminalde yazdığın komutları okuyan program, örneğin bash ya da zsh.
-- PATH: shell'in programları aradığı klasörlerin listesi.
-- `export`: bu shell ve onun başlattığı programlar için bir değişken ayarlar.
-- `.bashrc`: shell'in her yeni terminalde çalıştırdığı başlangıç dosyası; oraya yazılan export satırı her seferinde ayarlanır.
-- `build-essential`: `gcc`, `g++` ve `make` içeren Ubuntu paketi; `nvcc`, host derleyicisi olarak `g++`'ya ihtiyaç duyar.
-- mimari (architecture): bir GPU ailesinin donanım tasarımı, örneğin Hopper ya da Blackwell; eski CUDA sürümleri en yenilerini tanımaz.
-- Hopper / Blackwell / Rubin: NVIDIA'nın 2022, 2024 ve 2026 GPU mimarileri; yeni özelliklerini kullanmak için güncel bir CUDA sürümü gerekir.
-- FP8 / FP4: 8 bit ve 4 bit kayan nokta formatları; Hopper'ın Tensor Core'ları FP8'i, Blackwell'inkiler FP4'ü ekledi.
-- compute capability (hesaplama yeteneği): bir GPU mimarisinin sürüm numarası, örneğin L40S için 8,9, Rubin için 10,7.
-- CUDA sürümü (CUDA version): toolkit'in sürüm numarası, örneğin 13.3; kodunun hangi GPU'ları ve özellikleri kullanabileceğini belirler.
-- PyTorch: matematiğini CUDA üzerinden GPU'da çalıştıran popüler bir Python derin öğrenme kütüphanesi.
-- TensorFlow: Google'ın derin öğrenme kütüphanesi; NVIDIA GPU'larında o da CUDA kullanır.
-- Triton: OpenAI'ın, CUDA C++'ı elle yazmadan hızlı GPU kernel'ları yazmak için geliştirdiği Python tabanlı dil.
-- `pip`: Python'un paket kurucusu; onunla kurulan PyTorch kendi CUDA kütüphanelerini getirir.
-- kernel: GPU üzerinde çalışan fonksiyon; özel kernel'lar senin kendi yazdıklarındır.
+- mimari (architecture): bir GPU ailesinin donanım tasarımı, örneğin Hopper ya da Blackwell; yeni olanlar daha yeni toolkit ve driver ister.
+- Linux: GPU sunucularının çoğunun çalıştırdığı işletim sistemi; CUDA için en iyi desteklenen platform.
+- uzaktaki bir GPU (remote GPU): başka bir makinedeki, örneğin bir bulut sunucusundaki, ağ üzerinden kullandığın GPU.
+- CMake (Cross-platform Make): bir projenin nasıl derleneceğini tarif eden bir araç; tek bir ortama bağlı değildir.
+- `CMakeLists.txt`: CMake'in projenin nasıl derleneceğini okuduğu dosya.
+- `CMAKE_CUDA_ARCHITECTURES`: hangi compute capability için derleneceğini belirten CMake ayarı, örneğin `sm_89` için 89.
+- compute capability (hesaplama yeteneği): bir GPU mimarisinin sürüm numarası, örneğin L40S için 8,9, H100 için 9,0.
+- derleme (build): kaynak dosyaları derleyip bağlayarak çalıştırabileceğin bir programa dönüştürmek.
+- compiler (derleyici): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program; CUDA'da bu `nvcc`'dir.
+- toolkit (CUDA Toolkit): compiler'ı, runtime'ı ve GPU ile konuşan kütüphaneleri içeren temel katman.
+- runtime: programının çalışırken çağırdığı, GPU belleğini yöneten ve GPU'da iş başlatan CUDA kütüphanesi.
+- kütüphane (libraries): toolkit ile gelen hazır ve test edilmiş kod, örneğin matris hesapları için cuBLAS.
+- Hopper / Blackwell: NVIDIA'nın 2022 ve 2024 mimarileri; yeni özellikleri için güncel CUDA sürümleri gerekir.
+- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32, FP16 ya da FP8.
+- CUDA sürümü (CUDA version): toolkit'in sürüm numarası, örneğin 13.4; hangi GPU'ları ve özellikleri hedefleyebileceğini belirler.
+- toolchain: kodunu derleyen araçlar zinciri; CLion CMake'i, CMake de CUDA derleyicisini çağırır.
+- Visual Studio: Microsoft'un Windows için IDE'si; CUDA, içindeki C++ derleyicisi yüzünden onun kurulu olmasını ister.
+- MSVC (Microsoft Visual C++): Visual Studio'nun C++ derleyicisi; Windows'ta `nvcc`, kodunun CPU (Central Processing Unit, merkezi işlemci) kısmını ona verir.
+- bağımlılık (dependency): başka bir programın çalışabilmesi için kurulu olması gereken şey.
+- driver (GPU driver): işletim sisteminin GPU ile konuşmasını sağlayan yazılım; toolkit'ten ayrı kurulur.
+- driver dalı (driver branch): 580 ya da 615 gibi bir driver sürüm hattı; her CUDA sürümü en düşük bir dal ister.
+- canlı ortam (production): bitmiş yazılımın kullanıcıları için gerçekten çalıştığı ortam.

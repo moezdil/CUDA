@@ -1,162 +1,152 @@
-# 06 > Nvidia GPU Mimarileri
+# 06 > Bellek Bant Genişliği, Çekirdekler ve Saat Hızı
 
-Fermi, Ampere, Hopper, Blackwell ve Rubin, Nvidia GPU (Graphics Processing Unit, grafik işlem birimi) mimarilerinin adlarıdır. Bu derste 2010'dan 2028 yol haritasına kadar hepsini sırayla geziyorsun ve GPU'ların grafikten genel hesaplamaya, oradan da büyük ölçekli yapay zekâya (AI, artificial intelligence) nasıl geçtiğini görüyorsun. Güncel CUDA (Compute Unified Device Architecture) sürümünün bunlardan hangilerini hâlâ desteklediğini de öğreneceksin.
+Bir GPU'yu (Graphics Processing Unit, grafik işlem birimi) hızlı yapan tek bir sayı değildir. Bu derste bellek bant genişliğini, çekirdek sayısını, saat hızını, enerjiyi ve özel donanımı göreceksin ve her birini güncel GPU'ların gerçek sayılarıyla hesaplayacaksın.
 
-## Mimariler Neden Önemli
+## Bellek Bant Genişliği
 
-Fermi, Ampere ve Hopper gibi adlar birer etiketten fazlasıdır. Amaç onları ezberlemek değil. Amaç GPU'ların zaman içinde nasıl değiştiğini anlamak.
+GPU'nun işleyeceği veri bellekten gelir. Bellek bant genişliği (memory bandwidth), bellek ile GPU arasında saniyede ne kadar veri taşınabildiğidir; genelde GB/s (gigabytes per second, saniyede gigabayt) ya da TB/s (terabytes per second, saniyede terabayt) ile verilir.
 
-## "Mimari" Ne Demek
+## Küçük Bir Örnek
 
-GPU mimarisi, GPU'nun planıdır. Çipin içindeki her şeyin nasıl kurulacağını belirler.
+4 çekirdekli bir GPU düşün. Her çekirdek, işe başlamadan önce veriye ihtiyaç duyar.
 
-Yalnızca çekirdekleri kapsamaz. Şunları da belirler:
+Belleğin bir seferde yalnızca bir çekirdeğe veri gönderebildiğini varsayalım. İlk çekirdek çalışmaya başlar, diğer üçü bekler. Sonra ikinci çekirdek veriyi alır, ardından üçüncü ve dördüncü. Yani 4 çekirdekten aynı anda yalnızca biri çalışır ve GPU verimli kullanılmaz.
 
-- verinin nasıl aktığı  
-- belleğe nasıl erişildiği  
-- hangi tür işlemlerin hızlı olduğu  
-- GPU'nun neye göre optimize edildiği  
+Şimdi belleğin 4 çekirdeğin hepsine aynı anda veri gönderebildiğini varsayalım. Bütün çekirdekler birlikte başlar ve paralel çalışır; hiçbiri beklemez.
 
-Yeni bir mimari genelde küçük bir yükseltme değildir. Çoğu zaman tasarım önceliklerinde bir kaymadır.
+GPU ancak veriyi yeterince hızlı alırsa hızlıdır, yoksa bekler. Buna "bellek darboğazı" (memory bottleneck) denir.
 
-## Erken Modern Dönem
+<bandwidth-sim></bandwidth-sim>
 
-Zaman çizelgesini bir hikâye gibi okumak işini kolaylaştırır. Erken modern GPU'lar genel hesaplamaya ve grafiğe odaklanıyordu.
+## Tüketici GPU'ları ve Veri Merkezi GPU'ları
 
-Bu mimariler performansı ve verimliliği adım adım artırdı:
+İki tür modern GPU var:
 
-- Fermi (2010)  
-- Kepler (2012)  
-- Maxwell (2014)  
-- Pascal (2016)  
+- RTX 50 serisi gibi tüketici GPU'ları oyun ve genel kullanım için yapılır.
+- H100, Blackwell B200 ya da yeni Rubin GPU'ları gibi veri merkezi GPU'ları yapay zekâ (AI, artificial intelligence) ve büyük ölçekli hesaplama için yapılır.
 
-Bu dönemdeki hedef, GPU'ları genel iş yüklerinde daha hızlı ve daha verimli yapmaktı.
+İki türde de çok sayıda çekirdek olabilir, hatta bazen mimarileri bile benzerdir. Asıl fark bellektedir.
 
-## Yapay Zekâ Merkeze Geçiyor
-
-Volta (2017, V100) net bir dönüm noktasıdır. Nvidia, Volta ile yapay zekâya özel donanımı öne çıkarmaya başladı: ilk Tensor Core'lar, yani her SM'nin (Streaming Multiprocessor) içinde küçük matrisleri tek adımda çarpan birimler.
-
-Ondan sonra:
-
-- Turing (2018, RTX 20 serisi) Tensor Core'ları ve ışın izleme birimlerini tüketici kartlarına getirdi  
-- Ampere (2020, A100 ve RTX 30 serisi) bu fikri daha da büyüttü  
-- Ada Lovelace (2022, RTX 40 serisi ve L40S) bu birimleri Hopper'la aynı yıl tüketici ve iş istasyonu kartlarına getirdi  
-- Hopper (2022, H100) yapay zekâ iş yükleri, özellikle transformer'lar için yoğun biçimde optimize edildi ve FP8 (8-bit floating point, 8 bitlik kayan nokta) hesabını getirdi  
-
-Buradan sonra GPU'lar artık yalnızca grafik donanımı değildi. Tam birer hesaplama platformuna dönüştüler.
-
-## Yakın Dönem Mimarileri
-
-### Blackwell (2024 ile 2025 arası)
-
-Blackwell 2024'te duyuruldu ve büyük ölçekli yapay zekâ iş yükleri etrafında tasarlandı. B200 veri merkezi GPU'su iki çipi tek pakette birleştirir ve 8 TB/s'ye kadar bant genişliği veren HBM3e (High Bandwidth Memory) kullanır. Ayrıca yapay zekâ için 4 bitlik bir sayı biçimi olan NVFP4'ü getirdi. Blackwell Ultra (B300, 2025) GPU başına belleği 288 GB'a çıkardı. Tüketici tarafında RTX 50 serisi (2025) de Blackwell kullanır.
-
-Gerçek performans kazançları her durumda aynı değildir. Şunlara bağlıdır:
-
-- iş yükü  
-- duyarlılık  
-- sistem kurulumu  
-
-Yani "daha hızlı GPU" her zaman basit bir ifade değildir.
-
-### Rubin (2026, Teslimatlar Başladı)
-
-Rubin, Blackwell'den sonraki mimaridir. Tam üretimdedir ve Rubin GPU'larını Nvidia'nın Vera CPU'suyla (Central Processing Unit, merkezi işlem birimi) eşleştiren ilk Vera Rubin sistemleri 2026'nın ikinci yarısında bulut sağlayıcılarına ulaşıyor.
-
-Her Rubin GPU'su şunları getirir:
-
-- daha yeni Tensor Core tasarımları  
-- 288 GB'a kadar HBM4 bellek  
-- 22 TB/s'ye kadar bellek bant genişliği  
-
-Blackwell'le karşılaştır: 22 / 8 = 2,75, yani bir Rubin GPU'su saniyede neredeyse 3 kat fazla bayt taşıyabilir.
-
-### Rubin Ultra ve Feynman (Duyuruldu)
+Veri merkezi GPU'ları HBM (High Bandwidth Memory, yüksek bant genişlikli bellek) kullanır. HBM, GPU çipinin hemen yanında aynı paketin içinde duran istiflenmiş bellektir; çok büyük miktarda veriyi çok hızlı iletebilir.
 
 > [!NOTE]
-> Bunlar yol haritası maddeleri, satın alabileceğin ürünler değil. Rubin Ultra 2027'nin ikinci yarısı, Feynman ise 2028 için duyuruldu. Ayrıntılar hâlâ değişebilir.
+> HBM nesiller hâlinde gelir: H100 HBM3 (3,35 TB/s), B200 HBM3e (8 TB/s'ye kadar), 2026'nın ikinci yarısından beri teslim edilen Rubin GPU'ları ise HBM4 (22 TB/s'ye kadar) kullanır.
 
-Yön aynı kalıyor. Her şey daha büyük ve daha uzmanlaşmış yapay zekâ sistemlerine doğru ilerliyor.
+Tüketici GPU'ları GDDR (Graphics Double Data Rate) bellek kullanır: RTX 4090'da GDDR6X, RTX 50 serisinde GDDR7. Bunlar da hızlıdır ama HBM kadar değil.
 
-<arch-timeline focus="Volta"></arch-timeline>
+İki GPU kâğıt üzerinde birbirine benzeyebilir. Bellek bant genişliği yüksek olan, çekirdeklerini sürekli meşgul tutar; diğeri ise veri bekleyebilir. Veri merkezi GPU'larının yapay zekâ iş yüklerinde bu kadar güçlü olmasının başlıca nedenlerinden biri budur.
 
-## Hesaplama Yeteneği
+## Bellek Bant Genişliğini Ne Etkiler
 
-CUDA mimari adlarını kullanmaz. Her GPU, 8.9 gibi bir sürüm numarası olan bir CC (Compute Capability, hesaplama yeteneği) bildirir. Ana numara genelde mimariyi izler ama her zaman bire bir değil:
+Bellek bant genişliğini üç ana etken belirler:
 
-- Ampere: 8.0 (A100) ve 8.6 (RTX 30 serisi)  
-- Ada Lovelace: 8.9 (RTX 40 serisi, L40S)  
-- Hopper: 9.0 (H100)  
-- Blackwell: 10.0 (B200), 10.3 (B300) ve 12.0 (RTX 50 serisi)  
-- Rubin: 10.7 (CUDA 13.4'te destekleniyor)  
+- Veri yolu genişliği bir yolun genişliği gibidir. Yol ne kadar genişse aynı anda o kadar çok veri geçer.
+- Bellek hızı yoldaki hız sınırı gibidir. Yol geniş olsa bile trafik yavaşsa gecikme olur.
+- Bellek teknolojisi, modern GPU'ların en çok ayrıştığı yerdir. HBM yalnızca veri için yapılmış bir otoban gibidir. GDDR daha genel amaçlıdır.
 
-Yani Ada (8.9), 8 ana numarasını Ampere'le paylaşır; Blackwell ise iki farklı ana numara kullanır.
+<bandwidth-calc></bandwidth-calc>
+
+> [!TIP]
+> Bant genişliği = bit cinsinden veri yolu genişliği × pin başına hız, Gbps (gigabits per second, saniyede gigabit) / 8. RTX 4090'ın 21 Gbps'de 384 bitlik bir yolu var: 384 × 21 / 8 = 1.008 GB/s. RTX 5090'ın 28 Gbps'de 512 bitlik bir yolu var: 512 × 28 / 8 = 1.792 GB/s, yani yaklaşık %78 fazla.
+
+GPU performansı yalnızca çekirdeklerle ilgili değildir. Çekirdeklerin veriyi ne kadar hızlı aldığıyla da ilgilidir. En güçlü GPU bile belleği beklerse zayıflar.
+
+## Daha Fazla Çekirdek Her Zaman Daha Hızlı Değildir
+
+Veri geldikten sonra GPU'nun onu işlemesi gerekir. Her çekirdek komut çalıştırır. Daha fazla çekirdeğin daha iyi performans demek olduğunu düşünmek doğal, ama bu her zaman doğru değil.
+
+İki GPU düşün. Birincisinde 100, ikincisinde 200 çekirdek var. İkisi de 200 işlemlik aynı görevi çalıştırıyor.
+
+- Birinci GPU aynı anda 100 işlem yapar, yani iki tur gerekir.
+- İkinci GPU 200 işlemin hepsini tek turda yapar.
+
+Şimdi tur başına süreyi ekle:
+
+- Birinci GPU tur başına bir saniye harcar, yani 2 × 1 = 2 saniyede bitirir.
+- İkinci GPU tur başına dört saniye harcar, yani 1 × 4 = 4 saniyede bitirir.
+
+İkinci GPU'nun daha çok çekirdeği var ama daha yavaş. Demek ki çekirdeklerin ne kadar hızlı olduğunu da bilmemiz gerekiyor.
+
+## Saat Hızı
+
+Saat hızı (clock speed), her çekirdeğin komutları ne kadar hızlı çalıştırdığıdır; GHz (gigahertz, saniyede milyar döngü) ile verilir.
+
+Performans iki şeye birlikte bağlıdır:
+
+- Daha fazla çekirdek daha fazla paralellik sağlar.
+- Daha yüksek saat hızı her çekirdeği hızlandırır.
+
+Biri çok düşükse bütün sistemi sınırlar. Amaç dengedir.
+
+<cores-clock></cores-clock>
+
+## İki Tasarım Yönü
+
+GPU'lar iki tasarım yönünü izler. Bazıları oyun ve genel kullanım için, bazıları da yapay zekâ ve büyük ölçekli hesaplama için yapılır.
+
+- Veri merkezi GPU'ları genelde daha düşük saat hızlarında çalışır; çip alanını ve gücü Tensor Core'lara ve bellek bant genişliğine harcar.
+- Tüketici GPU'ları genelde grafik için daha yüksek saat hızlarında çalışır.
+
+RTX 4090 ve H100 SXM bunu gösterir. FP32 (32-bit floating point, 32 bitlik kayan nokta) çekirdek sayıları neredeyse aynıdır: 16.384 ve 16.896. RTX 4090 2,52 GHz'e kadar boost yapar, H100 ise yalnızca 1,98 GHz'e kadar. Ama H100 bellekten 3,35 TB/s taşır; bu, RTX 4090'ın 1.008 GB/s'sinin 3 katından fazladır.
+
+Hiçbiri genel olarak daha iyi değildir. Her biri farklı iş yükleri için optimize edilmiştir.
+
+## Enerji
+
+Performans her zaman enerjiye bağlıdır. Daha fazla çekirdek ve daha yüksek saat hızı, daha fazla güç tüketimi demektir. RTX 5090 en fazla 575 W, H100 SXM en fazla 700 W için derecelendirilmiştir. Bu yüzden performans ile verimlilik arasında her zaman bir denge vardır.
+
+"Hangi GPU daha iyi?" yanlış bir soru. Daha iyi soru şu: "Ne için daha iyi?"
+
+## Özel Donanım
+
+Modern GPU'lar yalnızca genel amaçlı çekirdek gruplarından ibaret değildir. Özel donanımları da vardır.
+
+Tensor Core'lar bunun bir örneğidir. Özellikle yapay zekâdaki matris hesabı için yapılmış birimlerdir. Doğru iş yüküyle işleri çok hızlandırabilirler. Ama bu ancak iş yükü donanıma uyuyorsa işe yarar.
+
+## Throughput
+
+Çekirdek sayısı, saat hızı ve TFLOPS (trillions of floating-point operations per second, saniyede trilyon kayan noktalı işlem) tek başına hikâyenin tamamını anlatmaz. Daha iyi soru, GPU'nun belirli bir sürede ne kadar iş bitirebildiğidir. Buna "throughput" (iş hacmi) denir.
+
+Tepe FP32 TFLOPS değeri çekirdek × saat hızı × 2'den gelir, çünkü bir FMA (fused multiply-add, birleşik çarp-topla) 2 işlem sayılır. RTX 4090 için: 16.384 × 2,52 GHz × 2 ≈ 82,6 TFLOPS. H100 SXM için: 16.896 × 1,98 GHz × 2 ≈ 66,9 TFLOPS. Bu sayıda RTX 4090 kazanır, ama Tensor Core'ları ve bellek bant genişliği sayesinde yapay zekâ eğitiminde H100 çok daha hızlıdır.
 
 > [!WARNING]
-> Güncel CUDA 13 sürümleri (CUDA 13.4, Eylül 2026'da çıktı) yalnızca Turing (CC 7.5) ve sonrasını destekler. Maxwell, Pascal ve Volta GPU'ları için daha eski bir CUDA 12 araç seti gerekir.
+> Özellik tablosundaki TFLOPS, her çekirdeğin her döngüde bir FMA yaptığını varsayan bir tepe değerdir. Gerçek programlar bunun yalnızca bir kısmına ulaşır; belleği bekleyen bir program çok daha azına.
 
-## Performans Bağlama Bağlıdır
-
-Basit sayılar kötü bir karşılaştırma ölçüsüdür. Örnekler:
-
-- TFLOPS (trillions of floating-point operations per second, saniyede trilyon kayan noktalı işlem)  
-- saat hızı  
-
-Bu sayılar hikâyenin tamamını anlatmaz. Performans şunlara bağlıdır:
-
-- hangi tür iş yükünü çalıştırdığın  
-- hangi duyarlılığı kullandığın  
-- belleğin nasıl davrandığı  
-- mimarinin nasıl tasarlandığı  
-
-Bir GPU kâğıt üzerinde çok güçlü görünüp belirli bir işte kötü performans gösterebilir. Ham sayıları daha düşük başka bir GPU ise gerçek kullanımda daha iyi olabilir.
-
-## Adlandırma da Değişti
-
-V100'e kadarki veri merkezi GPU'ları, Tesla V100 gibi "Tesla" markasını taşıyordu. 2020'deki A100'den itibaren Nvidia bu markayı bıraktı ve onlara Data Center GPU diyor.
-
-Bu, odağın genel hesaplamadan yapay zekâya ve bulut sistemlerine kaydığını gösterir.
-
-## Mimariler Tasarım Kararlarıdır
-
-Mimarileri sürüm olarak değil, tasarım kararları olarak görmek daha iyidir. Her mimari tek bir soruya cevap verir: Şu anda ne tür problemleri çözmek istiyoruz?
-
-Bu bakış açısıyla GPU adları daha anlamlı hâle gelir. Performans farkları mantıklı görünür. CUDA kavramları birbirine daha kolay bağlanır.
+Throughput ayrıca hesaplamanın türü, duyarlılık ve mimari gibi birçok şeye bağlıdır. Her şeyi tek bir sayı belirlemez.
 
 ## Özet
 
-GPU mimarileri, hesaplamanın kendisinin nasıl değiştiğini gösterir. Yol grafikten hesaplamaya, oradan da büyük ölçekli yapay zekâya gider ve neredeyse her yıl yeni bir veri merkezi mimarisi gelir: Hopper, Blackwell, Rubin. Bu kaymayı anlamak, CUDA'da derinleşmeden önce önemli bir adımdır.
+Bir GPU'nun hızlı belleğe, yeterli çekirdeğe, yeterli hıza, makul enerji kullanımına ve bazen de özel donanıma ihtiyacı vardır. Gerçek performans ancak bunlar dengede olduğunda ortaya çıkar.
+
+GPU performansı tek bir sayı değildir. Bellek, hesaplama gücü, verimlilik ve özel donanımın birlikte çalıştığı bir sistemdir. Bunu bilmek özellik tablolarını okumayı ve CUDA (Compute Unified Device Architecture) kavramlarını anlamayı kolaylaştırır. Sonraki dersler daha derine iniyor: GPU'nun içindeki bellek seviyelerini [Ders 07](../Lesson-07/notes.md), bir kernel'ın bellek mi yoksa hesap tarafından mı sınırlandığını anlamayı da [Ders 09](../Lesson-09/notes.md) anlatıyor.
 
 ## Sözlük
 
-- mimari (architecture): çipin içindeki her şeyin nasıl kurulacağını belirleyen GPU planı.
-- GPU (Graphics Processing Unit): bu derslerin konusu olan, paralel çalışan çok sayıda küçük çekirdekten oluşan işlemci.
-- Fermi: Nvidia'nın 2010 mimarisi; genel GPU hesaplaması düşünülerek tasarlanan ilk mimari, gerçek bir L1/L2 önbellek hiyerarşisi getirdi.
-- Ampere: Nvidia'nın 2020 mimarisi (A100, RTX 30 serisi); yapay zekâ için Tensor Core'ları büyüttü.
-- Hopper: Nvidia'nın yapay zekâ için tasarladığı 2022 mimarisi (H100); 8 bitlik sayılarla çalışabilen bir Transformer Engine'i vardır.
-- çekirdek (core): aritmetik yapan birim; çekirdek sayısı mimarinin sadece bir parçasıdır.
-- verimli (efficient): harcadığı her watt güç başına çok iş çıkaran.
-- Kepler / Maxwell / Pascal: Nvidia'nın 2012, 2014 ve 2016 mimarileri; GPU'ları adım adım daha hızlı ve daha az güç harcayan hâle getirdiler.
-- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek ya da bir oyunu çizmek.
-- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitimi büyük ölçüde dev matris hesaplarıdır, bu da GPU'lara çok uyar.
-- Volta: Nvidia'nın yapay zekâya özel donanımı öne çıkarmaya başladığı 2017 mimarisi (V100); ilk Tensor Core'lar onunla geldi.
-- Turing: Tensor Core'ları ve ışın izleme birimlerini tüketici GPU'larına getiren 2018 mimarisi (RTX 20 serisi); CC 7.5.
-- Ada Lovelace: 2022'nin tüketici ve iş istasyonu mimarisi (RTX 40 serisi, L40S); CC 8.9.
-- transformer: modern dil modellerinin arkasındaki sinir ağı tasarımı; büyük ölçüde dev matris çarpımlarından oluşur.
-- FP8 / NVFP4: yapay zekâ için 8 bitlik ve 4 bitlik sayı biçimleri; FP8'i Hopper, NVFP4'ü Blackwell getirdi.
-- Blackwell: büyük ölçekli yapay zekâ iş yükleri etrafında tasarlanmış 2024 ile 2025 arası mimari (B200, B300, RTX 50 serisi).
-- Blackwell Ultra: Blackwell'in 2025 yükseltmesi (B300); GPU başına 288 GB HBM3e.
-- bant genişliği (bandwidth): bellek ile çip arasında saniyede kaç bayt taşınabildiği.
-- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32, FP16 ya da FP8; bit azaldıkça hesap hızlanır ama hassasiyet düşer.
-- Rubin: Blackwell'den sonraki mimari; tam üretimde ve 2026'nın ikinci yarısında bulut sağlayıcılarına teslim ediliyor.
-- Tensor Core: her SM'nin içinde küçük matris çarpımlarını tek adımda yapan birim; yapay zekâ hızının kalbi.
-- HBM (High Bandwidth Memory) / HBM3e / HBM4: çipin hemen yanına istiflenmiş bellek; Blackwell HBM3e, Rubin HBM4 kullanır.
-- SM (Streaming Multiprocessor): Nvidia GPU'sunun yapı taşı; çekirdekleri, Tensor Core'ları ve paylaşımlı belleği içinde barındırır.
-- bulut (cloud): bir sağlayıcının veri merkezlerinden internet üzerinden kiralanan bilgisayarlar.
-- Rubin Ultra / Feynman: Rubin'den sonra gelecek, 2027 ve 2028 için duyurulmuş mimariler.
-- CC (Compute Capability): bir GPU'nun CUDA'ya bildirdiği sürüm numarası, örneğin Ada Lovelace için 8.9, B200 için 10.0.
-- TFLOPS (trillions of floating-point operations per second): tek başına hikâyenin tamamını anlatmayan basit bir performans sayısı.
-- saat hızı (clock speed): tek başına kötü bir karşılaştırma sağlayan başka bir basit sayı.
-- Tesla: Nvidia veri merkezi GPU'larının V100'e kadar kullanılan eski markası; A100'den itibaren bırakıldı.
-- Data Center GPU: Nvidia'nın sunucu GPU'ları için bugünkü adı, örneğin A100, H100 ve Blackwell ürünleri.
-- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform; CUDA 13, Turing ve sonrasındaki tüm mimarileri destekler.
+- GPU (Graphics Processing Unit): bu derslerin konusu olan, paralel çalışan çok sayıda çekirdekten oluşan işlemci.
+- bellek bant genişliği (memory bandwidth): bellek ile GPU arasında saniyede ne kadar veri taşınabildiği.
+- GB/s (gigabytes per second) / TB/s (terabytes per second): saniyede bir milyar ya da bir trilyon bayt; RTX 4090 1.008 GB/s'ye, H100 3,35 TB/s'ye ulaşır.
+- çekirdek (core): komut çalıştıran birim; bir işçi gibi, başlamadan önce veriye ihtiyacı vardır.
+- paralel (parallel): çok sayıda çekirdeğin birbiri ardına değil, aynı anda çalışması.
+- bellek darboğazı (memory bottleneck): bellek veriyi yeterince hızlı gönderemediği için GPU çekirdeklerinin beklemesi.
+- RTX: NVIDIA'nın oyun ve genel kullanım için tüketici GPU serisi, örneğin RTX 4090 ve RTX 5090.
+- H100: NVIDIA'nın 2022'de çıkardığı, 80 GB HBM3 bellekli, Hopper tabanlı veri merkezi GPU'su.
+- Blackwell: NVIDIA'nın Hopper'dan sonraki mimarisi; B200 veri merkezi GPU'su ve RTX 50 serisi bunu kullanır.
+- Rubin: NVIDIA'nın Blackwell'den sonraki mimarisi; HBM4 bellek kullanır, 2026'nın ikinci yarısından beri teslim ediliyor.
+- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitimi çok büyük miktarda veri taşımayı gerektirir, bu yüzden bellek bant genişliği çok önemlidir.
+- HBM (High Bandwidth Memory): veri merkezi GPU'larında GPU çipinin hemen yanında duran, son derece hızlı istiflenmiş bellek; HBM3, HBM3e ve HBM4 son nesilleridir.
+- GDDR (Graphics Double Data Rate) / GDDR6X / GDDR7: tüketici GPU'larında kullanılan bellek ailesi; hızlıdır ama HBM kadar değil.
+- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek ya da bir oyun çalıştırmak.
+- veri yolu genişliği (bus width): belleğin aynı anda kaç bit taşıyabildiği; bir yolun genişliği gibi.
+- bellek hızı (memory speed): her bellek pininin veriyi ne kadar hızlı gönderdiği; Gbps (gigabits per second) ile verilir.
+- komut (instruction): bir çekirdeğin çalıştırdığı temel bir emir, örneğin bir toplama ya da bir çarpma.
+- saat hızı (clock speed): her çekirdeğin komutları ne kadar hızlı çalıştırdığı; GHz (gigahertz) ile verilir.
+- FP32 (32-bit floating point): GPU hesabının standart sayı biçimi; özellik tablolarının "CUDA çekirdeği" diye saydığı şey FP32 çekirdekleridir.
+- verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
+- denge (trade-off): bir şeyden daha fazla almak için başka bir şeyden vazgeçmek, örneğin daha az güç için hızdan.
+- Tensor Core: matris hesabı, özellikle yapay zekâ için tasarlanmış özel donanım.
+- TFLOPS (trillions of floating-point operations per second): gerçek programların nadiren ulaştığı bir tepe değer.
+- FMA (fused multiply-add): a × b + c hesaplayan ve 2 kayan noktalı işlem sayılan tek bir komut.
+- throughput (iş hacmi): GPU'nun belirli bir sürede ne kadar iş bitirebildiği.
+- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32 ya da FP16; bit azaldıkça throughput artar ama hassasiyet düşer.
+- mimari (architecture): bir GPU'nun genel tasarımı; çekirdeklerin, belleğin ve özel birimlerin nasıl birlikte çalışacağını belirler.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform.

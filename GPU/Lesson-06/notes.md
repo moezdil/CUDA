@@ -1,162 +1,152 @@
-# 06 > Nvidia GPU Architectures
+# 06 > Memory Bandwidth, Cores and Clock Speed
 
-Fermi, Ampere, Hopper, Blackwell and Rubin are names of Nvidia GPU (Graphics Processing Unit) architectures. This lesson walks through them in order, from 2010 to the roadmap for 2028, and shows how GPUs moved from graphics to general compute to large-scale AI (artificial intelligence). It also shows which of them the current CUDA (Compute Unified Device Architecture) release still supports.
+What makes a GPU (Graphics Processing Unit) fast is not one number. This lesson covers memory bandwidth, core count, clock speed, energy and specialized hardware, and works through each one with real numbers from current GPUs.
 
-## Why Architectures Matter
+## Memory Bandwidth
 
-Names like Fermi, Ampere and Hopper are more than labels. The goal is not to memorize them. The goal is to understand how GPUs changed over time.
+A GPU needs data to work on, and that data comes from memory. Memory bandwidth is how much data can move between memory and the GPU every second, usually given in GB/s (gigabytes per second) or TB/s (terabytes per second).
 
-## What "Architecture" Means
+## A Small Example
 
-A GPU architecture is the blueprint of the GPU. It defines how everything inside the chip is built.
+Take a GPU with 4 cores. Each core needs data before it can start.
 
-It covers more than the cores. It also defines:
+Suppose the memory can send data to only one core at a time. The first core starts working and the other three wait. Then the second core gets data, then the third, then the fourth. So only one of the 4 cores works at a time. The GPU is not used efficiently.
 
-- how data flows  
-- how memory is accessed  
-- what kind of operations are fast  
-- what the GPU is optimized for  
+Now suppose the memory can send data to all 4 cores at once. All cores start together and run in parallel. Nothing waits.
 
-A new architecture is usually not a small upgrade. It is often a shift in design priorities.
+A GPU is only fast if it gets data fast enough. Otherwise, it waits. This is called a "memory bottleneck".
 
-## The Early Modern Era
+<bandwidth-sim></bandwidth-sim>
 
-It helps to read the timeline like a story. Early modern GPUs focused on general compute and graphics.
+## Consumer GPUs and Data Center GPUs
 
-These architectures improved performance and efficiency step by step:
+There are two kinds of modern GPUs:
 
-- Fermi (2010)  
-- Kepler (2012)  
-- Maxwell (2014)  
-- Pascal (2016)  
+- Consumer GPUs, like the RTX 50 series, are made for gaming and general use.
+- Data center GPUs, like the H100, the Blackwell B200 or the new Rubin GPUs, are made for AI (artificial intelligence) and large-scale computation.
 
-The goal in this period was to make GPUs faster and more efficient for general workloads.
+Both kinds can have many cores and sometimes similar architectures. The big difference is memory.
 
-## AI Becomes Central
-
-Volta (2017, V100) marks a clear shift. With Volta, Nvidia started to push AI-specific hardware: the first Tensor Cores, units inside each SM (Streaming Multiprocessor) that multiply small matrices in one step.
-
-After that:
-
-- Turing (2018, RTX 20 series) brought Tensor Cores and ray tracing units to consumer cards  
-- Ampere (2020, A100 and RTX 30 series) scaled this idea further  
-- Ada Lovelace (2022, RTX 40 series and L40S) brought these units to consumer and workstation cards in the same year as Hopper  
-- Hopper (2022, H100) optimized heavily for AI workloads, especially transformers, with FP8 (8-bit floating point) math  
-
-From here, GPUs were no longer just graphics hardware. They became full compute platforms.
-
-## Recent Architectures
-
-### Blackwell (2024 to 2025)
-
-Blackwell was announced in 2024 and is designed around large-scale AI workloads. The B200 data center GPU joins two chips in one package and uses HBM3e (High Bandwidth Memory) with up to 8 TB/s. It also added NVFP4, a 4-bit number format for AI. Blackwell Ultra (B300, 2025) raised the memory to 288 GB per GPU. On the consumer side, the RTX 50 series (2025) uses Blackwell too.
-
-The real performance gains are not the same for every case. They depend on:
-
-- the workload  
-- the precision  
-- the system setup  
-
-So "faster GPU" is not always a simple statement.
-
-### Rubin (2026, Now Shipping)
-
-Rubin is the architecture after Blackwell. It is in full production, and the first Vera Rubin systems, which pair Rubin GPUs with Nvidia's Vera CPU (Central Processing Unit), are reaching cloud providers in the second half of 2026.
-
-Each Rubin GPU brings:
-
-- newer Tensor Core designs  
-- up to 288 GB of HBM4 memory  
-- up to 22 TB/s of memory bandwidth  
-
-Compare that with Blackwell: 22 / 8 = 2.75, so a Rubin GPU can move almost 3 times as many bytes per second.
-
-### Rubin Ultra and Feynman (Announced)
+Data center GPUs use HBM (High Bandwidth Memory). HBM is stacked memory that sits right next to the GPU chip in the same package. It can deliver huge amounts of data very quickly.
 
 > [!NOTE]
-> These are roadmap items, not products you can buy. Rubin Ultra is announced for the second half of 2027, and Feynman for 2028. Details can still change.
+> HBM comes in generations: the H100 uses HBM3 (3.35 TB/s), the B200 uses HBM3e (up to 8 TB/s), and Rubin GPUs, shipping since the second half of 2026, use HBM4 (up to 22 TB/s).
 
-The direction stays the same. Everything moves toward larger, more specialized AI systems.
+Consumer GPUs use GDDR (Graphics Double Data Rate) memory: GDDR6X on the RTX 4090 and GDDR7 on the RTX 50 series. This is fast, but not as fast as HBM.
 
-<arch-timeline focus="Volta"></arch-timeline>
+Two GPUs can look similar on paper. The one with higher memory bandwidth keeps its cores busy. The other may wait for data. This is one main reason why data center GPUs are so strong in AI workloads.
 
-## Compute Capability
+## What Affects Memory Bandwidth
 
-CUDA does not use architecture names. Each GPU reports a CC (Compute Capability), a version number like 8.9. The major number usually follows the architecture, but not always one to one:
+Three main factors affect memory bandwidth:
 
-- Ampere: 8.0 (A100) and 8.6 (RTX 30 series)  
-- Ada Lovelace: 8.9 (RTX 40 series, L40S)  
-- Hopper: 9.0 (H100)  
-- Blackwell: 10.0 (B200), 10.3 (B300) and 12.0 (RTX 50 series)  
-- Rubin: 10.7 (supported in CUDA 13.4)  
+- Bus width is like the width of a road. A wider road moves more data at the same time.
+- Memory speed is like the speed limit on the road. Even a wide road causes delays if traffic is slow.
+- Memory technology is where modern GPUs differ most. HBM is like a high-speed highway built only for data. GDDR is more general-purpose.
 
-So Ada (8.9) shares the major number 8 with Ampere, and Blackwell uses two different major numbers.
+<bandwidth-calc></bandwidth-calc>
+
+> [!TIP]
+> Bandwidth = bus width in bits × speed per pin in Gbps (gigabits per second) / 8. The RTX 4090 has a 384-bit bus at 21 Gbps: 384 × 21 / 8 = 1,008 GB/s. The RTX 5090 has a 512-bit bus at 28 Gbps: 512 × 28 / 8 = 1,792 GB/s, about 78% more.
+
+GPU performance is not only about cores. It is also about how fast the cores get data. Even the strongest GPU becomes weak if it waits for memory.
+
+## More Cores Is Not Always Faster
+
+Once data arrives, the GPU must process it. Each core executes instructions. It seems natural that more cores means better performance, but this is not always true.
+
+Take two GPUs. The first has 100 cores. The second has 200 cores. Both run the same task with 200 operations.
+
+- The first GPU processes 100 operations at a time, so it needs two rounds.
+- The second GPU processes all 200 operations in one round.
+
+Now add the time per round:
+
+- The first GPU needs one second per round, so it finishes in 2 × 1 = 2 seconds.
+- The second GPU needs four seconds per round, so it finishes in 1 × 4 = 4 seconds.
+
+The second GPU has more cores, but it is slower. So we also need to know how fast the cores are.
+
+## Clock Speed
+
+Clock speed is how quickly each core executes instructions, given in GHz (gigahertz, billions of cycles per second).
+
+Performance depends on two things together:
+
+- More cores give more parallelism.
+- Higher clock speed makes each core faster.
+
+If one of them is too low, it limits the whole system. The goal is balance.
+
+<cores-clock></cores-clock>
+
+## Two Design Directions
+
+GPUs follow two design directions. Some are built for gaming and general use. Others are built for AI and large-scale computation.
+
+- Data center GPUs often run at lower clock speeds and spend their chip area and power on Tensor Cores and memory bandwidth.
+- Consumer GPUs often run at higher clock speeds for graphics.
+
+The RTX 4090 and the H100 SXM show this. They have almost the same number of FP32 (32-bit floating point) cores, 16,384 and 16,896. The RTX 4090 boosts to 2.52 GHz, the H100 only to 1.98 GHz. But the H100 moves 3.35 TB/s from memory, more than 3 times the 1,008 GB/s of the RTX 4090.
+
+Neither is better in general. Each is optimized for different workloads.
+
+## Energy
+
+Performance is always tied to energy. More cores and higher clock speed also mean more power use. An RTX 5090 is rated for up to 575 W, and an H100 SXM for up to 700 W. So there is always a trade-off between performance and efficiency.
+
+"Which GPU is better?" is the wrong question. The better question is "Better for what?"
+
+## Specialized Hardware
+
+Modern GPUs are not just groups of general-purpose cores. They also have specialized hardware.
+
+Tensor Cores are one example. They are units built for matrix math, especially in AI. With the right workload, they can speed things up a lot. This only works if the workload matches the hardware.
+
+## Throughput
+
+Core count, clock speed and TFLOPS (trillions of floating-point operations per second) alone do not tell the full story. A better question is how much work the GPU can finish in a given time. This is called "throughput".
+
+Peak FP32 TFLOPS come from cores × clock × 2, because one FMA (fused multiply-add) counts as 2 operations. For the RTX 4090: 16,384 × 2.52 GHz × 2 ≈ 82.6 TFLOPS. For the H100 SXM: 16,896 × 1.98 GHz × 2 ≈ 66.9 TFLOPS. On this number the RTX 4090 wins, yet the H100 is far faster for AI training, thanks to its Tensor Cores and memory bandwidth.
 
 > [!WARNING]
-> The current CUDA 13 releases (CUDA 13.4 came out in September 2026) support only Turing (CC 7.5) and newer. Maxwell, Pascal and Volta GPUs need an older CUDA 12 toolkit.
+> TFLOPS on a spec sheet is a peak that assumes every core does an FMA on every cycle. Real programs reach only part of it, and a program that waits for memory reaches much less.
 
-## Performance Depends on Context
-
-Simple numbers make a poor comparison. Examples are:
-
-- TFLOPS (trillions of floating-point operations per second)  
-- clock speed  
-
-These numbers do not tell the full story. Performance depends on:
-
-- what kind of workload you run  
-- what precision you use  
-- how memory behaves  
-- how the architecture is designed  
-
-A GPU can look very powerful on paper but perform poorly on a specific task. Another GPU with lower raw numbers can do better in real use.
-
-## Naming Changed Too
-
-Data center GPUs up to the V100 carried the "Tesla" brand, such as the Tesla V100. From the A100 in 2020 on, Nvidia dropped it and calls them Data Center GPUs.
-
-This shows a change in focus, from generic compute to AI and cloud systems.
-
-## Architectures Are Design Decisions
-
-It is better to see architectures as design decisions, not versions. Each architecture answers one question. What kind of problems do we want to solve now?
-
-With this view, GPU names make more sense. Performance differences become logical. CUDA concepts connect more easily.
+Throughput also depends on many things, such as the type of computation, the precision and the architecture. No single number defines everything.
 
 ## Summary
 
-GPU architectures show how computing itself is changing. The path goes from graphics, to compute, to AI at scale, with a new data center architecture about every year: Hopper, Blackwell, Rubin. Understanding this shift is an important step before going deeper into CUDA.
+A GPU needs fast memory, enough cores, enough speed, reasonable energy use, and sometimes specialized hardware. Real performance comes only when these are balanced.
+
+GPU performance is not a single number. It is a system where memory, compute power, efficiency and specialized hardware work together. Knowing this makes specifications easier to read and CUDA (Compute Unified Device Architecture) concepts easier to understand. The next lessons go deeper: the memory levels inside a GPU in [Lesson 07](../Lesson-07/notes.md), and how to tell whether a kernel is limited by memory or by math in [Lesson 09](../Lesson-09/notes.md).
 
 ## Glossary
 
-- architecture: the blueprint of the GPU that defines how everything inside the chip is built.
-- GPU (Graphics Processing Unit): the processor this track is about, built from many small cores that work in parallel.
-- Fermi: an Nvidia architecture from 2010, the first one designed with general GPU computing in mind, adding a real L1/L2 cache hierarchy.
-- Ampere: an Nvidia architecture from 2020 (A100, RTX 30 series) that scaled up Tensor Cores for AI.
-- Hopper: an Nvidia architecture from 2022 (H100) built for AI, with a Transformer Engine that can use 8-bit numbers.
-- core: a unit that does arithmetic; the core count is only one part of an architecture.
+- GPU (Graphics Processing Unit): the processor this track is about, built from many cores that work in parallel.
+- memory bandwidth: how much data can move between memory and the GPU every second.
+- GB/s (gigabytes per second) / TB/s (terabytes per second): a billion or a trillion bytes moving every second; an RTX 4090 reaches 1,008 GB/s, an H100 3.35 TB/s.
+- core: a unit that executes instructions; like a worker, it needs data before it can start.
+- parallel: many cores working at the same time instead of one after another.
+- memory bottleneck: when GPU cores wait because memory cannot send data fast enough.
+- RTX: NVIDIA's consumer GPU line for gaming and general use, such as the RTX 4090 and the RTX 5090.
+- H100: NVIDIA's Hopper data center GPU from 2022, with 80 GB of HBM3 memory.
+- Blackwell: NVIDIA's architecture after Hopper; the B200 data center GPU and the RTX 50 series use it.
+- Rubin: NVIDIA's architecture after Blackwell, with HBM4 memory, shipping since the second half of 2026.
+- AI (artificial intelligence): software that learns from data; training it moves huge amounts of data, so memory bandwidth matters a lot.
+- HBM (High Bandwidth Memory): extremely fast stacked memory that sits right next to the GPU chip in data center GPUs; HBM3, HBM3e and HBM4 are its recent generations.
+- GDDR (Graphics Double Data Rate) / GDDR6X / GDDR7: the memory family used in consumer GPUs; fast, but not as fast as HBM.
+- workload: the kind of work a program gives the GPU, such as training a model or running a game.
+- bus width: how many bits memory can move at the same time, like the width of a road.
+- memory speed: how fast each memory pin sends data, given in Gbps (gigabits per second).
+- instruction: one basic command a core runs, such as an add or a multiply.
+- clock speed: how quickly each core executes instructions, given in GHz (gigahertz).
+- FP32 (32-bit floating point): the standard number format for GPU math; FP32 cores are what spec sheets count as "CUDA cores".
 - efficiency: how much work a GPU gets done for each watt of power it uses.
-- Kepler / Maxwell / Pascal: Nvidia architectures from 2012, 2014 and 2016 that made GPUs steadily faster and more power efficient.
-- workload: the kind of work a program gives the GPU, such as training a model or rendering a game.
-- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math, which suits GPUs.
-- Volta: the 2017 architecture (V100) where Nvidia started to push AI-specific hardware, with the first Tensor Cores.
-- Turing: the 2018 architecture (RTX 20 series) that brought Tensor Cores and ray tracing units to consumer GPUs; CC 7.5.
-- Ada Lovelace: the 2022 consumer and workstation architecture (RTX 40 series, L40S); CC 8.9.
-- transformer: the neural network design behind modern language models; it is built mostly from large matrix multiplications.
-- FP8 / NVFP4: 8-bit and 4-bit number formats for AI; Hopper added FP8 and Blackwell added NVFP4.
-- Blackwell: the 2024 to 2025 architecture (B200, B300, RTX 50 series) designed around large-scale AI workloads.
-- Blackwell Ultra: the 2025 upgrade of Blackwell (B300) with 288 GB of HBM3e per GPU.
-- bandwidth: how many bytes per second can move between memory and the chip.
-- precision: how many bits each number uses, such as FP32, FP16 or FP8; fewer bits means faster math but less accuracy.
-- Rubin: the architecture after Blackwell, in full production and shipping to cloud providers in the second half of 2026.
-- Tensor Core: a unit inside each SM that does small matrix multiplications in one step, the core of AI speed.
-- HBM (High Bandwidth Memory) / HBM3e / HBM4: stacked memory next to the chip; Blackwell uses HBM3e, Rubin uses HBM4.
-- SM (Streaming Multiprocessor): the building block of an Nvidia GPU that holds its cores, Tensor Cores and shared memory.
-- cloud: computers rented over the internet from a provider's data centers.
-- Rubin Ultra / Feynman: announced architectures after Rubin, planned for 2027 and 2028.
-- CC (Compute Capability): the version number a GPU reports to CUDA, such as 8.9 for Ada Lovelace or 10.0 for the B200.
-- TFLOPS (trillions of floating-point operations per second): a simple performance number that does not tell the full story.
-- clock speed: another simple number that makes a poor comparison on its own.
-- Tesla: the old brand for Nvidia data center GPUs up to the V100, dropped from the A100 on.
-- Data Center GPU: Nvidia's current name for its server GPUs, such as the A100, H100 and the Blackwell parts.
-- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs; CUDA 13 supports Turing and every newer architecture.
+- trade-off: giving up some of one thing to get more of another, such as speed for lower power use.
+- Tensor Cores: specialized hardware built for matrix math, especially in AI.
+- TFLOPS (trillions of floating-point operations per second): a peak number that real programs rarely reach.
+- FMA (fused multiply-add): one instruction that computes a × b + c and counts as 2 floating-point operations.
+- throughput: how much work the GPU can finish in a given time.
+- precision: how many bits each number uses, such as FP32 or FP16; fewer bits give more throughput but less accuracy.
+- architecture: the overall design of a GPU, which decides how cores, memory and special units work together.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.

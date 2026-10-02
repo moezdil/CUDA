@@ -520,3 +520,385 @@ def("install-steps", function(el){
     el.querySelector(".dg-prog i").style.width = n / steps.length * 100 + "%";
   });
 });
+
+// Time to move N GB over one link: PCIe 4.0 / 5.0 x16, NVLink-C2C, or the GPU's own memory. Speeds are peak, per direction.
+def("data-path", function(el){
+  var links = [
+    { n: "PCIe 4.0 x16", bw: 31.5, who: "L40S, A100", note: "pcie" },
+    { n: "PCIe 5.0 x16", bw: 63, who: "H100, B200, RTX 5090", note: "pcie" },
+    { n: "NVLink-C2C", bw: 450, who: "Grace Hopper, Grace Blackwell", note: "c2c" },
+    { n: T("GPU's own memory"), bw: 864, who: "L40S GDDR6", note: "vram" }
+  ];
+  var notes = {
+    pcie: T("Peak for pinned host memory. From pageable memory the driver first copies the data into a pinned staging buffer, so the copy is slower."),
+    c2c: T("Coherent link: the GPU can also read ordinary pageable CPU memory directly, without a staging copy."),
+    vram: T("No link involved: this is how fast the L40S reads data that is already on the GPU.")
+  };
+  var CALM = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches), on = 0;
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Moving data to the GPU") + '</span>' + tabs(links.map(function(l){ return l.n; }), 0) + "</div>" +
+    '<div class="dg-ctl"><label>' + F("data size {0}", '<b class="n"></b>') + ' <input type="range" min="1" max="48" value="4" aria-label="' + T("data size in GB") + '"></label></div>' +
+    '<div class="dg-big dp-big"><b></b> <span></span></div><div class="dp-bars">' + links.map(function(l, i){
+      return '<div class="dp-row" data-i="' + i + '"><span class="dp-name">' + l.n + "<small>" + l.who + '</small></span><div class="dp-track"><i></i></div><b class="dp-t"></b></div>';
+    }).join("") + '</div><div class="dg-info" aria-live="polite"></div>';
+  var input = el.querySelector("input"), rows = el.querySelectorAll(".dp-row");
+  function fmt(s){
+    return s >= 1 ? s.toFixed(2) + " s" : s * 1000 >= 10 ? Math.round(s * 1000) + " ms" : (s * 1000).toFixed(1) + " ms";
+  }
+  function draw(){
+    var gb = +input.value, max = gb / links[0].bw, l = links[on], t = gb / l.bw;
+    el.querySelector(".n").textContent = gb + " GB";
+    el.querySelector(".dp-big b").textContent = fmt(t);
+    el.querySelector(".dp-big span").textContent = gb + " GB / " + l.bw + " GB/s";
+    rows.forEach(function(r, i){
+      var s = gb / links[i].bw, fill = r.querySelector("i");
+      r.classList.toggle("on", i === on);
+      r.querySelector(".dp-t").textContent = fmt(s);
+      fill.style.transitionDuration = CALM ? "0s" : (0.15 + 1.6 * s / max).toFixed(2) + "s";
+      fill.style.width = "0";
+      fill.getBoundingClientRect();
+      fill.style.width = (s / max * 100).toFixed(2) + "%";
+    });
+    el.querySelector(".dg-info").innerHTML = (l.note === "vram" ? "" : F("<em>{0}×</em> the time of reading the same data from the L40S's own memory.", (864 / l.bw).toFixed(1)) + "<br>") + notes[l.note];
+  }
+  onTabs(el.querySelector(".dg-tabs"), function(i){ on = i; draw(); });
+  input.addEventListener("input", draw);
+  draw();
+});
+
+// One warp scheduler, N resident warps. Simplified model: every warp issues for 2 cycles, then waits 8 cycles for memory.
+def("latency-hiding", function(el){
+  var ISSUE = 2, WAIT = 8, CYC = 30, MAX = 8, timer = 0;
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("One warp scheduler, many warps") + '</span><div class="dg-ctl"><label>' + F("resident warps {0}", '<b class="n"></b>') +
+    ' <input type="range" min="1" max="' + MAX + '" value="1" aria-label="' + T("resident warps") + '"></label><button class="dg-btn" type="button">' + T("play") + '</button></div></div>' +
+    '<p class="dg-note">' + F("Simplified model: each warp issues for {0} cycles, then waits {1} cycles for memory.", ISSUE, WAIT) + '</p>' +
+    '<div class="lh-grid"></div><div class="dg-legend"><span><i class="C"></i>' + T("issuing") + '</span><span><i class="W"></i>' + T("waiting for memory") + '</span><span><i class="lh-r"></i>' + T("ready, waiting its turn") + '</span><span><i class="lh-idle"></i>' + T("scheduler idle") + '</span></div>' +
+    '<div class="lh-meter"><span>' + T("scheduler busy") + '</span><div><i></i></div><b></b></div><div class="dg-info"></div>';
+  var input = el.querySelector("input");
+  function sim(N){
+    var rows = [], left = [], back = [], since = [], sched = [], cur = -1;
+    for (var w = 0; w < N; w++) { rows.push([]); left.push(ISSUE); back.push(0); since.push(w); }
+    for (var t = 0; t < CYC; t++) {
+      var ready = [];
+      for (w = 0; w < N; w++) { if (back[w] <= t) { if (!left[w]) { left[w] = ISSUE; since[w] = t; } ready.push(w); } }
+      // keep issuing the same warp until it stalls, else take the warp that has been ready longest
+      if (ready.indexOf(cur) < 0) { cur = ready.length ? ready.reduce(function(a, b){ return since[b] < since[a] ? b : a; }) : -1; }
+      for (w = 0; w < N; w++) { rows[w][t] = back[w] > t ? "W" : w === cur ? "C" : "lh-r"; }
+      sched[t] = cur >= 0 ? "C" : "lh-idle";
+      if (cur >= 0 && !--left[cur]) { back[cur] = t + 1 + WAIT; cur = -1; }
+    }
+    return { rows: rows, sched: sched };
+  }
+  function row(label, cells, cls){
+    return '<div' + (cls ? ' class="' + cls + '"' : "") + "><span>" + label + "</span>" + cells.map(function(c, t){ return '<i data-t="' + t + '" class="' + c + '"></i>'; }).join("") + "</div>";
+  }
+  function draw(){
+    clearInterval(timer);
+    var N = +input.value, r = sim(N), busy = r.sched.filter(function(c){ return c === "C"; }).length, pct = Math.round(busy / CYC * 100), need = Math.ceil((ISSUE + WAIT) / ISSUE);
+    el.querySelector(".n").textContent = N;
+    el.querySelector(".lh-grid").innerHTML = r.rows.map(function(c, w){ return row(F("warp {0}", w), c); }).join("") + row(T("issue"), r.sched, "lh-s");
+    el.querySelector(".lh-meter i").style.width = pct + "%";
+    el.querySelector(".lh-meter b").textContent = pct + "%";
+    el.querySelector(".dg-info").innerHTML = F("The scheduler issued on <b>{0} of {1}</b> cycles.", busy, CYC) + " " +
+      (N < need ? F("Too few warps: when all of them wait for memory, nobody can issue. About {0} warps hide this wait.", need)
+        : N === need ? T("Just enough warps: while some wait, another one is always ready.")
+        : T("Already full. Extra warps only wait their turn, they do not make the scheduler faster."));
+  }
+  el.querySelector(".dg-btn").addEventListener("click", function(){
+    draw();
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { return; }
+    var cells = el.querySelectorAll(".lh-grid i"), now = -1;
+    cells.forEach(function(c){ c.style.opacity = .1; });
+    timer = setInterval(function(){
+      now++;
+      cells.forEach(function(c){ if (+c.dataset.t === now) { c.style.opacity = 1; } });
+      if (now >= CYC - 1) { clearInterval(timer); }
+    }, 90);
+  });
+  input.addEventListener("input", draw);
+  draw();
+});
+
+// Memory hierarchy: a stacked pyramid, registers on top, global memory at the bottom. Pick a level to read its scope, size and wait.
+def("mem-hierarchy", function(el){
+  var GPUS = ["L40S", "H100 SXM"];
+  // wait = load latency in clock cycles from published microbenchmarks: RTX 4090 (same AD102 chip as the L40S) and H800 (Hopper, like the H100).
+  var L = [
+    { k: "reg", n: T("Registers"), w: 34, c: "--thread", scope: 0, where: T("inside each SM, right next to the cores"),
+      size: [T("256 KB per SM (65,536 registers), at most 255 per thread"), T("256 KB per SM (65,536 registers), at most 255 per thread")], wait: [0, 0] },
+    { k: "smem", n: T("Shared memory / L1"), w: 52, c: "--block", scope: 1, where: T("inside each SM, one pool split between shared memory and L1"),
+      size: [T("128 KB per SM, up to 100 KB of it as shared memory"), T("256 KB per SM, up to 228 KB of it as shared memory")], wait: [30, 29], wait2: [43, 41] },
+    { k: "l2", n: T("L2 cache"), w: 74, c: "--cool", scope: 2, where: T("on the GPU chip, outside the SMs"),
+      size: ["96 MB", "50 MB"], wait: [273, 263] },
+    { k: "gmem", n: T("Global memory"), w: 100, c: "--accent", scope: 2, where: T("memory chips beside the GPU chip: GDDR6 on the L40S, HBM3 stacks in the package on the H100"),
+      size: [T("48 GB of GDDR6 at 864 GB/s"), T("80 GB of HBM3 at 3.35 TB/s")], wait: [542, 479] }
+  ];
+  var S = [
+    { k: "const", n: T("Constant memory"), c: "--warp", scope: 2, where: T("a read-only corner of global memory, cached in each SM"),
+      size: [T("64 KB, with an 8 KB cache in each SM"), T("64 KB, with an 8 KB cache in each SM")], say: T("Fast when every thread of a warp reads the same address; one read is broadcast to all of them.") },
+    { k: "local", n: T("Local memory"), c: "--red", scope: 0, where: T("in global memory, cached in L1 and L2"),
+      size: [T("up to 512 KB per thread"), T("up to 512 KB per thread")], say: T("Private to one thread, but it lives off-chip. A miss in the caches costs as much as a global memory read.") }
+  ];
+  var gpu = 0, cur = "smem";
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Where does the data live?") + "</span>" + tabs(GPUS, 0) + "</div>" +
+    '<div class="mh-pyr"><span class="mh-ax">' + T("smaller, faster") + "</span>" + L.map(function(l){
+      return '<button type="button" data-k="' + l.k + '" style="--w:' + l.w + "%;--c:var(" + l.c + ')">' + l.n + "</button>";
+    }).join("") + '<span class="mh-ax">' + T("bigger, slower") + "</span>" +
+    '<span class="dg-lbl">' + T("also kept in global memory") + '</span><div class="mh-side">' + S.map(function(l){
+      return '<button type="button" data-k="' + l.k + '" style="--c:var(' + l.c + ')">' + l.n + "</button>";
+    }).join("") + '</div></div><div class="dg-info" aria-live="polite"></div>';
+  var info = el.querySelector(".dg-info");
+  function find(k){ return L.concat(S).filter(function(l){ return l.k === k; })[0]; }
+  function draw(){
+    var l = find(cur), g = GPUS[gpu], max = L[3].wait[gpu], wait;
+    if (l.say) { wait = l.say; }
+    else if (!l.wait[gpu]) { wait = T("No wait: the core reads registers as part of the instruction itself."); }
+    else {
+      wait = F("about <em>{0} cycles</em> to load", l.wait[gpu]) + (l.wait2 ? " " + F("(L1 hit: about {0})", l.wait2[gpu]) : "") +
+        '<div class="dg-track mh-bar"><i style="width:' + Math.round(l.wait[gpu] / max * 100) + '%"></i><span>' + F("{0}% of a global memory load", Math.round(l.wait[gpu] / max * 100)) + "</span></div>";
+    }
+    info.innerHTML = "<b>" + l.n + "</b> · " + l.where +
+      '<div class="dg-facts mh-scope">' + [T("one thread"), T("one block"), T("whole GPU")].map(function(s, i){
+        return "<span" + (i === l.scope ? ' class="on"' : "") + ">" + s + "</span>";
+      }).join("") + "</div>" +
+      "<div>" + F("Size on the {0}: <b>{1}</b>", g, l.size[gpu]) + "</div><div>" + wait + "</div>" +
+      (l.say ? "" : '<small class="mh-src">' + (gpu ? T("Cycles measured on an H800, a Hopper GPU like the H100.") : T("Cycles measured on an RTX 4090, which uses the same AD102 chip as the L40S.")) + "</small>");
+  }
+  pick(el.querySelector(".mh-pyr"), function(k){ cur = k; draw(); });
+  onTabs(el.querySelector(".dg-tabs"), function(i){ gpu = i; draw(); });
+  el.querySelector('[data-k="smem"]').click();
+});
+
+// Lesson 12: four scales of connected GPUs, from one card to a cluster of racks.
+def("multi-gpu", function(el){
+  function gpus(n, cls){ var s = ""; for (var i = 0; i < n; i++) { s += '<i class="mg-g' + (cls ? " " + cls : "") + '"></i>'; } return s; }
+  function trays(n){ var s = ""; for (var i = 0; i < n; i++) { s += '<span class="mg-tray">' + gpus(4) + "</span>"; } return s; }
+  var levels = [
+    { tab: T("one GPU"), link: "PCIe 4.0 x16", bar: "PCIe 4.0", kind: "pcie", n: "1", spec: "64 GB/s", way: 32, ex: "L40S",
+      draw: '<div class="mg-one"><div class="mg-box host">CPU</div><div class="mg-link pcie v"><span>PCIe</span></div><div class="mg-box gpu">GPU<small>L40S</small></div></div>',
+      info: T("<b>One GPU.</b> Its only link goes to the CPU over PCIe: 64 GB/s for both directions, 32 GB/s each way. The L40S has no NVLink, so a second L40S could only be reached over PCIe too.") },
+    { tab: T("8-GPU server"), link: "NVLink 4 · NVSwitch", bar: "NVLink 4 (H100)", kind: "nvl", n: "8", spec: "900 GB/s", way: 450, ex: "DGX H100",
+      draw: '<div class="mg-srv"><div class="mg-row">' + gpus(4, "up") + '</div><div class="mg-sw">' + F("{0} NVSwitch chips", 4) + '</div><div class="mg-row">' + gpus(4, "dn") + "</div></div>",
+      info: T("<b>8 GPUs, one board.</b> Every H100 connects to the NVSwitch chips with 18 NVLink links, 900 GB/s in total. Any GPU reaches any other at full speed, all at the same time.") },
+    { tab: T("NVL72 rack"), link: "NVLink 5 · NVSwitch", bar: "NVLink 5 (B200)", kind: "nvl", n: "72", spec: "1.8 TB/s", way: 900, ex: "GB200 NVL72",
+      draw: '<div class="mg-rack"><span class="dg-lbl">' + F("{0} compute trays", 10) + '</span><div class="mg-trays">' + trays(10) + '</div><div class="mg-sw">' + F("{0} NVLink switch trays", 9) + '</div><div class="mg-trays">' + trays(8) + '</div><span class="dg-lbl">' + F("{0} compute trays", 8) + "</span></div>",
+      info: T("<b>72 GPUs, one NVLink domain.</b> 18 trays with 4 GPUs each, wired through 9 switch trays in the middle. Every GPU reaches every other at 1.8 TB/s, about 130 TB/s for the whole rack.") },
+    { tab: T("cluster of racks"), link: "InfiniBand / Ethernet", bar: T("network"), kind: "net", n: "1000+", spec: "800 Gb/s", way: 100, ex: "GB300 NVL72",
+      draw: '<div class="mg-clu"><div class="mg-racks">' + [0, 1, 2, 3].map(function(){ return '<div class="mg-mini"><b>NVL72</b><span>' + gpus(72) + "</span></div>"; }).join("") + '<div class="mg-more">…</div></div><div class="mg-sw net">' + T("network switches") + "</div></div>",
+      info: T("<b>Many racks, one network.</b> Each GPU has its own network card, 400 or 800 Gb/s. 800 Gb/s is only 100 GB/s each way, 9 times less than NVLink inside the rack. Send only what must cross the network.") }
+  ];
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("From one GPU to a cluster") + "</span>" + tabs(levels.map(function(l){ return l.tab; }), 1) + "</div>" +
+    '<div class="mg-stage"></div><div class="dg-facts"></div>' +
+    '<span class="dg-lbl mg-bl">' + T("bandwidth per GPU, one way") + '</span><div class="dg-bars mg-bars">' + levels.map(function(l){
+      return '<div><span>' + l.bar + '</span><i class="' + l.kind + '" style="width:' + (l.way / 900 * 100) + '%"></i><b>' + l.way + " GB/s</b></div>";
+    }).join("") + '</div><div class="dg-info" aria-live="polite"></div>';
+  function show(k){
+    var l = levels[k];
+    el.querySelector(".mg-stage").innerHTML = l.draw;
+    el.querySelector(".dg-facts").innerHTML = "<span>" + T("GPUs") + ": <b>" + l.n + "</b></span><span>" + T("link") + ': <b class="mg-' + l.kind + '">' + l.link + "</b></span><span>" + T("per GPU") + ": <b>" + l.spec + "</b></span><span>" + T("example") + ": <b>" + l.ex + "</b></span>";
+    el.querySelectorAll(".mg-bars div").forEach(function(d, i){ d.classList.toggle("on", i === k); });
+    el.querySelector(".dg-info").innerHTML = l.info;
+  }
+  onTabs(el.querySelector(".dg-tabs"), show);
+  show(1);
+});
+
+// Number formats: pick a format, type a value, see its bits (sign, exponent, mantissa) and how it is rounded.
+// All rounding is exact: the typed decimal becomes a BigInt fraction, so no double rounding sneaks in.
+def("num-formats", function(el){
+  // name, exponent bits, mantissa bits, kind, use
+  // kind: ieee = all-ones exponent is inf/NaN; fn = only S.1111.111 is NaN (E4M3); fin = no inf/NaN; int; nv = NVFP4
+  var FM = [
+    ["FP64", 11, 52, "ieee", T("science and simulation, where every digit counts")],
+    ["FP32", 8, 23, "ieee", T("the default for CUDA cores and general GPU math")],
+    ["TF32", 8, 10, "ieee", T("FP32 matrix math on Tensor Cores (Ampere and later), kept in 32-bit registers")],
+    ["FP16", 5, 10, "ieee", T("training and inference; small range, so training needs loss scaling")],
+    ["BF16", 8, 7, "ieee", T("the standard for training: FP32 range, less precision")],
+    ["FP8 E4M3", 4, 3, "fn", T("inference and the forward pass of training")],
+    ["FP8 E5M2", 5, 2, "ieee", T("gradients in training, where range matters more")],
+    ["FP6 E2M3", 2, 3, "fin", T("inference with a shared block scale (Blackwell)")],
+    ["FP6 E3M2", 3, 2, "fin", T("inference with a shared block scale (Blackwell)")],
+    ["FP4 E2M1", 2, 1, "fin", T("the 4-bit element inside NVFP4 and MXFP4; alone it holds only 15 values")],
+    ["NVFP4", 2, 1, "nv", T("inference on Blackwell, and more and more training")],
+    ["INT8", 0, 7, "int", T("quantized inference: whole numbers times a scale")]
+  ];
+  var presets = ["3.14159", "0.1", "1000", "0.00001"];
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("How a number is stored") + '</span><span class="dg-note">' + T("pick a format, type a value") + "</span></div>" +
+    tabs(FM.map(function(f){ return f[0]; }), 1) +
+    '<div class="dg-ctl nf-ctl"><label>' + T("value") + ' <input type="text" inputmode="decimal" spellcheck="false" value="3.14159"></label>' +
+    '<span class="nf-pre">' + presets.map(function(p, i){ return '<button type="button" data-k="' + p + '"' + (i ? "" : ' class="on"') + ">" + p + "</button>"; }).join("") + "</span></div>" +
+    '<div class="nf-bits"></div>' +
+    '<div class="dg-legend"><span><i style="background:var(--warp)"></i>' + T("sign") + '</span><span><i style="background:var(--cool)"></i>' + T("exponent") + '</span><span><i style="background:var(--accent)"></i>' + T("mantissa") + '</span><span><i style="background:var(--block)"></i>' + T("integer / scale") + "</span></div>" +
+    '<table class="dg-cmp nf-out"></table><div class="dg-stats nf-stats"></div><div class="dg-info"></div>';
+  var inp = el.querySelector("input"), cur = 1;
+
+  var B = BigInt, ZERO = B(0), ONE = B(1), TWO = B(2);
+  function blen(n){ return n === ZERO ? 0 : n.toString(2).length; }
+  function shl(n, k){ return k >= 0 ? n << B(k) : n >> B(-k); }
+  function p10(k){ return B(10) ** B(k); }
+  // "3.14159", "-1e-5" -> {n, d} with d > 0, or null
+  function parse(s){
+    var m = String(s).trim().replace(/,/g, "").match(/^([+-]?)(\d*)\.?(\d*)(?:e([+-]?\d{1,3}))?$/i);
+    if (!m || !(m[2] + m[3])) { return null; }
+    var e = (+m[4] || 0) - m[3].length, n = B(m[2] + m[3]) * (m[1] === "-" ? -ONE : ONE);
+    return e >= 0 ? { n: n * p10(e), d: ONE } : { n: n, d: p10(-e) };
+  }
+  // exact fraction -> Number (works for tiny and huge values)
+  function num(r){
+    if (r.n === ZERO) { return 0; }
+    var a = r.n < ZERO ? -r.n : r.n, k = 20 - (a.toString().length - r.d.toString().length);
+    var q = k >= 0 ? a * p10(k) / r.d : a / (r.d * p10(-k));
+    return (r.n < ZERO ? -1 : 1) * Number(q + "e" + (-k));
+  }
+  function dyad(q, p, neg){ var n = neg ? -q : q; return p >= 0 ? { n: shl(n, p), d: ONE } : { n: n, d: shl(ONE, -p) }; }
+  function sub(a, b){ return { n: a.n * b.d - b.n * a.d, d: a.d * b.d }; }
+
+  // Round |N/D| to a float with E exponent bits and M mantissa bits, round to nearest, ties to even.
+  function enc(N, D, E, M, kind, sat){
+    var bias = (1 << (E - 1)) - 1, emin = 1 - bias, top = (1 << E) - 1;
+    var maxEf = kind === "ieee" ? top - 1 : top, maxMf = shl(ONE, M) - (kind === "fn" ? TWO : ONE);
+    var mx = { ef: maxEf, mf: maxMf, q: maxMf + shl(ONE, M), p: maxEf - bias - M };
+    if (N === ZERO) { return { ef: 0, mf: ZERO, q: ZERO, p: 0 }; }
+    var e = blen(N) - blen(D);
+    while (shl(N, -Math.min(e, 0)) < shl(D, Math.max(e, 0))) { e--; }
+    while (shl(N, -Math.min(e + 1, 0)) >= shl(D, Math.max(e + 1, 0))) { e++; }
+    var ex = Math.max(e, emin), s = M - ex;
+    var nn = s >= 0 ? shl(N, s) : N, dd = s >= 0 ? D : shl(D, -s), r = nn / dd, rem = nn - r * dd;
+    if (TWO * rem > dd || (TWO * rem === dd && r % TWO === ONE)) { r++; }
+    if (r === shl(ONE, M + 1)) { r = shl(ONE, M); ex++; }
+    var ef = r >= shl(ONE, M) ? ex + bias : 0, mf = ef ? r - shl(ONE, M) : r;
+    if (ef > maxEf || (ef === maxEf && mf > maxMf)) {
+      if (kind === "ieee" && !sat) { return { ef: top, mf: ZERO, inf: true }; }
+      mx.clamp = true; return mx;
+    }
+    return { ef: ef, mf: mf, q: r, p: ex - M, under: r === ZERO };
+  }
+  function bin(v, w){ var s = v.toString(2); while (s.length < w) { s = "0" + s; } return s; }
+  function fmt(v, sig){
+    if (!isFinite(v)) { return v < 0 ? "−∞" : "∞"; }
+    if (v === 0) { return "0"; }
+    var a = Math.abs(v), s = a >= 1e6 || a < 1e-4 ? v.toExponential(sig - 1).replace(/\.?0+e/, "e") : v.toPrecision(sig).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+    return s.replace(/-/g, "−");
+  }
+  function cells(bits, cls){
+    return bits.split("").map(function(b, i){ return '<i class="nf-' + cls[i] + (cls[i] === "k" && cls[i - 1] !== "k" ? " nf-gap" : "") + '">' + b + "</i>"; }).join("");
+  }
+  function row(k, v){ return "<tr><th>" + k + "</th><td>" + v + "</td></tr>"; }
+
+  function draw(){
+    var f = FM[cur], E = f[1], M = f[2], kind = f[3], x = parse(inp.value), sig = E === 11 ? 17 : 10;
+    inp.setAttribute("aria-invalid", x ? "false" : "true");
+    if (!x) { el.querySelector(".nf-out").innerHTML = row(T("value"), T("type a number such as 3.14159 or 1e-5")); return; }
+    var neg = x.n < ZERO, N = neg ? -x.n : x.n, bits = "", cls = "", stored, note = "", formula = "", stats = [];
+    if (kind === "int") {
+      var r = N / x.d, rem = N - r * x.d;
+      if (TWO * rem > x.d || (TWO * rem === x.d && r % TWO === ONE)) { r++; }
+      var q = Number(r) * (neg ? -1 : 1);
+      if (q > 127 || q < -128) { q = q > 0 ? 127 : -128; note = T("out of range: clamps to the end of the range"); }
+      bits = bin((q + 256) % 256, 8); cls = "ssssssss".replace(/s/g, "i");
+      stored = { n: B(q), d: ONE };
+      formula = F("whole numbers from {0} to {1}; the top bit counts −128 (two's complement)", "−128", "127");
+      stats = [F("{0} bits", 8), F("largest {0}", "127"), T("256 values, all evenly spaced")];
+    } else if (kind === "nv") {
+      // assume this value is the largest |x| in its 16-value block: scale = amax / 6, stored in E4M3
+      var sc = enc(N, x.d * B(6), 4, 3, "fn", true);
+      if (sc.under || sc.q === ZERO) { stored = { n: ZERO, d: ONE }; bits = "0000"; cls = "seem"; note = T("too small: rounds to 0"); }
+      else {
+        var sd = dyad(sc.q, sc.p, false), el2 = enc(N * sd.d, x.d * sd.n, 2, 1, "fin", true);
+        stored = dyad(el2.q * sc.q, el2.p + sc.p, neg);
+        bits = (neg ? "1" : "0") + bin(el2.ef, 2) + bin(el2.mf, 1); cls = "seem";
+        var sv = num(dyad(sc.q, sc.p, false));
+        formula = F("scale s = {0} (FP8 E4M3, shared by 16 values) × element {1} (FP4 E2M1)", fmt(sv, 6), fmt(num(dyad(el2.q, el2.p, neg)), 4));
+        bits += " 0" + bin(sc.ef, 4) + bin(sc.mf, 3); cls += " kkkkkkkk";
+      }
+      stats = [T("4 bits + one 8-bit scale per 16 values = 4.5 bits each"), F("largest {0} per block", "6 × 448 = 2,688"), T("plus one FP32 scale per tensor")];
+    } else {
+      var bias = (1 << (E - 1)) - 1, h = enc(N, x.d, E, M, kind, false);
+      bits = (neg ? "1" : "0") + bin(h.ef, E) + bin(h.mf, M);
+      cls = "s" + "e".repeat(E) + "m".repeat(M);
+      if (h.inf) { stored = null; note = T("too big: becomes infinity"); }
+      else {
+        stored = dyad(h.q, h.p, neg);
+        if (h.clamp) { note = T("too big: clamps to the largest value"); }
+        else if (h.under) { note = T("too small: rounds to 0"); }
+        formula = h.ef ? F("exponent field {0} − bias {1} = {2}, so the value is {3} × 2^{2} × {4}", h.ef, bias, fmt(h.ef - bias, 4), neg ? "−1" : "+1", fmt(1 + Number(h.mf) / Math.pow(2, M), sig))
+          : F("exponent field 0: a subnormal (or zero), value = {0} × 2^{1} × {2}", neg ? "−1" : "+1", fmt(1 - bias, 4), fmt(Number(h.mf) / Math.pow(2, M), sig));
+      }
+      var mx = enc(p10(400), ONE, E, M, kind, true), mxv = num(dyad(mx.q, mx.p, false));
+      stats = [F("{0} bits", 1 + E + M), F("largest {0}", fmt(mxv, 6)), F("smallest normal {0}", fmt(Math.pow(2, 1 - bias), 3)), F("about {0} decimal digits", ((M + 1) * Math.LOG10E * Math.LN2).toFixed(1))];
+    }
+    var n = bits.replace(" ", "").length;
+    el.querySelector(".nf-bits").style.setProperty("--n", Math.min(n, 32));
+    el.querySelector(".nf-bits").className = "nf-bits" + (n > 19 ? " many" : "");
+    el.querySelector(".nf-bits").setAttribute("aria-label", T("bits") + " " + bits);
+    el.querySelector(".nf-bits").innerHTML = cells(bits.replace(" ", ""), cls.replace(" ", ""));
+    var sv2 = stored ? num(stored) : (neg ? -Infinity : Infinity), err = stored ? num(sub(stored, x)) : NaN;
+    el.querySelector(".nf-out").innerHTML =
+      row(T("you typed"), inp.value.trim()) +
+      row(T("stored as"), "<b>" + fmt(sv2, sig) + "</b>" + (note ? ' <span class="nf-warn">' + note + "</span>" : "")) +
+      row(T("error"), isNaN(err) ? "∞" : err === 0 ? T("none, exact") : fmt(err, 3) + (num(x) ? " (" + fmt(Math.abs(err / num(x)) * 100, 3) + "%)" : "")) +
+      row(T("bits"), '<code class="nf-raw">' + (kind === "int" || kind === "nv" ? bits : bits[0] + " " + bits.substr(1, E) + " " + bits.substr(1 + E)) + "</code>") +
+      (formula ? row(T("how"), formula) : "");
+    el.querySelector(".nf-stats").innerHTML = stats.map(function(s){ return "<span>" + s + "</span>"; }).join("");
+    el.querySelector(".dg-info").innerHTML = "<b>" + f[0] + "</b>: " + f[4] + (kind === "nv" ? "<br>" + T("Here the typed value is taken as the largest value in its block of 16.") : "");
+  }
+  onTabs(el.querySelector(".dg-tabs"), function(i){ cur = i; draw(); });
+  pick(el.querySelector(".nf-pre"), function(k){ inp.value = k; draw(); });
+  inp.addEventListener("input", function(){ el.querySelectorAll(".nf-pre .on").forEach(function(b){ b.classList.remove("on"); }); draw(); });
+  draw();
+});
+
+def("roofline-chart", function(el){
+  // Peak FP32 (non-Tensor) in GFLOPS and memory bandwidth in GB/s, from NVIDIA's spec sheets.
+  var gpus = [["L40S", 91600, 864], ["H100 SXM", 67000, 3350], ["RTX 5090", 104800, 1792]];
+  // name, FLOPs, bytes per element (or per whole matrix multiply).
+  var ks = [
+    [T("vector add"), 1, 12, "c[i] = a[i] + b[i]"],
+    ["SAXPY", 2, 12, "y[i] = a * x[i] + y[i]"],
+    [T("dot product"), 2, 8, "s += x[i] * y[i]"],
+    [F("matmul N = {0}", 256), 2 * Math.pow(256, 3), 12 * 256 * 256, "C = A × B"],
+    [F("matmul N = {0}", 4096), 2 * Math.pow(4096, 3), 12 * 4096 * 4096, "C = A × B"]
+  ];
+  var W = 360, H = 230, L = 46, R = 12, TOP = 12, B = 34, X0 = -4, X1 = 10, Y0 = 1, Y1 = 5.5;
+  function px(ai){ return L + (Math.log2(ai) - X0) / (X1 - X0) * (W - L - R); }
+  function py(g){ return TOP + (Y1 - Math.log10(g)) / (Y1 - Y0) * (H - TOP - B); }
+  function num(x){ return (+x.toPrecision(3)).toLocaleString("en-US"); }
+  var grid = "";
+  [1 / 16, 1 / 4, 1, 4, 16, 64, 256, 1024].forEach(function(a){
+    grid += '<line class="rf-grid" x1="' + px(a) + '" x2="' + px(a) + '" y1="' + TOP + '" y2="' + (H - B) + '"/><text class="rf-tick" x="' + px(a) + '" y="' + (H - B + 13) + '" text-anchor="middle">' + (a < 1 ? "1/" + 1 / a : a < 1024 ? a : "1k") + "</text>";
+  });
+  [10, 100, 1000, 10000, 100000].forEach(function(g){
+    grid += '<line class="rf-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + py(g) + '" y2="' + py(g) + '"/><text class="rf-tick" x="' + (L - 5) + '" y="' + (py(g) + 3) + '" text-anchor="end">' + (g < 1000 ? g : g / 1000 + "k") + "</text>";
+  });
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("The roofline") + "</span>" + tabs(gpus.map(function(g){ return g[0]; }), 0) + "</div>" +
+    '<div class="dg-stats"></div>' +
+    '<svg class="rf-svg" viewBox="0 0 ' + W + " " + H + '" role="img">' + grid +
+    '<text class="rf-axis" x="' + (L + (W - L - R) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">' + T("arithmetic intensity (FLOP/byte)") + "</text>" +
+    '<text class="rf-axis" transform="translate(11 ' + (TOP + (H - TOP - B) / 2) + ') rotate(-90)" text-anchor="middle">GFLOPS</text>' +
+    '<polyline class="rf-mem"/><polyline class="rf-cmp"/><line class="rf-ridge"/><text class="rf-rl" text-anchor="middle"></text>' +
+    '<g class="rf-dot"><circle r="6"/></g></svg>' +
+    '<div class="dg-tabs rf-ks">' + ks.map(function(k, i){ return '<button type="button" data-k="' + i + '">' + k[0] + "</button>"; }).join("") + "</div>" +
+    '<div class="dg-info" aria-live="polite"></div>';
+  var g = gpus[0], k = ks[0], $ = el.querySelector.bind(el);
+  function draw(){
+    var peak = g[1], bw = g[2], ridge = peak / bw, xmin = Math.pow(2, X0), xmax = Math.pow(2, X1);
+    $(".dg-stats").innerHTML = "<span>" + T("peak FP32") + " <b>" + (peak / 1000).toLocaleString("en-US") + " TFLOPS</b></span><span>" + T("bandwidth") + " <b>" + bw.toLocaleString("en-US") + " GB/s</b></span><span>" + T("ridge point") + " <b>" + num(ridge) + " FLOP/byte</b></span>";
+    $(".rf-mem").setAttribute("points", px(xmin) + "," + py(xmin * bw) + " " + px(ridge) + "," + py(peak));
+    $(".rf-cmp").setAttribute("points", px(ridge) + "," + py(peak) + " " + px(xmax) + "," + py(peak));
+    var r = $(".rf-ridge"), rl = $(".rf-rl");
+    r.setAttribute("x1", px(ridge)); r.setAttribute("x2", px(ridge)); r.setAttribute("y1", py(peak)); r.setAttribute("y2", H - B);
+    rl.setAttribute("x", px(ridge)); rl.setAttribute("y", py(peak) - 5); rl.textContent = F("ridge {0}", num(ridge));
+    var ai = k[1] / k[2], got = Math.min(peak, ai * bw), mem = ai < ridge;
+    var dot = $(".rf-dot");
+    dot.setAttribute("class", "rf-dot " + (mem ? "mem" : "cmp"));
+    dot.style.transform = "translate(" + px(ai) + "px," + py(got) + "px)";
+    var verdict = mem ? T("memory bound") : T("compute bound");
+    $(".rf-svg").setAttribute("aria-label", F("{0} on the {1}: {2}, {3} GFLOPS", k[0], g[0], verdict, Math.round(got).toLocaleString("en-US")));
+    $(".dg-info").innerHTML = ("<code>" + k[3] + "</code><br>" +
+      F("{0} FLOP over {1} bytes = <b>{2} FLOP/byte</b>. The ridge point of the {3} is {4}.", k[1].toLocaleString("en-US"), k[2].toLocaleString("en-US"), num(ai), g[0], num(ridge)) + " " +
+      F("<em>{0}</em>: at most <b>{1} GFLOPS</b>, {2}% of the peak. {3}", verdict, Math.round(got).toLocaleString("en-US"), +(got / peak * 100).toPrecision(2),
+        mem ? T("Faster math would not help. Move fewer bytes.") : T("Memory keeps up. Now the math units are the limit, so Tensor Cores and better math help."))).replace(/。 /g, "。");
+  }
+  onTabs($(".dg-tabs"), function(i){ g = gpus[i]; draw(); });
+  pick($(".rf-ks"), function(i){ k = ks[+i]; draw(); });
+  $(".rf-ks button").click();
+});

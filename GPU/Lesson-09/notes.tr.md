@@ -1,144 +1,165 @@
-# 09 > Compute Capability
+# 09 > Hesap mı Bellek mi Sınırlıyor
 
-Bu derste compute capability'nin ne olduğunu, numaralarının nasıl işlediğini ve hangi özellikleri, hangi CUDA (Compute Unified Device Architecture) araç seti sürümlerini kullanabileceğini nasıl belirlediğini göreceksin. Dersin sonunda herhangi bir GPU'ya (Graphics Processing Unit, grafik işlem birimi) bakıp neyi desteklediğini söyleyebileceksin.
+Her kernel iki şeyden biri tarafından yavaşlatılır: GPU'nun (Graphics Processing Unit, grafik işlem birimi) ne kadar hızlı hesap yapabildiği ya da veriyi ne kadar hızlı taşıyabildiği. Bu derste hangisi olduğunu tek bir sayıyla, aritmetik yoğunlukla, ve roofline denen basit bir grafikle nasıl anlayacağını göreceksin. Bütün örneklerde bu derslerdeki programları çalıştıran NVIDIA L40S kullanılıyor.
 
-## Compute Capability Nedir
+## Her Kernel'in İki Sınırı
 
-Compute capability (CC), NVIDIA'nın bir GPU'nun özelliklerini tanımlamak için kullandığı sistemdir. Yazılımın değil, donanımın sürüm numarasıdır.
+Bir kernel'in bitmesi için iki şey gerekir: hesabının çekirdekler tarafından yapılması ve verisinin bellek ile çekirdekler arasında taşınması.
 
-Bir pazarlama puanı ya da benchmark değildir. Bir GPU mimarisinin tam olarak neyi yapıp neyi yapamadığını söyler. Onu tek bir sayıya sığmış bir özellik tablosu gibi düşün.
+İkisi de zaman alır ve GPU'da ikisi aynı anda olur. Bazı warp'lar veri beklerken diğerleri hesap yapar (bkz. [Ders 08](../Lesson-08/notes.md)). Bu yüzden kernel yaklaşık olarak ikisinden yavaş olanı kadar sürer:
 
-## Numaralandırma Nasıl Çalışır
+- hesap süresi = FLOPs / tepe FLOPS
+- veri süresi = taşınan bayt / bellek bant genişliği
 
-Compute capability, 7.5, 8.9 ya da 12.0 gibi bir sürüm numarasıdır. Kural bütün nesiller için aynıdır:
+Hangisi büyükse süreyi o belirler. Veri kısmı büyükse kernel bellek sınırlıdır (memory bound). Hesap kısmı büyükse hesap sınırlıdır (compute bound).
 
-- Noktadan önceki sayı büyük bir mimari değişikliği gösterir
-- Noktadan sonraki sayı küçük iyileştirmeleri ya da eklemeleri gösterir
+## FLOP Saymak
 
-Yani 7.x'ten 8.x'e geçmek sadece bir hız artışı değildir. Yeni donanım birimleri ve yeni yetenekleri olan farklı bir mimari demektir. Somut bir örnek: RTX 4090 CC 8.9, A100 ise CC 8.0'dır. İkisi de 8.x ailesindendir, yani temel tasarımı paylaşırlar; ama 8.9, A100'de olmayan özellikler ekler, örneğin FP8 Tensor Core'ları.
+Bir FLOP (floating-point operation, kayan noktalı işlem), kayan noktalı sayılar üzerinde bir toplama, çıkarma, çarpma ya da bölmedir. FLOPS (floating-point operations per second, saniyedeki kayan noktalı işlem) ise bir hızdır: saniyede kaç tane yapıldığı.
+
+[Ders 06](../Lesson-06/notes.md) tepe değerin nereden geldiğini gösterdi: çekirdek × saat hızı × 2, çünkü bir FMA (fused multiply-add, birleşik çarp-topla) 2 FLOP sayılır. L40S için: 18.176 FP32 (32-bit floating point, 32 bit kayan nokta) çekirdek × 2,52 GHz × 2 ≈ 91,6 TFLOPS (saniyede trilyon FLOP), bu da NVIDIA'nın özellik sayfasındaki FP32 değeridir.
+
+> [!NOTE]
+> FLOPs (küçük s) bir iş miktarıdır. FLOPS (büyük S) bir hızdır. 1.000 FLOP yapan bir kernel, 91,6 TFLOPS'a ulaşan bir GPU'da yalnızca hesabı için en az 1.000 / 91,6 trilyon saniye harcar.
+
+Bir kernel'in FLOP sayısını bulmak için bir thread'in yaptığı hesabı say ve thread sayısıyla çarp. `c[i] = a[i] + b[i]` eleman başına 1 FLOP'tur. `y[i] = a * x[i] + y[i]` eleman başına 2 FLOP'tur: bir çarpma ve bir toplama.
+
+## Bayt Saymak
+
+Taşınan bayt, GPU belleği ile çip arasında gidip gelen baytlardır. Bir `float` 4 bayttır. Bir thread'in bellekten okuduğu ve belleğe geri yazdığı her değeri say.
+
+`c[i] = a[i] + b[i]` için her thread `a[i]` ve `b[i]` okur, `c[i]` yazar: 3 float × 4 bayt = eleman başına 12 bayt.
+
+Bu tarafın hız sınırı [Ders 06](../Lesson-06/notes.md)'daki bellek bant genişliğidir. L40S'te 48 GB GDDR6 (Graphics Double Data Rate 6) bellek ve 864 GB/s (gigabytes per second, saniyede gigabayt) bant genişliği vardır.
+
+## Aritmetik Yoğunluk
+
+İki sayıyı bir araya getirince bu dersin en işe yarar sayısını elde edersin:
+
+aritmetik yoğunluk = FLOPs / taşınan bayt
+
+Birimi FLOP/bayt'tır ve bir kernel'in içeri aldığı her bayt için ne kadar hesap yaptığını söyler. Yalnızca kernel'e bağlıdır, GPU'ya değil. Yoğunluğu düşük bir kernel zamanının çoğunu veri bekleyerek geçirir. Yoğunluğu yüksek bir kernel her baytı defalarca kullanır.
+
+Vektör toplamada 12 bayt başına 1 FLOP vardır: 1 / 12 ≈ 0,083 FLOP/bayt. Bu çok düşüktür.
+
+## Kırılma Noktası
+
+GPU'nun da karşılaştırma için kendi sayısı vardır. Tepe FLOPS'u bellek bant genişliğine böl:
+
+kırılma noktası (ridge point) = tepe FLOPS / bellek bant genişliği
+
+L40S için: 91.600 GFLOPS / 864 GB/s ≈ 106 FLOP/bayt. FP32 çekirdeklerini meşgul tutmak için bir kernel'in okuduğu her bayt başına yaklaşık 106 FLOP yapması gerekir. Daha azında çekirdekler belleği bekler.
 
 > [!TIP]
-> Makinendeki GPU'nun CC değerini görmek için `nvidia-smi --query-gpu=name,compute_cap --format=csv` komutunu çalıştır. NVIDIA'nın "CUDA GPUs" web sayfası her kartın CC değerini listeler.
+> Hızlı test: kernel'in aritmetik yoğunluğunu GPU'nun kırılma noktasıyla karşılaştır. Altındaysa bellek sınırlı, üstündeyse hesap sınırlıdır.
 
-## Mimariler
+Farklı GPU'ların kırılma noktaları çok farklıdır:
 
-### Volta → CC 7.0
+| GPU | Tepe FP32 | Bant genişliği | Kırılma noktası |
+|---|---|---|---|
+| L40S | 91,6 TFLOPS | 864 GB/s | ≈ 106 FLOP/bayt |
+| H100 SXM | 67 TFLOPS | 3.350 GB/s | ≈ 20 FLOP/bayt |
+| RTX 5090 | 104,8 TFLOPS | 1.792 GB/s | ≈ 58 FLOP/bayt |
 
-Volta, Tensor Core'ları getirdi. Bunlar yapay zekâda (AI, artificial intelligence) ve derin öğrenmede kullanılan matris işlemlerini hızlandıran özel birimlerdir. Volta'dan önce bu işlemler genel amaçlı CUDA çekirdeklerinde çalışıyordu. Volta'dan sonra kendilerine ayrılmış bir donanımları oldu.
+H100'ün FP32 hesap gücüne göre bant genişliği çok daha fazladır, bu yüzden oldukça hafif kernel'ler bile onun FP32 tavanına ulaşır. L40S'in FP32 hesap gücü yüksektir ama belleği GDDR6'dır, bu yüzden birçok kernel önce bellek sınırına çarpar.
 
-### Turing ve Ampere → CC 7.5 ve 8.x
+## Roofline Modeli
 
-Turing (CC 7.5, RTX 20 serisi), Tensor Core'ları tüketici kartlarına taşıdı. Ampere (A100 için CC 8.0, RTX 30 serisi için 8.6) daha güçlü ve verimli Tensor Core'lar, daha yüksek bellek bant genişliği ve daha iyi enerji verimliliği getirdi. Ada Lovelace (CC 8.9, RTX 40 serisi ve L40S) ise FP8 (8 bit kayan noktalı sayı) desteği ekledi.
+Roofline modeli (roofline model) bunların hepsini tek bir grafikte çizer. x ekseni aritmetik yoğunluk, y ekseni ulaşılabilir GFLOPS'tur (saniyede milyar FLOP). İki eksen de logaritmiktir, yani her adım bir kattır.
 
-### Hopper → CC 9.0
+ulaşılabilir GFLOPS = min(tepe GFLOPS, aritmetik yoğunluk × bant genişliği)
 
-Hopper (H100 ve H200) bir başka büyük adımdı. Çok büyük yapay zekâ modelleri için yeni yürütme modelleri getirdi ve yapay zekâ performansını ileri taşıdı.
+Grafikte kırılma noktasında buluşan iki çizgi vardır. Solda eğik bir çizgi: bant genişliği × yoğunluk, yani bellek tavanı. Sağda düz bir çizgi: tepe değer, yani hesap tavanı. Bir kernel tavanın altında bir noktadır. Tavanın üstüne asla çıkamaz.
 
-### Blackwell → CC 10.x, 11.0 ve 12.x
+<roofline-chart></roofline-chart>
 
-Blackwell, 2026'da sevkiyatı yapılan ana nesildir. 5. nesil Tensor Core'lara ve NVFP4 (NVIDIA 4 bit kayan noktalı sayı) adlı yeni bir duyarlık biçimine sahiptir. NVFP4, büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkarır. FP4 hızlandırması önceki mimarilerde yoktur.
+Bir GPU ve bir kernel seç. Eğik kısımdaki nokta bellek sınırlı, düz kısımdaki nokta hesap sınırlıdır.
 
-Blackwell, her çip ailesi için bir tane olmak üzere birkaç farklı compute capability ile gelir:
+## Hesaplı Örnek: Vektör Toplama
 
-| CC | Ürünler |
-|---|---|
-| 10.0 | B200, GB200 (veri merkezi) |
-| 10.3 | B300, GB300 (Blackwell Ultra, veri merkezi) |
-| 11.0 | Jetson Thor (robotik) |
-| 12.0 | GeForce RTX 50 serisi, RTX PRO Blackwell |
-| 12.1 | GB10 (DGX Spark masaüstü) |
+L40S'te dizi başına 100 milyon float ile vektör toplamayı al (N = 100.000.000).
 
-> [!NOTE]
-> Bir sonraki mimari olan Rubin, CC 10.7'dir. B200 ve B300 ile aynı 10.x ailesine aittir. İlk Vera Rubin NVL72 rack'lerinin sevkiyatı Eylül 2026'da başladı.
+- FLOP: eleman başına 1, yani 100.000.000 FLOP.
+- Bayt: eleman başına 12, yani 1.200.000.000 bayt = 1,2 GB.
+- Hesap süresi: 100.000.000 / 91,6 trilyon ≈ 0,0011 ms (yaklaşık 1,1 µs).
+- Veri süresi: 1,2 GB / 864 GB/s ≈ 1,39 ms.
 
-## Özellik Desteği
+Veri kısmı yaklaşık 1.270 kat daha uzundur. Roofline aynı cevabı verir: 0,083 × 864 ≈ 72 GFLOPS ulaşılabilir, 91.600 GFLOPS tepe değerin %0,1'inden az. Vektör toplama her GPU'da ağır biçimde bellek sınırlıdır. Bu, CUDA (Compute Unified Device Architecture) Pratik bölümündeki vektör toplama dersinin programıdır ([CUDA Ders 08](../../cuda/Lesson-08/notes.md)).
 
-Resmî CUDA dokümantasyonunda özellikleri compute capability sürümleriyle eşleştiren tablolar vardır. Bu tablolarda net örüntüler görülür:
+## Hesaplı Örnek: SAXPY ve İç Çarpım
 
-- CC 5.0'daki GPU'lar yarım duyarlıklı (FP16) işlemleri desteklemez
-- Tensor Core'lar sadece CC 7.0'dan itibaren vardır
-- FP8 Tensor Core'lar CC 8.9 (Ada Lovelace) ve 9.0 (Hopper) ile gelir
-- NVFP4, CC 10.0 ya da üstünü gerektirir
+SAXPY (Single-precision A times X Plus Y, tek duyarlıklı a çarpı x artı y) `y[i] = a * x[i] + y[i]` hesaplar. Eleman başına 2 FLOP (bir FMA) yapar ve 12 bayt taşır: `x[i]` ve `y[i]` okur, `y[i]` yazar. Aritmetik yoğunluk: 2 / 12 ≈ 0,167 FLOP/bayt. L40S'te: 0,167 × 864 ≈ 144 GFLOPS ulaşılabilir.
 
-Eksik bir donanım özelliği sonradan eklenemez. GPU'nda Tensor Core yoksa onları kullanamazsın. Yazılım bazen eksik bir birimi taklit edebilir (emülasyon), ama bu çok daha yavaştır ve çoğu Tensor Core özelliği için böyle bir yol yoktur. Donanımda ya o birim vardır ya da yoktur.
+İç çarpım (dot product) iki dizi üzerinde `s += x[i] * y[i]` hesaplar. Eleman başına 2 FLOP yapar ve 8 bayt okur, eleman başına hiçbir şey yazmaz. Aritmetik yoğunluk: 2 / 8 = 0,25 FLOP/bayt. L40S'te: 0,25 × 864 = 216 GFLOPS ulaşılabilir.
 
-Bu yüzden performansa duyarlı CUDA kodu yazmadan önce "GPU'm ihtiyacım olanı destekliyor mu?" diye sor. Bu soru, "GPU'm yeterince hızlı mı?" sorusundan önce gelir.
+İkisi de vektör toplamadan biraz iyidir ama ikisi de 106 olan kırılma noktasının çok altındadır. Bellek sınırlıdırlar. Hesabı hızlandırmak sürelerini hiç değiştirmez.
 
-## Yazılım Uyumluluğu
+## Hesaplı Örnek: Matris Çarpımı
 
-Compute capability, hangi CUDA araç seti sürümlerini kullanabileceğini de belirler. Yeni bir mimari, onu tanıyan bir araç setine ihtiyaç duyar; eski mimariler de birkaç yıl sonra yeni araç setlerinden çıkarılır.
+İki N × N matrisin matris çarpımı (matrix multiply) `C = A × B` farklıdır. C'nin her elemanı N çarpımın toplamıdır, yani N çarpma ve N toplama ister:
 
-Bazı örnekler:
+- FLOP: N × N eleman × 2N = 2N³.
+- Bayt, her matris bellekten yalnızca bir kez geçerse: A ve B okunur, C yazılır, yani 3 × N² float × 4 bayt = 12N².
+- Aritmetik yoğunluk: 2N³ / 12N² = N / 6.
 
-- Hopper (CC 9.0): CUDA 11.8 ya da üstünü gerektirir
-- Blackwell (CC 10.0 ve 12.0): yerel cubin desteği için CUDA 12.8 ya da üstünü gerektirir
-- Blackwell Ultra (CC 10.3): CUDA 12.9 ya da üstünü gerektirir
-- Rubin (CC 10.7): CUDA 13.4'te destekleniyor
-- Maxwell, Pascal ve Volta (CC 5.x ile 7.0 arası): CUDA 13 bunları hiç desteklemez; onlar için son araç setleri CUDA 12.x'tir
+Yoğunluk N ile büyür, çünkü okunan her sayı N kez kullanılır. N = 4.096 için:
+
+- FLOP: 2 × 4.096³ = 137.438.953.472 (yaklaşık 137 milyar).
+- Bayt: 12 × 4.096² = 201.326.592 (yaklaşık 201 MB).
+- Aritmetik yoğunluk: 4.096 / 6 ≈ 683 FLOP/bayt.
+
+683, 106'nın çok üstündedir, bu yüzden L40S'te bu matris çarpımı hesap sınırlıdır. Hesap süresi: 137,4 milyar / 91,6 trilyon ≈ 1,5 ms. Veri süresi: 201 MB / 864 GB/s ≈ 0,23 ms. N = 256 için yoğunluk yalnızca 256 / 6 ≈ 43'tür: L40S'te bellek sınırlı (kırılma 106), H100'de ise hesap sınırlı (kırılma 20).
 
 > [!WARNING]
-> CUDA 13 (güncel ana sürüm, Eylül 2026 itibarıyla 13.4) sadece CC 7.5 (Turing) ve üstünü destekler. GTX 1080 (CC 6.1) gibi bir Pascal kartında CUDA 12.x'te kalman gerekir.
+> N / 6 en iyi durumdur: her matris bellekten bir kez geçer. Basit (naive) bir kernel aynı satır ve sütunları tekrar tekrar okur ve çok daha fazla bayt taşır, bu da gerçek yoğunluğunu düşürür. Veriyi çip üstü bellekten, örneğin paylaşımlı bellek ve önbelleklerden ([Ders 07](../Lesson-07/notes.md)) yeniden kullanmak, gerçek bir kernel'in N / 6'ya yaklaşmasını sağlar.
 
-Mimarin için gereken en düşük sürümün altındaki ya da mimarini artık desteklemeyen bir araç seti kesin bir hata verir. Kod ya derlenmez ya da çalışma zamanında hata verir.
+## Sonuç Ne Anlama Geliyor
 
-İş akışı hep aynıdır:
+Cevap, emeğini nereye harcaman gerektiğini söyler:
 
-1. GPU'nun compute capability değerini bul.
-2. CUDA sürümünü seç.
-3. Kodunu yaz.
+- Bellek sınırlı: veri taşımayı iyileştir. Her baytı bir kez oku, büyük ve hizalı parçalar halinde oku (birleşik erişim), tekrar kullanılan veriyi paylaşımlı bellekte ya da register'larda tut, daha az bayt taşınsın diye daha küçük sayı formatları kullan ve kernel'leri birleştir ki ara veri dışarı yazılıp geri okunmasın.
+- Hesap sınırlı: hesabı iyileştir. Tensor Core'ları kullan, doğruluk izin verdiğinde daha ucuz formatlar seç ve gerekmeyen işi kaldır.
 
-<cc-explorer></cc-explorer>
+Yanlış tarafı iyileştirmek hiçbir şey kazandırmaz. Vektör toplamanın hesabını iki kat hızlandırsan da süresi yaklaşık 1,39 ms kalır, çünkü sınır hiçbir zaman hesap değildi.
 
-## Alt Seviye Katman (PTX)
+## Daha Yüksek Bir Tavan: Tensor Core'lar
 
-CUDA kodu doğrudan GPU'da çalışmaz. Önce PTX'e (Parallel Thread Execution) derlenir. PTX, NVIDIA GPU'ları için bir assembly dili gibi düşük seviyeli bir ara dildir.
+Yukarıdaki tavanlar sıradan çekirdeklerdeki FP32 içindir. Tensor Core'lar matris hesabı için çok daha yüksek bir hesap tavanı verir. L40S, Tensor Core'larında seyreklik olmadan FP16 (16-bit floating point, 16 bit kayan nokta) ile 362 TFLOPS'a ulaşır, FP32 tepe değerinin yaklaşık 4 katı. Bant genişliği yine 864 GB/s olduğundan kırılma noktası yaklaşık 362.000 / 864 ≈ 419 FLOP/bayt'a çıkar.
 
-Bazı PTX komutları, sadece belirli bir compute capability'den itibaren var olan donanım birimlerine ihtiyaç duyar. Warp shuffle fonksiyonları buna bir örnektir.
+Daha yüksek bir tavan yalnızca hesap sınırlı kernel'lere yardım eder. Vektör toplama, tavan ne olursa olsun 72 GFLOPS'ta kalır. [Ders 10](../Lesson-10/notes.md) sayı formatlarını ve Tensor Core'ları anlatıyor.
 
-> [!NOTE]
-> Warp shuffle fonksiyonları, bir warp'taki thread'lerin paylaşımlı bellek ya da global bellek kullanmadan veri paylaşmasını sağlar. Warp shuffle, CC 3.0'dan (Kepler) beri vardır.
+## Bunun CUDA İçin Önemi
 
-GPU'n en düşük sürümün altındaysa bu komutlar çalışamaz. Onlar için gereken donanım çipte yoktur.
+Bir kernel'i ayarlamadan önce FLOP'larını ve baytlarını say. Tek satırlık bir hesap, bellek erişimi üzerinde mi yoksa hesap üzerinde mi çalışman gerektiğini ve kernel'in bu GPU'nun yapabileceğinin en iyisinden ne kadar uzak olduğunu söyler.
 
-## Özet
-
-Aynı kural makine öğrenmesi hatlarında, fizik simülasyonlarında ve özel CUDA kernel'larında da geçerlidir. GPU'nun compute capability değeri, donanımın ile kodun arasındaki sözleşmedir.
-
-CC numaranı bil. Onu CUDA dokümantasyonuyla karşılaştır. Doğru araç seti sürümünü seç. Sonra derle. Performans ayarı, optimizasyon ve özellik seçimi hep buradan başlar.
-
-> Compute capability sadece bir sürüm numarası değildir. GPU'nun gerçekte neler yapabildiğinin tanımıdır.
+İlk yazdığın basit kernel'lerin çoğu, örneğin vektör toplama, ölçekleme, kopyalama ve indirgeme (reduction), bellek sınırlıdır. Bunlarda hedef TFLOPS değil, bellek bant genişliğine ulaşmaktır. 1,2 GB'ını 864 GB/s'ye yakın bir hızla taşıyan bir vektör toplama, tepe FLOPS'un %0,1'inden azını kullansa bile çok iyi bir kernel'dir.
 
 ## Sözlük
 
-- compute capability (CC): NVIDIA'nın, bir GPU mimarisinin neyi yapıp neyi yapamadığını söyleyen sürüm numarası.
-- GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
-- benchmark: hızı ölçen bir test programı; compute capability bir hız puanı değildir.
-- mimari: bir GPU ailesinin donanım tasarımı; her mimari kendi ana CC numarasını alır.
-- noktadan önceki sayı (ana numara): büyük bir mimari değişikliği gösterir; Ampere için 8, Hopper için 9 gibi.
-- noktadan sonraki sayı (alt numara): küçük iyileştirmeleri ya da eklemeleri gösterir; 8.x ailesinde 8.6 ya da 8.9 gibi.
-- `nvidia-smi`: NVIDIA'nın komut satırı aracı; `--query-gpu=compute_cap` ile her GPU'nun CC değerini yazdırır.
-- Tensor Core: yapay zekâ için matris işlemlerini hızlandıran özel birimler; CC 7.0'dan itibaren vardır.
-- CUDA çekirdekleri: bir NVIDIA GPU'sunun genel amaçlı aritmetik birimleri; çekirdek sayısında sayılanlar bunlardır.
-- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitilmesi büyük ölçüde dev matris hesabıdır.
-- Turing: NVIDIA'nın 2018 mimarisi (RTX 20 serisi), CC 7.5; CUDA 13'ün desteklediği en eski mimari.
-- Ada Lovelace: NVIDIA'nın 2022 mimarisi (RTX 40 serisi, L40S), CC 8.9.
-- Hopper: NVIDIA'nın 2022 veri merkezi mimarisi (H100, H200), CC 9.0.
-- Blackwell: NVIDIA'nın 2026'daki ana mimarisi; farklı çipleri için CC 10.0, 10.3, 11.0, 12.0 ve 12.1.
-- Blackwell Ultra: B300 ve GB300; veri merkezleri için geliştirilmiş Blackwell, CC 10.3.
-- Rubin: Blackwell'den sonraki mimari, CC 10.7; Eylül 2026'dan beri veri merkezi rack'lerinde sevk ediliyor.
-- NVFP4 (NVIDIA 4 bit kayan noktalı sayı): büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkaran Blackwell duyarlık biçimi.
-- FP8 (8 bit kayan noktalı sayı): FP16'dan daha az hassas, ama onu destekleyen Tensor Core'larda iki kat hızlı bir sayı biçimi.
-- çıkarım (inference): eğitilmiş bir yapay zekâ modelini cevap almak için çalıştırmak; model eğitiminin tersi.
-- FP16: yarım duyarlıklı işlemler; CC 5.0'daki GPU'lar bunları desteklemez.
-- emülasyon: eksik donanımı yazılımla taklit etmek; genelde çok daha yavaştır ya da hiç mümkün değildir.
-- araç seti (CUDA Toolkit): nvcc derleyicisini, kütüphaneleri ve araçları içeren NVIDIA paketi; her sürüm belirli bir compute capability aralığını destekler.
-- CUDA 13: güncel ana CUDA sürümü; sadece CC 7.5 ve üstünü destekler.
-- Maxwell / Pascal / Volta: CUDA 13'ün artık desteklemediği 2014, 2016 ve 2017 NVIDIA mimarileri (CC 5.x ile 7.0 arası).
-- cubin: tek bir compute capability için derlenmiş GPU ikili dosyası; daha yeni GPU'lar için yeniden derlenebilen PTX'in aksine.
-- çalışma zamanı (runtime): programın çalıştığı an; derleme zamanının tersi.
-- PTX (Parallel Thread Execution): NVIDIA GPU'ları için assembly gibi düşük seviyeli bir ara dil; CUDA kodu önce buna derlenir.
-- assembly dili: bir işlemcinin çalıştırdığı temel komutların insanın okuyabileceği biçimi; her komut bir satır.
-- warp shuffle: bir warp'taki thread'lerin paylaşımlı ya da global belleği kullanmadan veri paylaşmasını sağlayan fonksiyonlar.
-- warp: aynı komutu birlikte çalıştıran 32 thread'lik grup.
-- global bellek: GPU'nun ana belleği (VRAM); her thread görür, ama paylaşımlı bellekten çok daha yavaştır.
-- kernel: GPU'da çalışan, CPU'daki koddan başlatılan fonksiyon.
+- GPU (Graphics Processing Unit): bu derslerin konusu olan, paralel çalışan çok sayıda çekirdekten oluşan işlemci.
+- kernel: GPU'da çalışan, her thread için bir kopyası olan fonksiyon.
+- warp: birlikte çalışan 32 thread'lik grup; bazı warp'lar veri beklerken diğerleri hesap yapar.
+- bellek sınırlı (memory bound): süresini hesabın değil veri taşımanın belirlediği kernel; roofline'ın eğik kısmında durur.
+- hesap sınırlı (compute bound): süresini veri taşımanın değil hesabın belirlediği kernel; roofline'ın düz kısmında durur.
+- FLOP (floating-point operation): kayan noktalı sayılar üzerinde bir toplama, çıkarma, çarpma ya da bölme; FLOPs (küçük s) bunların sayısıdır.
+- FLOPS (floating-point operations per second): bir hız; GFLOPS saniyede milyar, TFLOPS saniyede trilyon FLOP demektir.
+- FMA (fused multiply-add): a × b + c hesaplayan ve 2 FLOP sayılan tek komut.
+- FP32 (32-bit floating point): GPU hesabının standart sayı formatı; bir `float` 4 bayttır.
+- tepe FLOPS (peak FLOPS): çekirdek × saat hızı × 2; L40S için FP32'de 91,6 TFLOPS.
+- taşınan bayt (bytes moved): GPU belleği ile çip arasında gidip gelen baytlar, her okuma ve her yazma sayılır.
+- bellek bant genişliği (memory bandwidth): belleğin saniyede kaç bayt verebildiği; L40S'te 864 GB/s.
+- GDDR6 (Graphics Double Data Rate 6): L40S'teki bellek türü, H100 gibi veri merkezi GPU'larındaki HBM'den (High Bandwidth Memory) yavaştır.
+- aritmetik yoğunluk (arithmetic intensity): FLOP sayısının taşınan bayta bölümü, FLOP/bayt cinsinden; GPU'ya değil kernel'e bağlıdır.
+- kırılma noktası (ridge point): tepe FLOPS'un bellek bant genişliğine bölümü; L40S'te yaklaşık 106 FLOP/bayt, H100 SXM'de 20.
+- roofline modeli (roofline model): ulaşılabilir FLOPS'u aritmetik yoğunluğa karşı çizen, eğik bir bellek tavanı ve düz bir hesap tavanı olan log-log grafik.
+- ulaşılabilir GFLOPS (attainable GFLOPS): bir kernel'in en fazla ulaşabileceği değer, min(tepe, yoğunluk × bant genişliği).
+- vektör toplama (vector add): `c[i] = a[i] + b[i]`, 12 bayt başına 1 FLOP.
+- SAXPY (Single-precision A times X Plus Y): `y[i] = a * x[i] + y[i]`, 12 bayt başına 2 FLOP.
+- iç çarpım (dot product): iki dizi üzerinde `x[i] * y[i]` toplamı, 8 bayt başına 2 FLOP.
+- matris çarpımı (matrix multiply): `C = A × B`; N × N FP32 matrisler için en az 12N² bayt üzerinden 2N³ FLOP, yani yoğunluk N / 6.
+- paylaşımlı bellek (shared memory): bir block'un thread'lerinin paylaştığı hızlı çip üstü bellek; kernel'in veriyi tekrar okumadan yeniden kullanmasını sağlar.
+- birleşik erişim (coalesced access): komşu thread'lerin komşu adresleri okuması, böylece bellek onlara birkaç büyük aktarımla hizmet eder.
+- Tensor Core: matris hesabı için yapılmış, tavanı çok daha yüksek birimler; L40S'te seyreklik olmadan FP16'da 362 TFLOPS.
+- FP16 (16-bit floating point): 2 baytlık sayı formatı; Tensor Core'lar onu FP32 çekirdeklerin FP32'yi çalıştırdığından çok daha hızlı çalıştırır.
+- seyreklik (sparsity): Tensor Core'ların sabit bir desende sıfırları atlaması; özellik sayfaları çoğu zaman bununla verilen, yoğun değerin iki katı olan sayıları gösterir.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın kendi GPU'larında çalışan programlar yazmak için platformu.

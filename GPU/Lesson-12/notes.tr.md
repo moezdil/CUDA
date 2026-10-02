@@ -1,99 +1,151 @@
-# 12 > CUDA Toolkit, GPU Programlamanın Temeli
+# 12 > Birlikte Çalışan GPU'lar
 
-Bu derste CUDA Toolkit'in ne olduğunu ve sana neler sunduğunu göreceksin. CUDA Toolkit, GPU (Graphics Processing Unit, grafik işlemci) üzerinde program yazmak, derlemek, çalıştırmak ve incelemek için kullandığın ortamdır. Ekim 2026 itibarıyla en yeni sürüm CUDA 13.4.
+Büyük yapay zekâ (AI, artificial intelligence) modelleri aynı anda yüzlerce, hatta binlerce GPU (Graphics Processing Unit, grafik işlem birimi) üzerinde eğitilir. Bu derste tek bir GPU'nun neden yetmediğini, GPU'ların bir sunucunun, bir rack'in ve koca bir cluster'ın içinde nasıl birbirine bağlandığını ve işin aralarında nasıl bölündüğünü göreceksin. Sonunda ters yöne bakacağız: büyük bir GPU'yu birkaç küçük GPU'ya bölmek.
 
-## CUDA nedir
+## Tek GPU Neden Yetmez
 
-CUDA (Compute Unified Device Architecture), NVIDIA'nın paralel hesaplama platformudur ve kodunu GPU'ya bağlar. O olmadan bir NVIDIA GPU'yu tam olarak kontrol edemezsin.
+Birden fazla GPU kullanmanın iki nedeni var. Ya model tek bir GPU'nun belleğine sığmaz ya da tek GPU ile eğitim çok uzun sürer.
 
-## Derleyici: nvcc
+70 milyar parametreli (modelin öğrendiği sayılar) bir model düşün. BF16 (brain floating point, 16 bit) ile saklandığında her parametre 2 bayt tutar, bkz. [Ders 10](../Lesson-10/notes.md):
 
-Toolkit'in merkezinde derleyici (compiler), yani `nvcc` (NVIDIA CUDA Compiler) bulunur. CUDA kodunu GPU'nun çalıştırabileceği koda çevirir.
-
-Bu iki adımda olur: önce kodun bir ara biçime, PTX'e (Parallel Thread Execution) dönüşür; sonra PTX, belirli bir GPU mimarisi için makine koduna çevrilir. Bu makine koduna SASS (Streaming Assembler) denir.
-
-<nvcc-pipeline></nvcc-pipeline>
-
-Bu mimariyi compute capability (hesaplama yeteneği) numarasıyla belirtirsin. `-arch=sm_89` bayrağı compute capability 8,9 demektir: ana sürüm 8, alt sürüm 9. Bu Ada nesli, örneğin L40S. Hopper H100 `sm_90` (9,0), Blackwell B200 ise `sm_100` (10,0).
-
-Ampere, Hopper ve Blackwell gibi mimarilerin komutları, veri türleri ve yürütme modelleri farklıdır, bu yüzden doğru mimari için derlemen gerekir. Aynı kod farklı GPU'larda çalışabilir, ama doğru derleme hedefi olmadan aynı şekilde davranmaz ya da aynı hıza ulaşmaz.
-
-## Kütüphaneler
-
-Toolkit sana optimize edilmiş kütüphaneler de sunar. Bunlar GPU'yu iyi kullanır, böylece her şeyi kendin yazmak zorunda kalmazsın. Şu alanlar için kütüphaneler var:
-
-- lineer cebir (cuBLAS)
-- Fourier dönüşümleri (cuFFT)
-- rastgele sayı üretimi (cuRAND)
-- seyrek matrisler (cuSPARSE)
-
-Derin öğrenme için NVIDIA'nın cuDNN kütüphanesi var. Ayrı indirilir, toolkit'in parçası değildir.
-
-Bu kütüphaneler yeni donanımlar için güncellenir. Yeni CUDA sürümleri Hopper'da FP8 (8 bit kayan nokta), Blackwell'de FP4 (4 bit kayan nokta) gibi düşük duyarlıklı formatları destekliyor. Modern yapay zekâ (AI, Artificial Intelligence) iş yükleri bu formatları kullanıyor.
-
-## Runtime API
-
-Programın GPU ile CUDA runtime API (Application Programming Interface, uygulama programlama arayüzü) üzerinden konuşur. Açık API çağrılarıyla programın:
-
-- GPU'da bellek ayırır
-- veriyi CPU (Central Processing Unit, merkezi işlemci) ile GPU arasında taşır
-- kernel'ları başlatır
-
-Veri taşıma çoğu zaman GPU programlarındaki asıl darboğazdır. Bu yüzden verinin ne zaman ve nasıl taşındığını bilmek, kernel'ı yazmak kadar önemlidir.
-
-## Profiling ve hata ayıklama araçları
-
-Programının nasıl davrandığını da görmen gerekir. Toolkit'te GPU uygulamalarında profiling (performans ölçümü), hata ayıklama ve analiz için araçlar var: Nsight Systems, Nsight Compute, cuda-gdb ve Compute Sanitizer. Bu araçlar performansı ölçer, darboğazları ve bellek sorunlarını bulur. İş yükleri büyüdükçe performans ayarı, geliştirmenin zorunlu bir parçası olur.
-
-## Örnek programlar
-
-NVIDIA örnek programlar da yayınlar. Bunlar belleğin nasıl yönetildiğini, kernel'ların nasıl başlatıldığını ve performansın nasıl iyileştirileceğini gösterir. CUDA 11.6'dan beri toolkit'in içinde gelmiyorlar. Onları GitHub'daki cuda-samples deposundan alırsın. Onları incelemek, teoriden gerçek anlayışa geçmenin hızlı bir yoludur.
-
-## Toolkit donanımı takip eder
-
-Toolkit, GPU mimarisine sıkı sıkıya bağlı: her yeni mimari yeni donanım özellikleri getirir, toolkit de onlara destek ekler.
-
-- CUDA 13.0 Ağustos 2025'te çıktı. Güncel sürüm CUDA 13.4.
-- CUDA 13, Turing'i (compute capability 7,5) ve ondan yeni bütün mimarileri, Blackwell (10.x ve 12.x) dahil, destekler. CUDA 13.4, kütüphanelerine Rubin (10,7) desteğini ekledi. Rubin veri merkezi GPU'ları 2026'nın ikinci yarısında teslim edilmeye başladı.
-
-> [!WARNING]
-> CUDA 13.0, Maxwell, Pascal ve Volta'yı, yani compute capability 7,5'in altındaki bütün GPU'ları kaldırdı. CUDA 13 artık onlar için kod derleyemiyor. Bu GPU'lar için CUDA 12.x'te kalman gerekir.
+- Yalnızca ağırlıklar: 70 × 10⁹ × 2 bayt = 140 GB. Bu, H100'ün 80 GB'ından zaten fazla ve L40S'in 48 GB'ının neredeyse 3 katı.
+- Eğitim çok daha fazlasını ister. Yaygın bir yöntem parametre başına yaklaşık 16 bayt tutar: BF16 ağırlıklar için 2, gradyanlar için 2, ağırlıkların FP32 (32-bit floating point, 32 bit kayan nokta) ana kopyası için 4 ve Adam optimizer'ının her parametre için tuttuğu iki değer için 8. Toplam 70 × 10⁹ × 16 = 1.120 GB.
+- 1.120 GB / 80 GB = 14. Yani tek bir aktivasyon (her katmanın ara sonuçları) saklanmadan önce, sadece bu durumu tutmak için en az 14 H100 gerekir.
 
 > [!NOTE]
-> Toolkit artık tek ve sabit bir paket değil, parçalarının kendi sürüm numaraları var: CUDA 13.4 Update 1'de `nvcc` 13.4.92 sürümünde, cuBLAS ise 13.8.0.4 sürümünde. GPU sürücüsü de artık paketle gelmiyor: Windows'ta CUDA 13.1'den, Linux'ta CUDA 13.4'ten beri. Sürücüyü ayrıca kurarsın.
+> Aktivasyonlar batch boyutu ve dizi uzunluğuyla büyür; uzun girdilerde ağırlıklardan bile fazla bellek isteyebilirler. Gerçek eğitimlerin bu tahmindeki 14'ten çok daha fazla GPU kullanmasının nedeni budur.
 
-## Özet
+İkinci neden zaman. Büyük bir modeli eğitmek sabit miktarda hesap ister. Tek bir GPU buna yıllarca uğraşacaksa, 1.000 GPU bunu prensipte günler içinde bitirebilir, ama ancak sonuçlarını yeterince hızlı paylaşabilirlerse. Dersin geri kalanı bu paylaşımla ilgili.
 
-CUDA Toolkit, GPU programlama için eksiksiz bir ortam: onunla kod yazar, derler, çalıştırır, analiz eder ve iyileştirirsin. NVIDIA GPU'larıyla ciddi şekilde çalışmak için CUDA'yı anlaman gerekiyor; geri kalan her şey onun üzerine kurulu.
+## Scale Up ve Scale Out
+
+GPU'lar iki seviyede bağlanır:
+
+- Scale up (dikey büyütme): Birbirine yakın duran GPU'lar, yani aynı sunucu ya da aynı rack içindekiler, çok hızlı bir bağlantıyla, NVLink ile birleştirilir. Bir program için neredeyse tek büyük bir GPU gibi davranırlar.
+- Scale out (yatay büyütme): Çok sayıda sunucu ya da rack bir ağla, InfiniBand ya da Ethernet ile birleştirilir. Bu ağ GPU başına çok daha yavaştır ama binlerce sunucuya kadar büyüyebilir.
+
+Diyagram tek bir GPU'dan rack'lerden oluşan bir cluster'a kadar dört boyutu, her seviyedeki bağlantı türünü ve her GPU'nun aldığı bant genişliğini gösteriyor.
+
+<multi-gpu></multi-gpu>
+
+## PCIe ve NVLink
+
+Her GPU, CPU (Central Processing Unit, merkezi işlem birimi) ile PCIe (Peripheral Component Interconnect Express) üzerinden konuşur, bkz. [Ders 11](../Lesson-11/notes.md). Bu derslerde kullandığımız L40S'te PCIe 4.0 x16 var: iki yön birlikte 64 GB/s (gigabytes per second, saniyede gigabayt), her yönde 32 GB/s. Aynı sunucudaki iki L40S yalnızca PCIe üzerinden konuşabilir. L40S'te NVLink yok.
+
+NVLink, NVIDIA'nın GPU'dan GPU'ya doğrudan bağlantısıdır. Her nesil GPU başına bant genişliğini kabaca ikiye katladı, iki yön birlikte sayılarak. En yeni nesiller birkaç TB/s'ye (terabytes per second, saniyede terabayt) ulaşıyor:
+
+| NVLink | Mimari | Örnek GPU | GPU başına bant genişliği |
+|---|---|---|---|
+| 1 | Pascal | P100 | 160 GB/s |
+| 2 | Volta | V100 | 300 GB/s |
+| 3 | Ampere | A100 | 600 GB/s |
+| 4 | Hopper | H100 | 900 GB/s |
+| 5 | Blackwell | B200 | 1,8 TB/s |
+| 6 | Rubin | Rubin | 3,6 TB/s |
+
+H100, 900 GB/s'ye her biri 50 GB/s olan 18 NVLink bağlantısıyla ulaşır. B200'de de 18 bağlantı var, her biri 100 GB/s. NVLink 6 kullanan Rubin sistemleri 2026'nın ikinci yarısından beri teslim ediliyor.
+
+> [!TIP]
+> Bağlantı hızları genelde iki yönü birlikte sayar. H100'ün 900 GB/s'si aynı anda 450 GB/s gönderme artı 450 GB/s almadır. Bir aktarım süresi hesaplarken tek yön sayısına böl.
+
+## NVSwitch ve 8 GPU'lu Sunucu
+
+8 GPU varken her GPU'yu diğer her birine doğrudan bağlamak, 18 bağlantısını küçük gruplara bölerdi. Bunun yerine bütün GPU'lar NVSwitch çiplerine bağlanır. NVSwitch, NVLink için bir switch'tir: her GPU onun üzerinden diğer her GPU'ya bağlantılarının tam hızıyla ulaşabilir.
+
+Bir DGX H100 sunucusunda tek bir kart üzerinde 8 H100 ve 4 NVSwitch çipi bulunur. Her GPU çifti 900 GB/s ile konuşabilir ve 8'i de bunu aynı anda yapabilir. 8 GPU'lu bir B200 sunucusu da aynı şekilde, GPU başına 1,8 TB/s ile çalışır.
+
+## NVL72 Rack'i
+
+GB200 NVL72 aynı fikri bir sunucudan koca bir rack'e taşır. 18 hesaplama tepsisinde 72 Blackwell GPU ve 36 Grace CPU, rack'in ortasında da 9 NVLink switch tepsisi bulunur. 72 GPU'nun hepsi tek bir NVLink alanıdır: her GPU diğer her GPU'ya 1,8 TB/s ile ulaşır. Toplamda 72 × 1,8 TB/s ≈ 130 TB/s eder.
+
+Bir NVLink alanındaki her bağlantı bu kadar hızlı olduğu için 72 GPU, sürekli konuşmayı gerektiren ve bir ağ üzerinden fazlasıyla yavaş kalacak işleri paylaşabilir. Vera Rubin NVL72 alan başına 72 GPU'yu korur ve NVLink 6 ile bağlantıyı GPU başına 3,6 TB/s'ye çıkarır.
+
+## Sunucular Arası: InfiniBand ve Ethernet
+
+Bir NVLink alanının ötesinde sunucular ve rack'ler bir ağla birleştirilir. Yapay zekâ veri merkezleri InfiniBand ya da hızlı bir Ethernet kullanır. Genelde her GPU'nun kendi ağ kartı olur: bir DGX H100'de GPU başına bir tane olmak üzere 400 Gb/s (gigabits per second, saniyede gigabit) hızında 8 ConnectX-7 kartı var; GB300 NVL72 ise ConnectX-8 ile her GPU'ya 800 Gb/s verir.
+
+> [!WARNING]
+> Ağ hızları Gb/s (bit), GPU bağlantıları GB/s (bayt) ile verilir. 8'e böl: 400 Gb/s = 50 GB/s, 800 Gb/s = 100 GB/s, tek yönde. Yani bir H100 NVLink üzerinden 450 GB/s gönderebilir ama ağ kartı üzerinden yalnızca 50 GB/s, 9 kat daha az.
+
+Bu fark çoklu GPU programlarındaki her şeyi belirler: en çok konuşan işi tek bir NVLink alanının içinde tut, ağı yalnızca geçmesi şart olan veri için kullan.
+
+## NCCL ve Collective'ler
+
+GPU'lar bir modeli birlikte eğitirken sonuçlarını tekrar tekrar birleştirmek zorundadır. Bir gruptaki bütün GPU'ların katıldığı bir paylaşım kalıbına collective denir. En önemlisi all-reduce'dur: her GPU kendi sayı listesiyle başlar, sonunda her GPU bütün listelerin toplamını tutar.
+
+NVIDIA GPU'larında bu işi yapan kütüphane NCCL'dir (NVIDIA Collective Communications Library). En hızlı yolu, NVLink'i, PCIe'yi ya da ağı bulur ve all-reduce, broadcast (bir GPU aynı veriyi herkese gönderir) ve all-gather (her GPU her GPU'nun parçasını alır) gibi collective'leri çalıştırır.
+
+all-reduce'u çalıştırmanın yaygın bir yolu ring'dir (halka). GPU'lar bir çember oluşturur, her biri parçaları komşusuna gönderir ve çemberde iki tur sonra her GPU tam toplama sahip olur. N GPU ve S boyutunda veriyle her GPU 2 × (N - 1) / N × S gönderir. Halkada kaç GPU olursa olsun bu neredeyse 2 × S'dir.
+
+## Hesaplı Örnek: PCIe ve NVLink Üzerinde All-Reduce
+
+7 milyar parametreli bir modeli 8 GPU üzerinde eğittiğini düşün. Her adımdan sonra BF16 gradyanlar 8 GPU'nun hepsinde toplanmalıdır:
+
+- Veri boyutu: 7 × 10⁹ × 2 bayt = 14 GB.
+- Her GPU 2 × (8 - 1) / 8 × 14 GB = 2 × 0,875 × 14 GB = 24,5 GB gönderir ve aynı anda aynı miktarı alır.
+
+Şimdi her bağlantının tek yön bant genişliğine böl:
+
+| Bağlantı | Tek yön | 24,5 GB için süre |
+|---|---|---|
+| PCIe 4.0 x16 (L40S) | 32 GB/s | 24,5 / 32 ≈ 0,77 s |
+| 400 Gb/s ağ | 50 GB/s | 24,5 / 50 = 0,49 s |
+| NVLink 4 (H100) | 450 GB/s | 24,5 / 450 ≈ 0,054 s |
+| NVLink 5 (B200) | 900 GB/s | 24,5 / 900 ≈ 0,027 s |
+
+Bunlar kâğıt üzerindeki en iyi durumlar. Gerçek bir 8 GPU'lu PCIe sunucusunda birkaç kart aynı PCIe switch'lerini ve CPU bağlantılarını paylaşır, bu yüzden daha da yavaştır. Bir eğitim adımı 0,5 s hesap yapıyorsa, PCIe sunucusu gradyan paylaşmaya hesaptan daha fazla zaman harcar. NVLink bu paylaşımı yaklaşık 14 kat kısaltır.
+
+## İşi Bölmenin Üç Yolu
+
+Veri paralelliği (data parallelism): her GPU modelin tamamını tutar ve batch'in farklı bir parçası üzerinde çalışır. Her adımdan sonra bir all-reduce gradyanları toplar, böylece bütün kopyalar aynı kalır. En basit yöntemdir ama modelin tamamı her GPU'ya sığmalıdır. FSDP (Fully Sharded Data Parallel) gibi türevler ağırlıkları ve optimizer değerlerini GPU'lara dağıtır ve yalnızca gerektiğinde toplar.
+
+Tensör paralelliği (tensor parallelism): her katmanın büyük matrisleri parçalara bölünür ve her GPU her katmanın kendi parçasını hesaplar. GPU'lar her katmanın içinde, adım başına defalarca kısmi sonuç paylaşmak zorundadır; bu yüzden tensör paralelliği tek bir NVLink alanının içinde tutulur.
+
+Pipeline paralelliği (pipeline parallelism): katmanlar aşamalara bölünür, örneğin 1-20. katmanlar ilk GPU'da, 21-40. katmanlar ikincisinde. Aktivasyonlar bir montaj hattındaki gibi aşamadan aşamaya akar. Yalnızca aşama sınırlarındaki aktivasyonlar taşındığı için daha yavaş bir bağlantı yeterlidir, ama batch küçük micro-batch'lere bölünmezse aşamalar birbirini bekler.
+
+Büyük eğitimler üçünü birleştirir: sunucu ya da rack içinde tensör paralelliği, bunlar arasında pipeline aşamaları ve bütün cluster üzerinde veri paralelliği.
+
+## Ters Yön: MIG
+
+Bazen tek bir GPU fazla büyüktür. Küçük bir model ya da notebook kullanan biri H100'ün yalnızca bir kısmına ihtiyaç duyabilir. MIG (Multi-Instance GPU, çoklu örnekli GPU) bir GPU'yu en fazla 7 izole örneğe böler. Her örneğin kendi SM'leri (Streaming Multiprocessor), L2 önbelleğinin kendi payı ve belleğin kendi payı olur; böylece bir kullanıcı diğerini yavaşlatamaz ya da verisini okuyamaz. Örneğin bir H100 80 GB, her biri 10 GB olan 7 örneğe dönüşebilir.
+
+MIG, Ampere'den beri veri merkezi GPU'larında var: A100, H100, H200 ve B200 en fazla 7 örneğe, A30 en fazla 4 örneğe izin verir. RTX PRO 6000 Blackwell, MIG'i en fazla 4 örnekle bir iş istasyonu kartına getirir.
+
+> [!NOTE]
+> L40S'te ne MIG ne NVLink var. Birkaç program yine de onu paylaşabilir, ama sırayla (time slicing, zaman dilimleme) ve donanım izolasyonu olmadan.
+
+## Bunun CUDA İçin Önemi
+
+CUDA'da (Compute Unified Device Architecture) bir kernel her zaman tek bir GPU üzerinde çalışır. Birden fazla GPU kullanan bir program her birini `cudaSetDevice` ile seçer ve her birinde kernel başlatır. Veri GPU'lar arasında `cudaMemcpyPeer` ile taşınır; NVLink varsa onun üzerinden, yoksa PCIe üzerinden. all-reduce ve diğer collective'ler için programlar kendileri yazmak yerine NCCL'i çağırır.
+
+İletişim hesapla örtüşmelidir: bir GPU bir katmanın gradyanlarını hesaplarken NCCL bir önceki katmanınkileri göndermeye başlayabilir. Bir MIG örneğinde `cudaGetDeviceProperties` yalnızca o örneğin SM'lerini bildirir; bu yüzden bir kernel grid boyutunu [Ders 05](../Lesson-05/notes.md)'teki gibi bildirilen SM sayısından almalı, asla 132 gibi sabit yazılmış bir sayıdan değil.
 
 ## Sözlük
 
-- CUDA (Compute Unified Device Architecture): NVIDIA'nın paralel hesaplama platformu; kodunu GPU'ya bağlar.
-- GPU (Graphics Processing Unit): CUDA programlarının üzerinde çalıştığı, binlerce küçük çekirdeği olan işlemci.
-- paralel hesaplama (parallel computing): işi aynı anda çalışan birçok küçük parçaya bölmek.
-- toolkit (CUDA Toolkit): GPU programlarını yazmak, derlemek, çalıştırmak, analiz etmek ve iyileştirmek için eksiksiz ortam; güncel sürüm 13.4.
-- derleyici (compiler): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program.
-- `nvcc` (NVIDIA CUDA Compiler): toolkit'in merkezindeki derleyici; CUDA kodunu GPU'nun çalıştırabileceği koda çevirir.
-- PTX (Parallel Thread Execution): `nvcc`'nin, tek bir GPU mimarisi için makine kodundan önce ilk ürettiği ara biçim.
-- makine kodu (machine code): belirli bir işlemcinin doğrudan çalıştırdığı ikili komutlar; NVIDIA GPU'larında buna SASS (Streaming Assembler) denir.
-- mimari (architecture): bir GPU ailesinin donanım tasarımı, örneğin Ampere, Hopper ya da Blackwell.
-- compute capability (hesaplama yeteneği): bir GPU mimarisinin sürüm numarası, örneğin 8,9; `sm_89` aynı sayının `-arch` için yazılışı.
-- Ampere / Hopper / Blackwell / Rubin: NVIDIA'nın 2020, 2022, 2024 ve 2026 GPU mimarileri; her birinin kendi komutları ve veri türleri var.
-- derleme hedefi (compile target): derlediğin GPU mimarisi; yanlış hedef davranışı ve hızı değiştirebilir.
-- kütüphane (library): programından çağırdığın hazır ve test edilmiş kod, örneğin cuBLAS ya da cuFFT.
-- lineer cebir (linear algebra): vektörler ve matrislerle yapılan matematik, örneğin vektör toplamak ya da matris çarpmak.
-- Fourier dönüşümleri (Fourier transforms): bir sinyali frekanslarına ayırma yöntemi; ses, görüntü ve fizik hesaplarında kullanılır.
-- derin öğrenme (deep learning): çok katmanlı sinir ağlarından kurulan yapay zekâ; cuDNN, NVIDIA'nın bunun için sunduğu, ayrı indirilen kütüphane.
-- FP8 / FP4: 8 bit ve 4 bit kayan nokta formatları; Hopper FP8'i, Blackwell FP4'ü ekledi.
-- yapay zekâ (AI): veriden öğrenen yazılım, örneğin dil modelleri; çoğu GPU üzerinde çalışır.
-- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek.
-- runtime API (Application Programming Interface): programının GPU belleği ayırmak, veri taşımak ve kernel başlatmak için kullandığı çağrılar.
-- CPU (Central Processing Unit): ana işlemci; bir CUDA programında ana kodu çalıştırır ve işi GPU'ya gönderir.
-- kernel: GPU üzerinde çalışan, CPU'daki koddan başlatılan fonksiyon.
-- darboğaz (bottleneck): bütün programın hızını sınırlayan en yavaş adım; çoğu zaman CPU ile GPU arasındaki kopyalama.
-- profiling: bir programın zamanını nerede harcadığını ölçmek; Nsight Systems ve Nsight Compute, toolkit'in profiling araçlarıdır.
-- hata ayıklama (debugging): hataları bulup düzeltmek; cuda-gdb GPU kodunu adım adım izler, Compute Sanitizer bellek hatalarını bulur.
-- örnek programlar (sample programs): NVIDIA'nın küçük CUDA örnek programları; CUDA 11.6'dan beri GitHub'daki cuda-samples deposunda duruyorlar.
-- Turing: compute capability 7,5 olan 2018 mimarisi; CUDA 13'ün desteklediği en eski mimari.
-- Maxwell / Pascal / Volta: eski mimariler (2014, 2016, 2017); CUDA 13 artık onlar için kod derleyemiyor.
-- sürücü (GPU driver): işletim sisteminin GPU ile konuşmasını sağlayan yazılım; toolkit'ten ayrı kurulur.
+- GPU (Graphics Processing Unit): bu bölümün konusu olan işlemci; bu ders çok sayıda GPU'yu birbirine bağlar.
+- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; GPU'ların binlercesinin birbirine bağlanmasının nedeni büyük yapay zekâ modelleridir.
+- parametre (parameter): modelin öğrendiği bir sayı; 70 milyar parametreli bir modelde 70 × 10⁹ tane vardır.
+- BF16 (brain floating point, 16 bit): eğitimde ağırlıklar ve gradyanlar için kullanılan 2 baytlık sayı biçimi.
+- FP32 (32-bit floating point): 4 baytlık sayı biçimi; eğitim ağırlıkların ana kopyasını çoğu zaman bununla tutar.
+- gradyan (gradient): bir eğitim adımından sonra her parametrenin ne kadar değişmesi gerektiği; veri paralelliği bunları GPU'lar arasında toplar.
+- aktivasyon (activation): bir katmanın ara sonucu; ağırlıklardan fazla bellek isteyebilir.
+- scale up / scale out: yakın GPU'ları NVLink ile ya da sunucuları bir ağla bağlamak.
+- PCIe (Peripheral Component Interconnect Express): CPU ile GPU arasındaki bağlantı; PCIe 4.0 x16 her yönde 32 GB/s verir.
+- CPU (Central Processing Unit): sunucunun ana işlemcisi; GPU'lar ona PCIe üzerinden ulaşır.
+- NVLink: NVIDIA'nın GPU'dan GPU'ya doğrudan bağlantısı; H100'de GPU başına 900 GB/s, B200'de 1,8 TB/s.
+- GB/s (gigabytes per second) / Gb/s (gigabits per second): saniyede bayt ya da bit; 8 Gb/s = 1 GB/s.
+- NVSwitch: her GPU'nun diğer her GPU'ya tam hızla ulaşmasını sağlayan NVLink switch çipi.
+- NVL72: tek bir NVLink alanında 72 GPU bulunan rack, örneğin GB200 NVL72.
+- NVLink alanı (NVLink domain): hepsi birbirine NVLink üzerinden ulaşan bir GPU grubu.
+- InfiniBand / Ethernet: sunucuları ve rack'leri birleştiren ağlar; GPU başına 400 ya da 800 Gb/s.
+- collective: bir gruptaki bütün GPU'ların katıldığı paylaşım, örneğin all-reduce.
+- all-reduce: sonunda her GPU'nun bütün GPU'ların verisinin toplamını tuttuğu collective.
+- NCCL (NVIDIA Collective Communications Library): NVIDIA GPU'larında collective'leri çalıştıran kütüphane.
+- ring (halka): GPU'ların parçaları bir çember boyunca aktardığı all-reduce yöntemi; her GPU veri boyutunun yaklaşık 2 katını gönderir.
+- veri paralelliği (data parallelism): her GPU modelin tamamını tutar ve batch'in farklı bir parçası üzerinde çalışır.
+- FSDP (Fully Sharded Data Parallel): ağırlıkları ve optimizer değerlerini GPU'lara dağıtan veri paralelliği.
+- tensör paralelliği (tensor parallelism): her katmanın matrisleri GPU'lara bölünür; GPU'lar her katmanda konuşur.
+- pipeline paralelliği (pipeline parallelism): katmanlar farklı GPU'lardaki aşamalara bölünür, bir montaj hattı gibi.
+- MIG (Multi-Instance GPU): bir GPU'yu en fazla 7 izole örneğe bölmek.
+- SM (Streaming Multiprocessor): GPU'nun yapı taşı; her MIG örneği kendi SM'lerini alır.
+- zaman dilimleme (time slicing): programların bir GPU'yu izolasyon olmadan sırayla paylaşması.

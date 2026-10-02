@@ -1,148 +1,94 @@
-# 15 > Installing CUDA Toolkit on Linux
+# 15 > Setting Up CUDA Development (A Modern Workflow with JetBrains)
 
-This lesson shows how to install the CUDA Toolkit on Linux in WSL (Windows Subsystem for Linux). After this, your system can compile and run code on the GPU (Graphics Processing Unit). The steps follow NVIDIA's installation guide as of October 2026.
+This lesson explains how to set up a CUDA work environment. It uses JetBrains tools, mainly CLion, on top of the CUDA Toolkit. CLion has been free for non-commercial use, such as learning and open source, since May 2025.
 
-## Match your platform
+## Why JetBrains and CLion
 
-A CUDA install must match your platform exactly. On WSL, use NVIDIA's WSL-Ubuntu repository. Its packages hold the toolkit without a Linux driver, so they cannot overwrite the driver that comes from Windows. On native Ubuntu you would use the repository for your Ubuntu version instead, such as `ubuntu2404` for Ubuntu 24.04.
+You need a setup you can use every day without fighting the tools. This repo builds that setup around CLion, an IDE (Integrated Development Environment).
 
-## Check the GPU first
+The reason is how modern development works. GPU (Graphics Processing Unit) architectures and toolkits change fast. Projects are no longer tied to one platform. You might develop on Linux, test on a remote GPU and deploy somewhere else. An IDE tied to one system, like Visual Studio, limits this kind of work.
 
-Before you install CUDA, make sure your system can see the GPU:
+JetBrains tools are built around CMake (Cross-platform Make). CMake is a tool that describes how to build a project. A CMake project is not tied to one environment. You can build it on different systems with different compilers and keep the same structure. Real GPU systems are built this way.
 
-```bash
-nvidia-smi
+## The CUDA Toolkit comes first
+
+The CUDA Toolkit is the base of everything. Nothing builds without it. It gives you the compiler, the runtime and the libraries that talk to the GPU. It is not an editor. It is the layer that makes GPU execution possible.
+
+This layer depends on the hardware. Hopper and Blackwell bring new instructions, new precision formats and new execution behavior. You need a recent CUDA version to use them. As of October 2026 the newest one is CUDA 13.4. Older versions may still work, but they will not use what the hardware can do. So the CUDA version you choose defines what your code can do.
+
+## Where CLion fits
+
+CLion sits on top of the toolkit. It does not replace or hide it. It gives you a clean place to write code and organize your project. When you build, CLion calls CMake, and CMake calls the CUDA compiler `nvcc`. Nothing hidden happens, so you always know what is going on.
+
+<toolchain-stack></toolchain-stack>
+
+CMake knows CUDA as a language. A minimal `CMakeLists.txt` for one CUDA file looks like this:
+
+```cmake
+cmake_minimum_required(VERSION 3.24)
+project(hello LANGUAGES CXX CUDA)
+set(CMAKE_CUDA_ARCHITECTURES 89)
+add_executable(hello hello.cu)
 ```
 
-- `nvidia-smi` is NVIDIA's command line tool that asks the driver about the GPU. It prints the GPU name, the driver version and the memory use.
-- In WSL it works because the driver lives on the Windows side. WSL maps the tool in from Windows, under `/usr/lib/wsl/lib`.
+`CMAKE_CUDA_ARCHITECTURES 89` is the same target as `nvcc -arch=sm_89`: compute capability 8.9, the L40S used in these lessons. For a Hopper H100 you would write `90`, for a Blackwell B200 `100`.
 
-If this command fails, stop and fix your GPU setup first. CUDA will not work without it, because the toolkit talks to the GPU through the driver.
-
-## Install from the NVIDIA repository
-
-Use the official NVIDIA repository for WSL. It has current toolkits, built to work with the shared driver.
-
-> [!WARNING]
-> Do not use `apt install nvidia-cuda-toolkit`. That is Ubuntu's own package, and it lags far behind: on Ubuntu 24.04 it is CUDA 12.0.
-
-Run these commands. They first tell the package manager about NVIDIA's repository, then install the toolkit from it.
-
-```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt-get update
-sudo apt-get -y install cuda-toolkit-13-3
-```
-
-- `wget` downloads a file from a URL. The `wsl-ubuntu/x86_64` part of the address picks the repository for WSL on a 64-bit Intel or AMD CPU (Central Processing Unit).
-- `cuda-keyring_1.1-1_all.deb` is a small package. It holds NVIDIA's signing key and the address of the repository, so your system trusts NVIDIA's packages.
-- `sudo` runs a command with admin rights. Installing packages changes the system, so it needs them.
-- `dpkg -i` installs a local `.deb` file, here the keyring.
-- `apt-get update` refreshes the package lists. Without it, apt does not know about the packages in the new repository.
-- `apt-get -y install` installs a package. `-y` answers "yes" to the confirmation question.
-- `cuda-toolkit-13-3` is the toolkit package for CUDA 13.3. The name encodes the version: `13-3` means 13.3, and the files land in `/usr/local/cuda-13.3`. It holds only the toolkit, which is why no driver is installed.
-
-This installs CUDA Toolkit 13.3. It includes:
-
-* CUDA compiler (nvcc)
-* CUDA runtime
-* core libraries
+## Visual Studio on Windows
 
 > [!NOTE]
-> The newest CUDA is 13.4, but in October 2026 NVIDIA's WSL-Ubuntu repository goes up to 13.3. That is why this page installs `cuda-toolkit-13-3`. When `cuda-toolkit-13-4` appears there, change only the number. Never install the `cuda` or `cuda-drivers` packages in WSL: they try to install a Linux driver.
+> On Windows, `nvcc` needs the MSVC (Microsoft Visual C++) compiler, even if you never open Visual Studio. CUDA 13.4 works with Visual Studio 2019, 2022 and 2026. So Visual Studio is a dependency, not your workspace. You install it once and then forget it.
 
-## Verify the install
+All your real work happens in CLion.
 
-Check that the compiler is installed and that your shell can find it:
+## The GPU driver
 
-```bash
-nvcc --version
-```
+CUDA depends on the GPU driver. Since CUDA 13.1 on Windows and CUDA 13.4 on Linux, the toolkit installer no longer includes a driver. You install the driver yourself and keep it up to date.
 
-- `nvcc` is the CUDA compiler.
-- `--version` makes it print its version and exit, without compiling anything.
+Each CUDA release has a driver branch. A driver from branch 580 or newer runs programs built with any CUDA 13.x. To use the new features of CUDA 13.4, you need branch 615 or newer. So a 575 driver cannot run a CUDA 13 program, a 580 driver runs it, and a 615 driver also gives you everything new in 13.4.
 
-The last lines of the output should name release 13.3, because you installed `cuda-toolkit-13-3`.
+> [!WARNING]
+> If the driver is too old, you can get problems that are hard to explain. Code may compile but fail when it runs. Some features may not be available.
 
-If the command is not found, your PATH is not set correctly. PATH is the list of folders where the shell looks for programs. Add the CUDA folder to it:
+## The workflow
 
-```bash
-export PATH=/usr/local/cuda/bin:$PATH
-```
+With everything in place, the workflow is simple:
 
-- `export` sets a variable for this shell and for the programs it starts.
-- `/usr/local/cuda/bin` is the folder that holds `nvcc`. `/usr/local/cuda` is a link to the installed version, here `/usr/local/cuda-13.3`.
-- `:$PATH` adds the old list after the new folder, so nothing is lost. The shell searches the CUDA folder first.
+- You open CLion and write your code.
+- You build with CMake.
+- The CUDA Toolkit compiles it.
+- The GPU runs it.
 
-> [!TIP]
-> The setting lasts only for the current terminal. To keep it, add it to your `.bashrc` or `.zshrc`. Also install a host compiler with `sudo apt-get -y install build-essential`: `nvcc` hands the CPU part of every program to `g++`, and a fresh Ubuntu does not have it.
+When the setup is right, these steps work together smoothly.
 
-<install-steps></install-steps>
+## Summary
 
-## Why the version matters
-
-CUDA is closely tied to GPU architecture. Each new architecture needs a CUDA version that knows it:
-
-* FP8 (8-bit floating point) on Hopper, since CUDA 11.8
-* FP4 (4-bit floating point) on Blackwell, since CUDA 12.8
-* Rubin (compute capability 10.7) in the libraries, since CUDA 13.4
-
-If your CUDA version does not support them, your code still runs but does not use the hardware well, or cannot target the newest GPU at all.
-
-## CUDA under other tools
-
-CUDA is rarely used alone. It runs under systems such as:
-
-* PyTorch
-* TensorFlow
-* Triton
-* custom CUDA kernels
-
-PyTorch installed with `pip` brings its own copy of the CUDA libraries, so it only needs the driver. Your own kernels need the toolkit from this page.
-
-## Ready
-
-Your system is now ready. You have:
-
-* a Linux environment (WSL)
-* GPU access
-* CUDA Toolkit 13.3
-* a working CUDA compiler
-
-Now you can write and run real CUDA programs. The commands on this page come from [NVIDIA's download page for WSL-Ubuntu](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_network).
+CUDA development is not about choosing an editor. It is about understanding the toolchain. JetBrains tools fit well because they let each part of the system do its own job. This makes the setup cleaner, more stable and closer to production. This repo uses this setup.
 
 ## Glossary
 
-- Linux: a free, open-source operating system; here it runs inside Windows through WSL.
-- WSL (Windows Subsystem for Linux): runs a real Linux system inside Windows, while the GPU driver stays on the Windows side.
+- JetBrains: the company behind CLion, PyCharm, IntelliJ IDEA and other development tools.
+- CLion: a JetBrains IDE for C, C++ and CUDA. It sits on top of the CUDA Toolkit and is free for non-commercial use.
+- IDE (Integrated Development Environment): one app that combines an editor, build tools and a debugger.
 - GPU (Graphics Processing Unit): the processor with thousands of small cores that CUDA programs run on.
-- Ubuntu: a popular Linux distribution; NVIDIA has a separate CUDA repository for Ubuntu running in WSL (wsl-ubuntu).
-- repository (NVIDIA repository): an online source of packages; NVIDIA's one for WSL has the toolkit without a driver.
-- native Ubuntu: Ubuntu installed directly on the machine, not inside WSL; it uses a repository such as `ubuntu2404`.
-- `nvidia-smi`: NVIDIA's command line tool that asks the driver for the GPU name, driver version and memory use.
-- driver (GPU driver): the software that lets the system talk to the GPU; in WSL it comes from Windows, so you never install one inside Linux.
-- apt (package manager): Ubuntu's tool that downloads packages from repositories and installs them, together with what they depend on.
-- `cuda-keyring_1.1-1_all.deb`: a small package with NVIDIA's signing key and repository address, so your system trusts NVIDIA's packages.
-- `sudo`: runs a command with admin rights. Installing packages needs them.
-- `apt-get update`: refreshes the package lists so apt knows about the packages in the new repository.
-- `cuda-toolkit-13-3`: the package with only the CUDA 13.3 toolkit, no driver; the safe choice in WSL.
-- CPU (Central Processing Unit): the main processor; `x86_64` means a 64-bit Intel or AMD CPU.
-- CUDA Toolkit: NVIDIA's compiler, runtime and core libraries for building CUDA programs, version 13.3 on this page.
-- compiler: a program that turns source code into code a processor can run.
-- `nvcc`: the CUDA compiler. `nvcc --version` prints its version without compiling anything.
-- shell: the program that reads the commands you type in a terminal, such as bash or zsh.
-- PATH: the list of folders where the shell looks for programs.
-- `export`: sets a variable for this shell and for the programs it starts.
-- `.bashrc`: a startup file the shell runs in every new terminal, so an export line placed there is set every time.
-- `build-essential`: the Ubuntu package with `gcc`, `g++` and `make`; `nvcc` needs `g++` as its host compiler.
-- architecture: the hardware design of a GPU family, such as Hopper or Blackwell; old CUDA versions do not know the newest ones.
-- Hopper / Blackwell / Rubin: NVIDIA's GPU architectures from 2022, 2024 and 2026; each needs a recent CUDA version for its new features.
-- FP8 / FP4: 8-bit and 4-bit floating-point formats; Hopper's Tensor Cores added FP8, Blackwell's added FP4.
-- compute capability: the version number of a GPU architecture, such as 8.9 for the L40S or 10.7 for Rubin.
-- CUDA version: the toolkit release number, such as 13.3, which decides which GPUs and features your code can use.
-- PyTorch: a popular Python library for deep learning that runs its math on the GPU through CUDA.
-- TensorFlow: Google's deep learning library, which also uses CUDA on NVIDIA GPUs.
-- Triton: a Python-based language from OpenAI for writing fast GPU kernels without writing CUDA C++ by hand.
-- `pip`: Python's package installer; PyTorch installed with it ships its own CUDA libraries.
-- kernel: a function that runs on the GPU; custom kernels are the ones you write yourself.
+- architecture: the hardware design of a GPU family, such as Hopper or Blackwell; newer ones need newer toolkits and drivers.
+- Linux: the operating system that most GPU servers run, and the best supported platform for CUDA.
+- remote GPU: a GPU in another machine, such as a cloud server, that you use over the network.
+- CMake (Cross-platform Make): a tool that describes how to build a project. It is not tied to one environment.
+- `CMakeLists.txt`: the file in which CMake reads how to build your project.
+- `CMAKE_CUDA_ARCHITECTURES`: the CMake setting for the compute capability to compile for, such as 89 for `sm_89`.
+- compute capability: the version number of a GPU architecture, such as 8.9 for the L40S or 9.0 for the H100.
+- build: turning source files into a program you can run, by compiling and linking them.
+- compiler: a program that turns source code into code a processor can run; for CUDA it is `nvcc`.
+- toolkit (CUDA Toolkit): the base layer with the compiler, the runtime and the libraries that talk to the GPU.
+- runtime: the CUDA library your program calls while it runs, to manage GPU memory and launch work on the GPU.
+- libraries: ready-made, tested code that ships with the toolkit, such as cuBLAS for matrix math.
+- Hopper / Blackwell: NVIDIA's architectures from 2022 and 2024, which need recent CUDA versions for their new features.
+- precision: how many bits each number uses, such as FP32, FP16 or FP8.
+- CUDA version: the release number of the toolkit, such as 13.4; it decides which GPUs and features you can target.
+- toolchain: the chain of tools that builds your code. CLion calls CMake, and CMake calls the CUDA compiler.
+- Visual Studio: Microsoft's IDE for Windows; CUDA needs it installed because of its C++ compiler.
+- MSVC (Microsoft Visual C++): the C++ compiler from Visual Studio; on Windows, `nvcc` hands the CPU (Central Processing Unit) part of your code to it.
+- dependency: something another program needs to have installed in order to work.
+- driver (GPU driver): the software that lets the operating system talk to the GPU; installed separately from the toolkit.
+- driver branch: a driver release line such as 580 or 615; each CUDA release needs a minimum branch.
+- production: the real environment where finished software runs for its users.

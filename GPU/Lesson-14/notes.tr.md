@@ -1,97 +1,99 @@
-# 14 > Windows'ta Linux Çalıştırmak (WSL ile Pratik Bir Kurulum)
+# 14 > CUDA Toolkit, GPU Programlamanın Temeli
 
-Bu derste WSL (Windows Subsystem for Linux) ile Windows'un içinde Linux'u nasıl çalıştıracağını göreceksin. GPU'nun (Graphics Processing Unit, grafik işlemci) ve CUDA'nın WSL içinde nasıl çalıştığını ve sınırların nerede olduğunu da öğreneceksin.
+Bu derste CUDA Toolkit'in ne olduğunu ve sana neler sunduğunu göreceksin. CUDA Toolkit, GPU (Graphics Processing Unit, grafik işlemci) üzerinde program yazmak, derlemek, çalıştırmak ve incelemek için kullandığın ortamdır. Ekim 2026 itibarıyla en yeni sürüm CUDA 13.4.
 
-## Neden Linux
+## CUDA nedir
 
-Ciddi CUDA çalışmaları genelde Linux'ta yapılır. Windows hâlâ işe yarar, ama GPU ekosistemi yıllardır Linux etrafında gelişiyor; araçların, belgelerin ve gerçek kurulumların çoğu Linux bekler. Yapay zekâ (AI, Artificial Intelligence) ve HPC (High-Performance Computing, yüksek performanslı hesaplama) için kullanılan GPU sistemleri neredeyse her zaman Linux çalıştırır.
+CUDA (Compute Unified Device Architecture), NVIDIA'nın paralel hesaplama platformudur ve kodunu GPU'ya bağlar. O olmadan bir NVIDIA GPU'yu tam olarak kontrol edemezsin.
 
-## WSL nedir
+## Derleyici: nvcc
 
-WSL, Windows'un içinde gerçek bir Linux ortamı çalıştırır. Eski çözümler gibi bir emülasyon katmanı değildir: WSL2, küçük ve hafif bir sanal makinede gerçek bir Linux çekirdeği (kernel) çalıştırır. Bu, davranışta, uyumlulukta ve performansta büyük fark yaratır.
+Toolkit'in merkezinde derleyici (compiler), yani `nvcc` (NVIDIA CUDA Compiler) bulunur. CUDA kodunu GPU'nun çalıştırabileceği koda çevirir.
 
-## WSL'i kur
+Bu iki adımda olur: önce kodun bir ara biçime, PTX'e (Parallel Thread Execution) dönüşür; sonra PTX, belirli bir GPU mimarisi için makine koduna çevrilir. Bu makine koduna SASS (Streaming Assembler) denir.
 
-Windows'ta PowerShell gibi bir terminal aç ve şunu çalıştır:
+<nvcc-pipeline></nvcc-pipeline>
 
-```bash
-wsl --install
-wsl --update
-```
+Bu mimariyi compute capability (hesaplama yeteneği) numarasıyla belirtirsin. `-arch=sm_89` bayrağı compute capability 8,9 demektir: ana sürüm 8, alt sürüm 9. Bu Ada nesli, örneğin L40S. Hopper H100 `sm_90` (9,0), Blackwell B200 ise `sm_100` (10,0).
 
-- `wsl --install`, WSL'i açar ve varsayılan dağıtım olan Ubuntu'yu kurar.
-- `wsl --update`, WSL çekirdeğini en yeni sürüme getirir.
+Ampere, Hopper ve Blackwell gibi mimarilerin komutları, veri türleri ve yürütme modelleri farklıdır, bu yüzden doğru mimari için derlemen gerekir. Aynı kod farklı GPU'larda çalışabilir, ama doğru derleme hedefi olmadan aynı şekilde davranmaz ya da aynı hıza ulaşmaz.
 
-Her zaman WSL2 kullan. WSL1'in uyumluluğu daha düşüktür ve hiç GPU desteği yoktur. Yeni kurulumlar varsayılan olarak WSL2 kullanır. Kontrol etmek için `wsl -l -v` çalıştır: dağıtımının VERSION sütununda 2 yazmalı.
+## Kütüphaneler
 
-## İlk açılış
+Toolkit sana optimize edilmiş kütüphaneler de sunar. Bunlar GPU'yu iyi kullanır, böylece her şeyi kendin yazmak zorunda kalmazsın. Şu alanlar için kütüphaneler var:
 
-Linux dağıtımını ilk kez başlattığında bir kullanıcı adı ve parola oluşturursun. Bu, Windows ortamın değil, aynı makinedeki ayrı bir Linux ortamıdır: kendi kullanıcıları, kendi dosya sistemi ve kendi paket yöneticisi vardır. Bundan sonra aynı anda iki sistemde çalışırsın.
+- lineer cebir (cuBLAS)
+- Fourier dönüşümleri (cuFFT)
+- rastgele sayı üretimi (cuRAND)
+- seyrek matrisler (cuSPARSE)
 
-## GPU erişimi
+Derin öğrenme için NVIDIA'nın cuDNN kütüphanesi var. Ayrı indirilir, toolkit'in parçası değildir.
 
-WSL2 ile Linux, GPU'yu Windows driver'ı (sürücüsü) üzerinden kullanabilir. CUDA uygulamaları WSL içinde neredeyse doğrudan Linux kurulu bir sistemdeki gibi çalışır. Yani Linux'ta geliştirme yapıp Windows'u ana sistemin olarak kullanmaya devam edebilirsin.
+Bu kütüphaneler yeni donanımlar için güncellenir. Yeni CUDA sürümleri Hopper'da FP8 (8 bit kayan nokta), Blackwell'de FP4 (4 bit kayan nokta) gibi düşük duyarlıklı formatları destekliyor. Modern yapay zekâ (AI, Artificial Intelligence) iş yükleri bu formatları kullanıyor.
 
-GPU driver'ı WSL'in içine değil, Windows tarafına kurulur. Windows için normal NVIDIA driver'ını kurarsın, WSL de ana sistemdeki bu driver'ı kullanır. WSL içinde CUDA driver'ı, Windows'tan eşlenen `libcuda.so` adlı bir kütüphane olarak görünür.
+## Runtime API
+
+Programın GPU ile CUDA runtime API (Application Programming Interface, uygulama programlama arayüzü) üzerinden konuşur. Açık API çağrılarıyla programın:
+
+- GPU'da bellek ayırır
+- veriyi CPU (Central Processing Unit, merkezi işlemci) ile GPU arasında taşır
+- kernel'ları başlatır
+
+Veri taşıma çoğu zaman GPU programlarındaki asıl darboğazdır. Bu yüzden verinin ne zaman ve nasıl taşındığını bilmek, kernel'ı yazmak kadar önemlidir.
+
+## Profiling ve hata ayıklama araçları
+
+Programının nasıl davrandığını da görmen gerekir. Toolkit'te GPU uygulamalarında profiling (performans ölçümü), hata ayıklama ve analiz için araçlar var: Nsight Systems, Nsight Compute, cuda-gdb ve Compute Sanitizer. Bu araçlar performansı ölçer, darboğazları ve bellek sorunlarını bulur. İş yükleri büyüdükçe performans ayarı, geliştirmenin zorunlu bir parçası olur.
+
+## Örnek programlar
+
+NVIDIA örnek programlar da yayınlar. Bunlar belleğin nasıl yönetildiğini, kernel'ların nasıl başlatıldığını ve performansın nasıl iyileştirileceğini gösterir. CUDA 11.6'dan beri toolkit'in içinde gelmiyorlar. Onları GitHub'daki cuda-samples deposundan alırsın. Onları incelemek, teoriden gerçek anlayışa geçmenin hızlı bir yoludur.
+
+## Toolkit donanımı takip eder
+
+Toolkit, GPU mimarisine sıkı sıkıya bağlı: her yeni mimari yeni donanım özellikleri getirir, toolkit de onlara destek ekler.
+
+- CUDA 13.0 Ağustos 2025'te çıktı. Güncel sürüm CUDA 13.4.
+- CUDA 13, Turing'i (compute capability 7,5) ve ondan yeni bütün mimarileri, Blackwell (10.x ve 12.x) dahil, destekler. CUDA 13.4, kütüphanelerine Rubin (10,7) desteğini ekledi. Rubin veri merkezi GPU'ları 2026'nın ikinci yarısında teslim edilmeye başladı.
 
 > [!WARNING]
-> WSL içine asla Linux NVIDIA driver'ı kurma. Windows'tan eşlenen driver'ın üzerine yazar ve GPU erişimini bozar.
+> CUDA 13.0, Maxwell, Pascal ve Volta'yı, yani compute capability 7,5'in altındaki bütün GPU'ları kaldırdı. CUDA 13 artık onlar için kod derleyemiyor. Bu GPU'lar için CUDA 12.x'te kalman gerekir.
 
-<wsl-layers></wsl-layers>
-
-## WSL'de CUDA kurmak
-
-WSL içinde CUDA Toolkit'in Windows sürümünü değil, Linux sürümünü kurarsın. NVIDIA'nın bunun için ayrı bir WSL-Ubuntu deposu var. Bu depodaki paketlerde toolkit var ama driver yok, bu yüzden ana sistemden gelen driver'ın üzerine yazamazlar. Yani kurulum normal Linux'a benzer ama tamamen aynı değildir. [Ders 15](../Lesson-15/notes.md) seni adım adım götürür.
-
-## WSL'in sınırları
-
-WSL ciddi bir geliştirme ortamı. Yine de birkaç şey doğrudan Linux'tan farklı çalışır:
-
-- GPU desteği, WDDM (Windows Display Driver Model) modunda bir GeForce ya da RTX kart ister; bu, masaüstü kartların normal modudur. Veri merkezi GPU'ları desteklenmez.
-- Unified memory (birleşik bellek) sınırlıdır. CPU (Central Processing Unit, merkezi işlemci) ve GPU aynı yönetilen belleğe aynı anda erişemez.
-- `nvidia-smi` her değeri gösteremez, örneğin GPU kullanım oranını.
-
-GPU'nun CUDA 13'e uyduğunu da kontrol et. WSL'in kendisi Pascal ve sonrasıyla çalışır, ama CUDA 13 compute capability 7,5 veya üstünü ister. GeForce GTX 1080'in compute capability değeri 6,1'dir ve 6,1, 7,5'ten küçüktür; bu yüzden CUDA 13 onun için kod derleyemez. GeForce RTX 2060'ınki 7,5'tir, yani çalışır.
-
-> [!TIP]
-> Bir şey bozulduğunda katmanları aşağıdan yukarı kontrol et: önce Windows driver'ı, sonra WSL'in kendisi (`wsl --update`), sonra Linux dağıtımı, en son CUDA Toolkit.
+> [!NOTE]
+> Toolkit artık tek ve sabit bir paket değil, parçalarının kendi sürüm numaraları var: CUDA 13.4 Update 1'de `nvcc` 13.4.92 sürümünde, cuBLAS ise 13.8.0.4 sürümünde. GPU sürücüsü de artık paketle gelmiyor: Windows'ta CUDA 13.1'den, Linux'ta CUDA 13.4'ten beri. Sürücüyü ayrıca kurarsın.
 
 ## Özet
 
-WSL pratik bir köprü: Windows'ta kalırsın ve Linux tabanlı GPU araçlarını gerçek canlı sistemlere yakın bir şekilde kullanırsın. Başlamanın en doğal yollarından biri.
-
-> [!NOTE]
-> Bundan sonra bu dersler yalnızca Linux içinde ilerliyor. Windows sadece driver'ı taşıyan ana sistem olarak kalıyor.
+CUDA Toolkit, GPU programlama için eksiksiz bir ortam: onunla kod yazar, derler, çalıştırır, analiz eder ve iyileştirirsin. NVIDIA GPU'larıyla ciddi şekilde çalışmak için CUDA'yı anlaman gerekiyor; geri kalan her şey onun üzerine kurulu.
 
 ## Sözlük
 
-- Linux: ücretsiz, açık kaynaklı bir işletim sistemi; GPU sunucularının ve CUDA araçlarının çoğu onun etrafında kurulur.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın paralel hesaplama platformu; kodunu GPU'ya bağlar.
 - GPU (Graphics Processing Unit): CUDA programlarının üzerinde çalıştığı, binlerce küçük çekirdeği olan işlemci.
-- ekosistem (ecosystem): bir platformun, örneğin GPU'nun, etrafında gelişen tüm araçlar, kütüphaneler, belgeler ve driver'lar.
-- yapay zekâ (AI): veriden öğrenen yazılım, örneğin dil modelleri; çoğu GPU'larda eğitilir.
-- HPC (High-Performance Computing): hava tahmini ya da fizik simülasyonları gibi büyük problemler üzerinde birlikte çalışan çok sayıda güçlü işlemci.
-- WSL (Windows Subsystem for Linux): Windows'un içinde gerçek bir Linux ortamı çalıştırır.
-- emülasyon (emulation): başka bir sistemi gerçekten çalıştırmak yerine yazılımla taklit etmek; genelde daha yavaş ve daha az uyumludur.
-- WSL2: gerçek bir Linux çekirdeği çalıştıran WSL sürümü; Windows'ta CUDA'nın temeli.
-- Linux çekirdeği (Linux kernel): belleği, süreçleri ve donanımı yöneten Linux işletim sisteminin kalbi; CUDA kernel'ı ile aynı şey değildir.
-- sanal makine (virtual machine): yazılımla taklit edilen, kendi işletim sistemi olan ve gerçek bir makinede çalışan tam bir bilgisayar.
-- terminal: komut yazdığın metin penceresi; örneğin PowerShell ya da Windows Terminal.
-- `wsl --install`: WSL'i ve Ubuntu'yu kurmak için Windows terminalinde çalıştırdığın komut.
-- `wsl --update`: WSL çekirdeğini en yeni sürüme günceller.
-- WSL1: uyumluluğu daha düşük ve GPU desteği olmayan eski WSL sürümü.
-- Linux dağıtımı (Linux distribution): kendi kullanıcıları, dosya sistemi ve paket yöneticisi olan ayrı bir Linux ortamı; CUDA için genelde Ubuntu seçilir.
-- dosya sistemi (file system): işletim sisteminin dosyaları saklama ve düzenleme şekli; bir WSL dağıtımının Windows disklerinden ayrı, kendi dosya sistemi vardır.
-- paket yöneticisi (package manager): yazılımları çevrim içi listelerden kuran ve güncelleyen araç; örneğin Ubuntu'daki apt.
-- driver (GPU driver): işletim sisteminin GPU ile konuşmasını sağlayan yazılım; WSL için sadece Windows tarafına kurulur.
-- doğrudan Linux (native Linux): başka bir sistemin içinde değil, doğrudan makineye kurulu Linux.
-- ana sistem (host): WSL'in üzerinde çalıştığı Windows sistemi; WSL onun GPU driver'ını kullanır, kendine ait bir NVIDIA driver'ına ihtiyaç duymaz.
-- `libcuda.so`: CUDA driver kütüphanesi; WSL içinde Windows driver'ından eşlenir.
-- CUDA Toolkit: NVIDIA'nın derleyicisi, kütüphaneleri ve araçları; WSL içinde Linux sürümünü WSL-Ubuntu deposundan kurarsın.
-- WSL-Ubuntu deposu (WSL-Ubuntu repository): NVIDIA'nın WSL'de CUDA için paket kaynağı; paketlerinde toolkit var, driver yok.
-- WDDM (Windows Display Driver Model): masaüstü ekran kartları için normal Windows driver modu; WSL'deki GPU desteği bunu ister.
-- unified memory (birleşik bellek): CPU ile GPU'nun tek bir pointer üzerinden paylaştığı bellek; WSL'de yalnızca kısmen desteklenir.
-- CPU (Central Processing Unit): bilgisayarın ana işlemcisi.
-- `nvidia-smi`: GPU'yu, driver'ı ve bellek kullanımını gösteren NVIDIA komut satırı aracı.
-- compute capability (hesaplama yeteneği): bir GPU mimarisinin sürüm numarası, örneğin Turing için 7,5; CUDA 13, 7,5 veya üstünü ister.
-- Pascal: NVIDIA'nın 2016 mimarisi, örneğin GTX 1080; WSL onu çalıştırır, CUDA 13 onun için derleyemez.
-- canlı sistem (production): bitmiş yazılımın kullanıcıları için gerçekten çalıştığı sistemler.
+- paralel hesaplama (parallel computing): işi aynı anda çalışan birçok küçük parçaya bölmek.
+- toolkit (CUDA Toolkit): GPU programlarını yazmak, derlemek, çalıştırmak, analiz etmek ve iyileştirmek için eksiksiz ortam; güncel sürüm 13.4.
+- derleyici (compiler): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program.
+- `nvcc` (NVIDIA CUDA Compiler): toolkit'in merkezindeki derleyici; CUDA kodunu GPU'nun çalıştırabileceği koda çevirir.
+- PTX (Parallel Thread Execution): `nvcc`'nin, tek bir GPU mimarisi için makine kodundan önce ilk ürettiği ara biçim.
+- makine kodu (machine code): belirli bir işlemcinin doğrudan çalıştırdığı ikili komutlar; NVIDIA GPU'larında buna SASS (Streaming Assembler) denir.
+- mimari (architecture): bir GPU ailesinin donanım tasarımı, örneğin Ampere, Hopper ya da Blackwell.
+- compute capability (hesaplama yeteneği): bir GPU mimarisinin sürüm numarası, örneğin 8,9; `sm_89` aynı sayının `-arch` için yazılışı.
+- Ampere / Hopper / Blackwell / Rubin: NVIDIA'nın 2020, 2022, 2024 ve 2026 GPU mimarileri; her birinin kendi komutları ve veri türleri var.
+- derleme hedefi (compile target): derlediğin GPU mimarisi; yanlış hedef davranışı ve hızı değiştirebilir.
+- kütüphane (library): programından çağırdığın hazır ve test edilmiş kod, örneğin cuBLAS ya da cuFFT.
+- lineer cebir (linear algebra): vektörler ve matrislerle yapılan matematik, örneğin vektör toplamak ya da matris çarpmak.
+- Fourier dönüşümleri (Fourier transforms): bir sinyali frekanslarına ayırma yöntemi; ses, görüntü ve fizik hesaplarında kullanılır.
+- derin öğrenme (deep learning): çok katmanlı sinir ağlarından kurulan yapay zekâ; cuDNN, NVIDIA'nın bunun için sunduğu, ayrı indirilen kütüphane.
+- FP8 / FP4: 8 bit ve 4 bit kayan nokta formatları; Hopper FP8'i, Blackwell FP4'ü ekledi.
+- yapay zekâ (AI): veriden öğrenen yazılım, örneğin dil modelleri; çoğu GPU üzerinde çalışır.
+- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek.
+- runtime API (Application Programming Interface): programının GPU belleği ayırmak, veri taşımak ve kernel başlatmak için kullandığı çağrılar.
+- CPU (Central Processing Unit): ana işlemci; bir CUDA programında ana kodu çalıştırır ve işi GPU'ya gönderir.
+- kernel: GPU üzerinde çalışan, CPU'daki koddan başlatılan fonksiyon.
+- darboğaz (bottleneck): bütün programın hızını sınırlayan en yavaş adım; çoğu zaman CPU ile GPU arasındaki kopyalama.
+- profiling: bir programın zamanını nerede harcadığını ölçmek; Nsight Systems ve Nsight Compute, toolkit'in profiling araçlarıdır.
+- hata ayıklama (debugging): hataları bulup düzeltmek; cuda-gdb GPU kodunu adım adım izler, Compute Sanitizer bellek hatalarını bulur.
+- örnek programlar (sample programs): NVIDIA'nın küçük CUDA örnek programları; CUDA 11.6'dan beri GitHub'daki cuda-samples deposunda duruyorlar.
+- Turing: compute capability 7,5 olan 2018 mimarisi; CUDA 13'ün desteklediği en eski mimari.
+- Maxwell / Pascal / Volta: eski mimariler (2014, 2016, 2017); CUDA 13 artık onlar için kod derleyemiyor.
+- sürücü (GPU driver): işletim sisteminin GPU ile konuşmasını sağlayan yazılım; toolkit'ten ayrı kurulur.

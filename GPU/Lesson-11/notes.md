@@ -1,112 +1,150 @@
-# 11 > Reading the Volta White Paper
+# 11 > CPU to GPU Data Path
 
-This lesson walks through the V100 white paper. It shows what Volta changed and why it matters for GPUs (Graphics Processing Units) today.
+A kernel can only work on data that is already in GPU (Graphics Processing Unit) memory, and that data almost always starts in CPU memory. This lesson follows the bytes along the way: the PCIe link, pinned host memory, asynchronous copies, unified memory and the faster links on Grace Hopper and Grace Blackwell. [Lesson 00](../Lesson-00/notes.md) gave the short version; here you see why the path is slow and what you can do about it.
 
-## Why Read a Real White Paper
+## Two Memories, One Link
 
-A white paper shows the hardware design directly, without simplification. Volta is one of the most important examples. The V100 white paper shows the moment GPUs changed direction.
+A normal GPU server has two separate memories:
 
-## Start With Key Features
+- host memory: the system RAM (Random Access Memory) on the motherboard, next to the CPU (Central Processing Unit)
+- device memory: the GPU's own memory, GDDR (Graphics Double Data Rate) or HBM (High Bandwidth Memory), on the GPU board
 
-Do not jump straight into diagrams or numbers. Start with the "Key Features" section. It is short and shows what the architecture is trying to do.
+The CPU cannot read device memory like its own RAM, and a kernel cannot simply read host memory at full speed. Between them sits a link, on most machines PCIe (Peripheral Component Interconnect Express). Every byte the GPU works on crosses that link at least once.
 
-For Volta, the focus is clear. The architecture is built for AI (artificial intelligence). This is a change in purpose, not just an improvement over the previous generation.
+On the L40S used across these lessons, the two sides are very unequal. Its 48 GB of GDDR6 feeds the SMs (Streaming Multiprocessors) at 864 GB/s. The PCIe 4.0 x16 link to the CPU moves about 31.5 GB/s in each direction. [Lesson 07](../Lesson-07/notes.md) shows what happens to data once it is inside the GPU; this lesson is about getting it there.
 
-## Tensor Cores
+## The PCIe Link
 
-The most important change in Volta is Tensor Cores.
+PCIe is built from lanes. Each lane is a pair of wire pairs, one for each direction, so a link sends and receives at the same time (full duplex). A GPU slot has 16 lanes, written x16. Each new generation doubles the speed of a lane, measured in GT/s (gigatransfers per second):
 
-Before Volta, GPUs ran matrix operations on general CUDA cores. That worked, but it was not efficient. Volta gives matrix operations their own dedicated hardware: the V100 has 640 Tensor Cores, 8 in each of its 80 SMs.
+| Generation | Per lane | x16, per direction | GPUs that use it |
+|---|---|---|---|
+| PCIe 3.0 | 8 GT/s | 15.8 GB/s | V100 |
+| PCIe 4.0 | 16 GT/s | 31.5 GB/s | A100, L40S |
+| PCIe 5.0 | 32 GT/s | 63 GB/s | H100, B200, RTX 5090 |
+| PCIe 6.0 | 64 GT/s | about 121 GB/s | Blackwell Ultra (B300) |
 
-From here, the GPU is no longer just a general compute device. It is designed for AI workloads from the ground up.
-
-## The Streaming Multiprocessor (SM)
-
-The Streaming Multiprocessor (SM) is the core building block of the GPU. Volta has a redesigned SM, split into four processing blocks, each with its own warp scheduler.
-
-A key improvement is that different types of operations can run at the same time. In Pascal, integer and floating point operations shared one execution path and had to take turns. In Volta, they run in parallel.
-
-Modern workloads often mix different types of operations. So this change makes better use of the hardware.
-
-<volta-shift></volta-shift>
-
-## Instruction Speed
-
-A new architecture does not only add cores. It also makes existing operations faster.
-
-In Volta, many instructions finish in fewer cycles than in Pascal. Ampere and Hopper improve this further. This pattern continues into 2026. Progress is about efficiency, not only scale.
-
-## Memory
-
-Volta uses HBM2 (High Bandwidth Memory 2) memory: 16 or 32 GB at 900 GB/s on the V100. That is higher memory bandwidth than earlier generations.
-
-Modern GPU workloads are often limited by how fast data moves, not only by how fast it is processed. Higher bandwidth feeds more data to the compute units without waiting.
-
-## NVLink
-
-Volta introduces the second generation of NVLink. NVLink connects GPUs to each other at high speed.
-
-Volta increases both the number of links and their speed: the V100 has six NVLink links with 300 GB/s in total. This makes multi-GPU systems much more efficient.
+The x16 numbers are per direction. A data sheet that says "PCIe Gen4 x16: 64 GB/s" adds both directions together. A copy to the GPU only uses one direction, so for one copy the useful number is the per direction one.
 
 > [!NOTE]
-> In 2026, large AI systems based on Hopper and Blackwell depend on this idea even more. Volta was one of the first steps in that direction.
+> Spec sheets round: PCIe 4.0 x16 is 31.5 GB/s per direction, often written as 32 GB/s. A real copy reaches somewhat less, because each packet also carries headers and checks. PCIe 7.0 (128 GT/s per lane) was finalized in June 2025, but no GPU uses it yet.
 
-## Transistor Count
+<data-path></data-path>
 
-The transistor count shows how much hardware is inside a GPU. The V100 has around 21 billion transistors.
+## Worked Example: 4 GB to an L40S
 
-> [!NOTE]
-> Hopper reaches around 80 billion transistors in the H100. Blackwell goes further: the B200 puts 208 billion transistors on two dies that work as one GPU.
+Say a program needs 4 GB of input on an L40S. How long does the trip take, and how does that compare with reading the same bytes once they are on the GPU?
 
-This growth is not only about size. It reflects new units, new memory systems and more advanced execution models.
+- over PCIe 4.0 x16: 4 GB / 31.5 GB/s = 0.127 s, about 127 ms
+- from the L40S's own memory: 4 GB / 864 GB/s = 0.0046 s, about 4.6 ms
+- ratio: 864 / 31.5 = 27.4, so the copy takes about 27 times longer than one full read on the GPU
 
-## The Same Structure Every Time
+On a PCIe 5.0 card such as the H100 PCIe or the RTX 5090, the copy halves: 4 / 63 = 0.063 s, about 63 ms. It is still far slower than the 1.8 TB/s or more those GPUs read from their own memory.
 
-White papers for different architectures use a similar structure:
+## When the Copy Dominates
 
-1. New features
-2. SM design
-3. Performance comparisons
-4. Technical specifications
+Now add a kernel. Take a simple kernel that reads the 4 GB once and writes 4 GB of results. It moves 8 GB through device memory, so on the L40S it needs at least 8 / 864 = 0.0093 s, about 9.3 ms. Copying the input in and the result out costs 127 + 127 = 254 ms. The kernel is under 4% of the total time: 9.3 / (254 + 9.3) = 0.035.
 
-Once you can read one white paper, the others become much easier.
+The copy stops dominating only when the GPU does a lot of work per byte it receives:
 
-## Volta's Role
+- the kernel reuses the data many times, as in a matrix multiply, so its run time grows while the copy stays the same
+- the data stays on the GPU across many kernels, so you pay the copy once and read it at 864 GB/s afterwards
+- the CPU part of the program would take even longer than the copy
 
-Looking back from 2026, Volta is more than a strong GPU of its time. It is the point where GPUs became AI-focused. Ampere, Hopper and now Blackwell all build on this idea and push it further.
+[Lesson 09](../Lesson-09/notes.md) measures "work per byte" as arithmetic intensity. The same idea applies to the link: a workload needs about 27 times more work per byte to hide a PCIe 4.0 copy than to hide a read from the L40S's memory.
 
-Reading the V100 white paper helps you understand why GPUs look the way they do today.
+> [!WARNING]
+> Never time a kernel and quote that as the speedup of your program. If the data has to come from the CPU, the copy in and the copy out belong to the measurement, and for simple kernels they are most of it.
+
+## Pageable and Pinned Host Memory
+
+The copy itself is done by a DMA (Direct Memory Access) engine on the GPU: hardware that reads host memory over PCIe on its own, without the CPU moving each byte. A DMA engine needs a fixed physical address, and that is where the kind of host memory matters.
+
+- pageable memory: what `malloc` or `new` gives you. The OS (operating system) may move these pages to another place in RAM or swap them to disk at any time, so the DMA engine cannot safely read them.
+- pinned memory (page-locked memory): host memory that the OS promises never to move. In CUDA (Compute Unified Device Architecture) you get it from `cudaMallocHost` or `cudaHostAlloc`, or you lock an existing buffer with `cudaHostRegister`.
+
+When you copy from pageable memory, the driver works around the problem. It copies your data into a pinned staging buffer of its own with the CPU, then lets the DMA engine send that buffer to the GPU, piece by piece. Every byte is copied twice, once by the CPU and once over PCIe. From pinned memory the DMA engine reads your buffer directly, so the staging copy disappears and the link can run close to its peak.
 
 > [!TIP]
-> An example: https://images.nvidia.com/content/volta-architecture/pdf/volta-architecture-whitepaper.pdf
+> Pin the buffers you copy often, and allocate them once. Pinning is slow to set up and takes RAM away from the OS, so pinning many gigabytes "just in case" can slow the whole machine down.
+
+## Synchronous and Asynchronous Copies
+
+`cudaMemcpy` is the plain copy that [CUDA Lesson 08](../../cuda/Lesson-08/notes.md) uses. It is synchronous: the CPU thread waits until the copy is done, and the GPU runs nothing else from your program in the meantime. Copy, compute and copy back happen strictly one after another.
+
+`cudaMemcpyAsync` only queues the copy and returns at once. Together with streams, it lets copies and kernels overlap. A stream is a queue of GPU work that runs in order; work in different streams may run at the same time. Because the GPU has separate copy engines, it can copy one chunk while the SMs compute on another.
+
+A pipeline with 4 streams looks like this. Split the 4 GB into 4 chunks of 1 GB. Each chunk takes 1 / 31.5 = 0.032 s (32 ms) to copy. Say the kernel needs 12 ms per chunk. Done one after another: 4 × 32 + 4 × 12 = 176 ms. Overlapped, the kernel on chunk 1 runs while chunk 2 is copied, so the total drops to about 4 × 32 + 12 = 140 ms. The copy time is still there; only the kernel time hides behind it.
+
+Asynchronous copies need pinned host memory. From pageable memory, `cudaMemcpyAsync` still has to stage through the driver's buffer and usually stops being asynchronous.
+
+## Unified Memory
+
+Unified memory gives you one pointer that works on both sides. You allocate it with `cudaMallocManaged`, write to it on the CPU, pass it to a kernel and read the result on the CPU, with no `cudaMemcpy` in your code.
+
+The data still has to cross the link. Since Pascal, GPUs can take a page fault: when a kernel touches a page that is still in host memory, the GPU stops that access, the driver migrates the page to device memory, and the access continues. This page migration on demand is convenient, but many small faults are slower than one big copy. `cudaMemPrefetchAsync` tells the driver to move the pages in advance, which brings back most of the speed of an explicit copy.
+
+## Coherent Links: Grace Hopper and Grace Blackwell
+
+NVIDIA's superchips replace PCIe between CPU and GPU. The GH200 Grace Hopper Superchip puts a Grace CPU (Arm, with up to 480 GB of LPDDR5X (Low-Power Double Data Rate 5X) memory) and a Hopper GPU on one board, joined by NVLink-C2C (NVLink Chip-to-Chip). The GB200 Grace Blackwell Superchip joins one Grace CPU to two B200 GPUs the same way.
+
+NVLink-C2C moves 900 GB/s in total, 450 GB/s in each direction, about 7 times PCIe 5.0 x16. It is also coherent: the CPU and the GPU see one shared address space and keep their caches in agreement, so the GPU can read CPU memory directly, even ordinary memory from `malloc`, without staging. Copies still pay off for data the GPU reads again and again, because HBM is faster still, but the link is no longer the narrow point it is on PCIe.
+
+## GPUDirect
+
+GPUDirect is NVIDIA's name for paths that skip host memory altogether. GPUDirect P2P (peer to peer) lets two GPUs in the same machine copy to each other directly. GPUDirect RDMA (Remote Direct Memory Access) lets a NIC (Network Interface Card) read and write GPU memory directly, so data from another server lands on the GPU without a stop in CPU RAM. GPUDirect Storage does the same for NVMe (Non-Volatile Memory Express) drives and network storage. [Lesson 12](../Lesson-12/notes.md) shows how many GPUs use these paths together.
+
+## Why This Matters for CUDA
+
+The fastest kernel cannot make up for a slow data path. When you write CUDA:
+
+- copy once, keep the data on the GPU across as many kernels as you can, and copy back only the result
+- use pinned host memory (`cudaMallocHost`) for buffers you copy often
+- overlap copies and kernels with `cudaMemcpyAsync` and streams when the data does not fit the "copy once" pattern
+- with `cudaMallocManaged`, prefetch instead of relying on page faults
+- measure the copy time next to the kernel time, and compare both with the link bandwidth: 4 GB / 31.5 GB/s = 127 ms is the floor on an L40S
 
 ## Glossary
 
-- white paper: an official technical document that shows how a GPU architecture is built, without simplification.
-- Volta: Nvidia's 2017 architecture (V100, CC 7.0), the first one with Tensor Cores.
-- V100: the Volta GPU whose white paper this lesson walks through.
-- Key Features: a short white paper section that shows what the architecture is trying to do.
-- architecture: the hardware design of a GPU family; Volta, Ampere and Hopper are architectures.
-- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math.
-- generation: one release step of GPUs; Volta followed the Pascal generation.
-- Tensor Cores: dedicated hardware for matrix operations. Volta was the first to have them.
-- matrix operations: math on whole grids of numbers, mainly matrix multiplication, which is most of the work in AI.
-- CUDA cores: the general-purpose arithmetic units of the GPU, which ran matrix math before Tensor Cores existed.
-- workload: the kind of work a program gives the GPU, such as training a neural network.
-- Streaming Multiprocessor (SM): the core building block of the GPU. Volta has a redesigned SM.
-- Pascal: Nvidia's 2016 architecture (P100), the generation before Volta.
-- integer: a whole number such as 7 or -3; GPU code uses integer math all the time for indexes and addresses.
-- floating point: a number with a decimal point, such as 3.14; most graphics and AI math uses it.
-- parallel: running at the same time, here integer and floating point operations side by side.
-- instruction: one basic command the GPU runs, such as an add or a multiply.
-- cycle: one tick of the GPU clock; at 1.5 GHz there are 1.5 billion cycles every second.
-- efficiency: getting more work done with the same hardware, time or power.
-- Ampere / Hopper / Blackwell: the Nvidia architectures after Volta (2020, 2022, 2024), each building on its Tensor Cores.
-- HBM2 (High Bandwidth Memory 2): the memory Volta uses, 900 GB/s on the V100, higher than earlier generations.
-- GB/s: gigabytes per second, the unit of memory and link speed.
-- warp scheduler: the unit that picks which group of 32 threads runs next; each Volta SM has four.
-- GPU (Graphics Processing Unit): a processor built to run many simple tasks in parallel.
-- memory bandwidth: how fast data moves to the compute units. Higher bandwidth means less waiting.
-- NVLink: a high-speed link that connects GPUs to each other. Volta has its second generation.
-- multi-GPU: several GPUs in one machine working on one job and constantly exchanging data.
-- transistor count: how much hardware is inside a GPU. The V100 has around 21 billion transistors, the B200 208 billion.
+- host memory: the system RAM next to the CPU; in CUDA code, host buffers often start with `h_`.
+- device memory: the GPU's own memory (GDDR or HBM); in CUDA code, device buffers often start with `d_`.
+- RAM (Random Access Memory): the main memory of a computer; the CPU's RAM is the host memory.
+- CPU (Central Processing Unit): the main processor; in CUDA it is the host that prepares data and launches kernels.
+- GPU (Graphics Processing Unit): the processor with thousands of simple cores; in CUDA it is the device.
+- GDDR (Graphics Double Data Rate): the memory on gaming and workstation GPUs, such as the 48 GB of GDDR6 on the L40S.
+- HBM (High Bandwidth Memory): stacked memory next to the GPU chip on data center GPUs such as the H100 and B200.
+- PCIe (Peripheral Component Interconnect Express): the standard link between the CPU and plug-in cards such as GPUs.
+- SM (Streaming Multiprocessor): the processing unit of a GPU; the L40S has 142.
+- lane: one PCIe connection with a wire pair for each direction; a GPU slot uses 16 lanes (x16).
+- x16: a PCIe link with 16 lanes, the standard width for a GPU slot.
+- full duplex: sending and receiving at the same time, at full speed in each direction.
+- GT/s (gigatransfers per second): the raw signaling rate of one PCIe lane, 16 GT/s for PCIe 4.0.
+- per direction: the bandwidth one way only; a copy to the GPU uses one direction, so 31.5 GB/s on PCIe 4.0 x16.
+- L40S: the NVIDIA Ada Lovelace data center GPU used in these lessons, with 864 GB/s memory and PCIe 4.0 x16.
+- kernel: a function that runs on the GPU, launched by the CPU.
+- arithmetic intensity: the work done per byte moved; more work per byte hides a slow copy better.
+- DMA (Direct Memory Access): hardware on the GPU that moves data over PCIe by itself, without the CPU copying each byte.
+- pageable memory: normal host memory from `malloc` or `new`, which the OS may move or swap out.
+- OS (operating system): the software, such as Linux, that manages memory and decides where pages live.
+- pinned memory: host memory locked in place (page-locked), so the DMA engine can read it directly; from `cudaMallocHost`.
+- staging buffer: a pinned buffer the driver copies pageable data into before sending it to the GPU.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
+- `cudaMallocHost`: the CUDA call that allocates pinned host memory; free it with `cudaFreeHost`.
+- `cudaMemcpy`: the synchronous CUDA copy; the CPU thread waits until it is done.
+- `cudaMemcpyAsync`: a copy that is queued in a stream and returns at once; it needs pinned memory to really be asynchronous.
+- stream: a queue of GPU work that runs in order; work in different streams can overlap.
+- copy engine: a DMA engine on the GPU that runs copies while the SMs run kernels.
+- unified memory: memory reachable through one pointer from both CPU and GPU; the driver moves the pages.
+- `cudaMallocManaged`: the CUDA call that allocates unified memory.
+- page fault: an access to a page that is not where it is needed; the access waits until the page is moved or mapped.
+- page migration: moving a memory page from host memory to device memory or back.
+- `cudaMemPrefetchAsync`: moves unified memory pages ahead of time, so the kernel does not stop on page faults.
+- Grace Hopper (GH200): a superchip with a Grace CPU and a Hopper GPU joined by NVLink-C2C.
+- Grace Blackwell (GB200): a superchip with one Grace CPU and two B200 GPUs joined by NVLink-C2C.
+- LPDDR5X (Low-Power Double Data Rate 5X): the energy-efficient memory of the Grace CPU.
+- NVLink-C2C (NVLink Chip-to-Chip): NVIDIA's coherent CPU-GPU link, 900 GB/s in total, 450 GB/s per direction.
+- coherent: CPU and GPU share one address space and keep their caches in agreement, so each can read the other's memory.
+- GPUDirect: NVIDIA's family of paths that move data to or from GPU memory without a stop in host memory.
+- RDMA (Remote Direct Memory Access): reading or writing another machine's memory over the network without its CPU.
+- NIC (Network Interface Card): the card that connects a server to the network.
+- NVMe (Non-Volatile Memory Express): the fast interface for SSD (solid state drive) storage on PCIe.

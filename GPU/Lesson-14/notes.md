@@ -1,97 +1,99 @@
-# 14 > Running Linux on Windows (A Practical Setup with WSL)
+# 14 > CUDA Toolkit, The Foundation of GPU Programming
 
-This lesson explains how to run Linux inside Windows with WSL (Windows Subsystem for Linux). It also shows how the GPU (Graphics Processing Unit) and CUDA work inside WSL, and where the limits are.
+This lesson explains what the CUDA Toolkit is and what it gives you. It is the environment you use to write, compile, run and study programs on a GPU (Graphics Processing Unit). As of October 2026 the newest release is CUDA 13.4.
 
-## Why Linux
+## What CUDA is
 
-Serious CUDA work usually leads to Linux. Windows still works, but the GPU ecosystem has been built around Linux for years. Most tools, docs and real deployments expect Linux. GPU systems for AI (Artificial Intelligence) and HPC (High-Performance Computing) almost always run Linux.
+CUDA (Compute Unified Device Architecture) is NVIDIA's platform for parallel computing. It connects your code to the GPU. Without it, you cannot fully control an NVIDIA GPU.
 
-## What WSL is
+## The compiler: nvcc
 
-WSL runs a real Linux environment inside Windows. It is not an emulation layer like older solutions. WSL2 runs a real Linux kernel in a small, lightweight virtual machine. This makes a big difference in behavior, compatibility and performance.
+The center of the toolkit is the compiler, `nvcc` (NVIDIA CUDA Compiler). It turns your CUDA code into code the GPU can run.
 
-## Install WSL
+This happens in two steps. First your code becomes an intermediate form, PTX (Parallel Thread Execution). Then PTX becomes machine code, called SASS (Streaming Assembler), for one specific GPU architecture.
 
-Open a terminal on Windows, such as PowerShell, and run:
+<nvcc-pipeline></nvcc-pipeline>
 
-```bash
-wsl --install
-wsl --update
-```
+You name that architecture with its compute capability. The flag `-arch=sm_89` means compute capability 8.9: major version 8, minor version 9. That is the Ada generation, for example the L40S. A Hopper H100 is `sm_90` (9.0), a Blackwell B200 is `sm_100` (10.0).
 
-- `wsl --install` turns on WSL and installs Ubuntu, the default distribution.
-- `wsl --update` brings the WSL kernel to the newest version.
+Architectures such as Ampere, Hopper and Blackwell have different instructions, data types and execution models. So you must compile for the correct architecture. The same code may run on different GPUs. But without the right compile target, it will not behave the same or reach the same speed.
 
-Always use WSL2. WSL1 has lower compatibility and no GPU support at all. New installs use WSL2 by default. To check, run `wsl -l -v`: the VERSION column must show 2 for your distribution.
+## Libraries
 
-## First start
+The toolkit also gives you optimized libraries. They use the GPU well, so you do not have to write everything yourself. There are libraries for:
 
-When you start your Linux distribution the first time, you create a username and password. This is a separate Linux environment on the same machine, not your Windows environment. It has its own users, its own file system and its own package manager. From now on, you work in two systems at once.
+- linear algebra (cuBLAS)
+- Fourier transforms (cuFFT)
+- random number generation (cuRAND)
+- sparse matrices (cuSPARSE)
 
-## GPU access
+For deep learning, NVIDIA has cuDNN. It is a separate download, not part of the toolkit.
 
-With WSL2, Linux can use the GPU through the Windows driver. CUDA apps run inside WSL almost like on a native Linux system. So you can develop in Linux and still use Windows as your main system.
+These libraries get updates for new hardware. Recent CUDA versions support low precision formats such as FP8 (8-bit floating point) on Hopper and FP4 (4-bit floating point) on Blackwell. Modern AI (Artificial Intelligence) workloads use these formats.
 
-The GPU driver is installed on the Windows side, not inside WSL. You install the normal NVIDIA driver for Windows, and WSL uses that driver from the host. Inside WSL, the CUDA driver shows up as a library called `libcuda.so`, mapped in from Windows.
+## The runtime API
+
+Your program talks to the GPU through the CUDA runtime API (Application Programming Interface). With explicit API calls, your program:
+
+- allocates memory on the GPU
+- moves data between the CPU (Central Processing Unit) and the GPU
+- launches kernels
+
+Data movement is often a main bottleneck in GPU programs. So knowing when and how data moves is as important as writing the kernel.
+
+## Tools for profiling and debugging
+
+You also need to see how your program behaves. The toolkit has tools for profiling, debugging and analyzing GPU apps: Nsight Systems, Nsight Compute, cuda-gdb and Compute Sanitizer. They measure performance, find bottlenecks and find memory problems. Large workloads make performance tuning a required part of development.
+
+## Sample programs
+
+NVIDIA also publishes sample programs. They show how memory is managed, how kernels are launched and how to improve performance. Since CUDA 11.6 they no longer ship inside the toolkit. You get them from the cuda-samples repository on GitHub. Studying them is a fast way to go from theory to real understanding.
+
+## The toolkit follows the hardware
+
+The toolkit is closely tied to GPU architecture. Each new architecture brings new hardware features, and the toolkit adds support for them.
+
+- CUDA 13.0 came out in August 2025. CUDA 13.4 is the current release.
+- CUDA 13 supports Turing (compute capability 7.5) and everything newer, including Blackwell (10.x and 12.x). CUDA 13.4 adds Rubin (10.7) to its libraries. Rubin data center GPUs began shipping in the second half of 2026.
 
 > [!WARNING]
-> Never install a Linux NVIDIA driver inside WSL. It overwrites the driver mapped in from Windows and breaks GPU access.
+> CUDA 13.0 removed Maxwell, Pascal and Volta, every GPU below compute capability 7.5. CUDA 13 can no longer build code for them. For those GPUs you have to stay on CUDA 12.x.
 
-<wsl-layers></wsl-layers>
-
-## Installing CUDA in WSL
-
-Inside WSL, you install the Linux version of the CUDA Toolkit, not the Windows one. NVIDIA has a separate WSL-Ubuntu repository for it. Its packages contain the toolkit but no driver, so they cannot overwrite the driver from the host. So the install looks like normal Linux, but it is not the same. [Lesson 15](../Lesson-15/notes.md) walks through it.
-
-## Limits of WSL
-
-WSL is a serious development environment. Still, a few things work differently from native Linux:
-
-- GPU support needs a GeForce or RTX card in WDDM (Windows Display Driver Model) mode, the normal mode for a desktop card. Data center GPUs are not supported.
-- Unified memory is limited. The CPU (Central Processing Unit) and the GPU cannot access the same managed memory at the same time.
-- `nvidia-smi` cannot show every value, for example GPU utilization.
-
-Also check that your GPU fits CUDA 13. WSL itself works with Pascal and newer, but CUDA 13 needs compute capability 7.5 or higher. A GeForce GTX 1080 is compute capability 6.1, and 6.1 is below 7.5, so CUDA 13 cannot build code for it. A GeForce RTX 2060 is compute capability 7.5, so it works.
-
-> [!TIP]
-> When something breaks, check the layers from the bottom up: the Windows driver, then WSL itself (`wsl --update`), then the Linux distribution, then the CUDA Toolkit.
+> [!NOTE]
+> The toolkit is no longer one fixed package. Its parts carry their own version numbers: in CUDA 13.4 Update 1, `nvcc` is version 13.4.92 but cuBLAS is version 13.8.0.4. The GPU driver is not bundled any more either, on Windows since CUDA 13.1 and on Linux since CUDA 13.4. You install the driver separately.
 
 ## Summary
 
-WSL is a practical bridge. You stay in Windows and use Linux-based GPU tools in a way close to real production systems. It is one of the most natural ways to start.
-
-> [!NOTE]
-> From here on, these lessons work only inside Linux. Windows appears only as the host that holds the driver.
+The CUDA Toolkit is the complete environment for GPU programming. With it you write code, compile it, run it, analyze it and improve it. To work seriously with NVIDIA GPUs, you need to understand CUDA. Everything else is built on it.
 
 ## Glossary
 
-- Linux: a free, open-source operating system; most GPU servers and CUDA tools are built around it.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for parallel computing. It connects your code to the GPU.
 - GPU (Graphics Processing Unit): the processor with thousands of small cores that CUDA programs run on.
-- ecosystem: all the tools, libraries, docs and drivers that grow around a platform such as the GPU.
-- AI (Artificial Intelligence): software that learns from data, such as language models; most of it is trained on GPUs.
-- HPC (High-Performance Computing): many powerful processors working together on big problems, such as weather or physics simulations.
-- WSL (Windows Subsystem for Linux): runs a real Linux environment inside Windows.
-- emulation: software that imitates another system instead of running it for real, which is usually slower and less compatible.
-- WSL2: the WSL version that runs a real Linux kernel. It is the base for CUDA on Windows.
-- Linux kernel: the core of the Linux operating system that manages memory, processes and hardware; not the same as a CUDA kernel.
-- virtual machine: a complete computer simulated in software, with its own operating system, running on a real machine.
-- terminal: a text window where you type commands, such as PowerShell or Windows Terminal.
-- `wsl --install`: the command you run in a Windows terminal to install WSL and Ubuntu.
-- `wsl --update`: updates the WSL kernel to the newest version.
-- WSL1: the older WSL version with lower compatibility and no GPU support.
-- Linux distribution: a separate Linux environment with its own users, file system and package manager; Ubuntu is the usual choice for CUDA.
-- file system: the way an operating system stores and organizes files; a WSL distribution has its own, separate from the Windows drives.
-- package manager: a tool that installs and updates software from online lists, such as apt on Ubuntu.
-- driver (GPU driver): the software that lets the operating system talk to the GPU; for WSL it is installed only on the Windows side.
-- native Linux: Linux installed directly on the machine, not running inside another system.
-- host: the Windows system WSL runs on. WSL uses its GPU driver and needs no NVIDIA driver of its own.
-- `libcuda.so`: the CUDA driver library; inside WSL it is mapped in from the Windows driver.
-- CUDA Toolkit: NVIDIA's compiler, libraries and tools; inside WSL you install the Linux version from the WSL-Ubuntu repository.
-- WSL-Ubuntu repository: NVIDIA's package source for CUDA in WSL; its packages hold the toolkit without a driver.
-- WDDM (Windows Display Driver Model): the normal Windows driver mode for desktop graphics cards; WSL GPU support needs it.
-- unified memory: memory that the CPU and the GPU share through one pointer; only partly supported in WSL.
-- CPU (Central Processing Unit): the main processor of the computer.
-- `nvidia-smi`: NVIDIA's command line tool that shows the GPU, the driver and the memory use.
-- compute capability: the version number of a GPU architecture, such as 7.5 for Turing; CUDA 13 needs 7.5 or higher.
-- Pascal: NVIDIA's 2016 architecture, such as the GTX 1080; WSL runs it, CUDA 13 cannot build for it.
-- production: the real systems where finished software runs for its users.
+- parallel computing: splitting work into many pieces that run at the same time.
+- toolkit (CUDA Toolkit): the complete environment to write, compile, run, analyze and improve GPU programs; version 13.4 is current.
+- compiler: a program that turns source code into code a processor can run.
+- `nvcc` (NVIDIA CUDA Compiler): the compiler at the center of the toolkit. It turns CUDA code into code the GPU can run.
+- PTX (Parallel Thread Execution): the intermediate form `nvcc` makes first, before machine code for one GPU architecture.
+- machine code: the binary instructions one specific processor runs directly; for NVIDIA GPUs it is called SASS (Streaming Assembler).
+- architecture: the hardware design of a GPU family, such as Ampere, Hopper or Blackwell.
+- compute capability: the version number of a GPU architecture, such as 8.9; `sm_89` is the same number written for `-arch`.
+- Ampere / Hopper / Blackwell / Rubin: NVIDIA GPU architectures from 2020, 2022, 2024 and 2026, each with its own instructions and data types.
+- compile target: the GPU architecture you compile for. The wrong one can change behavior and speed.
+- libraries: ready-made, tested code you call from your program, such as cuBLAS or cuFFT.
+- linear algebra: math with vectors and matrices, such as adding vectors or multiplying matrices.
+- Fourier transforms: a way to split a signal into its frequencies, used in audio, imaging and physics.
+- deep learning: AI built from neural networks with many layers; cuDNN is NVIDIA's library for it, downloaded separately.
+- FP8 / FP4: 8-bit and 4-bit floating-point formats; Hopper added FP8, Blackwell added FP4.
+- AI (Artificial Intelligence): software that learns from data, such as language models; most of it runs on GPUs.
+- workload: the kind of work a program gives the GPU, such as training a model.
+- runtime API (Application Programming Interface): the calls your program uses to allocate GPU memory, move data and launch kernels.
+- CPU (Central Processing Unit): the main processor; in a CUDA program it runs the main code and sends work to the GPU.
+- kernel: a function that runs on the GPU, launched from code on the CPU.
+- bottleneck: the slowest step, which limits the speed of the whole program; often the copy between CPU and GPU.
+- profiling: measuring where a program spends its time; Nsight Systems and Nsight Compute are the toolkit's profilers.
+- debugging: finding and fixing bugs; cuda-gdb steps through GPU code and Compute Sanitizer finds memory errors.
+- sample programs: small example CUDA programs from NVIDIA; since CUDA 11.6 they live in the cuda-samples repository on GitHub.
+- Turing: the 2018 architecture with compute capability 7.5, the oldest one CUDA 13 supports.
+- Maxwell / Pascal / Volta: older architectures (2014, 2016, 2017); CUDA 13 can no longer build code for them.
+- driver (GPU driver): the software that lets the operating system talk to the GPU; it is installed separately from the toolkit.

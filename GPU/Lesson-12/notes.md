@@ -1,99 +1,151 @@
-# 12 > CUDA Toolkit, The Foundation of GPU Programming
+# 12 > Many GPUs Together
 
-This lesson explains what the CUDA Toolkit is and what it gives you. It is the environment you use to write, compile, run and study programs on a GPU (Graphics Processing Unit). As of October 2026 the newest release is CUDA 13.4.
+Big AI (artificial intelligence) models are trained on hundreds or thousands of GPUs (Graphics Processing Units) at once. This lesson shows why one GPU is not enough, how GPUs are wired together inside a server, a rack and a whole cluster, and how the work is split between them. At the end it goes the other way: one big GPU split into several small ones.
 
-## What CUDA is
+## Why One GPU Is Not Enough
 
-CUDA (Compute Unified Device Architecture) is NVIDIA's platform for parallel computing. It connects your code to the GPU. Without it, you cannot fully control an NVIDIA GPU.
+There are two reasons to use more than one GPU. The model does not fit into the memory of one GPU, or training on one GPU would take far too long.
 
-## The compiler: nvcc
+Take a model with 70 billion parameters (the numbers the model learns). Stored in BF16 (brain floating point, 16 bits), each parameter takes 2 bytes, see [Lesson 10](../Lesson-10/notes.md):
 
-The center of the toolkit is the compiler, `nvcc` (NVIDIA CUDA Compiler). It turns your CUDA code into code the GPU can run.
-
-This happens in two steps. First your code becomes an intermediate form, PTX (Parallel Thread Execution). Then PTX becomes machine code, called SASS (Streaming Assembler), for one specific GPU architecture.
-
-<nvcc-pipeline></nvcc-pipeline>
-
-You name that architecture with its compute capability. The flag `-arch=sm_89` means compute capability 8.9: major version 8, minor version 9. That is the Ada generation, for example the L40S. A Hopper H100 is `sm_90` (9.0), a Blackwell B200 is `sm_100` (10.0).
-
-Architectures such as Ampere, Hopper and Blackwell have different instructions, data types and execution models. So you must compile for the correct architecture. The same code may run on different GPUs. But without the right compile target, it will not behave the same or reach the same speed.
-
-## Libraries
-
-The toolkit also gives you optimized libraries. They use the GPU well, so you do not have to write everything yourself. There are libraries for:
-
-- linear algebra (cuBLAS)
-- Fourier transforms (cuFFT)
-- random number generation (cuRAND)
-- sparse matrices (cuSPARSE)
-
-For deep learning, NVIDIA has cuDNN. It is a separate download, not part of the toolkit.
-
-These libraries get updates for new hardware. Recent CUDA versions support low precision formats such as FP8 (8-bit floating point) on Hopper and FP4 (4-bit floating point) on Blackwell. Modern AI (Artificial Intelligence) workloads use these formats.
-
-## The runtime API
-
-Your program talks to the GPU through the CUDA runtime API (Application Programming Interface). With explicit API calls, your program:
-
-- allocates memory on the GPU
-- moves data between the CPU (Central Processing Unit) and the GPU
-- launches kernels
-
-Data movement is often a main bottleneck in GPU programs. So knowing when and how data moves is as important as writing the kernel.
-
-## Tools for profiling and debugging
-
-You also need to see how your program behaves. The toolkit has tools for profiling, debugging and analyzing GPU apps: Nsight Systems, Nsight Compute, cuda-gdb and Compute Sanitizer. They measure performance, find bottlenecks and find memory problems. Large workloads make performance tuning a required part of development.
-
-## Sample programs
-
-NVIDIA also publishes sample programs. They show how memory is managed, how kernels are launched and how to improve performance. Since CUDA 11.6 they no longer ship inside the toolkit. You get them from the cuda-samples repository on GitHub. Studying them is a fast way to go from theory to real understanding.
-
-## The toolkit follows the hardware
-
-The toolkit is closely tied to GPU architecture. Each new architecture brings new hardware features, and the toolkit adds support for them.
-
-- CUDA 13.0 came out in August 2025. CUDA 13.4 is the current release.
-- CUDA 13 supports Turing (compute capability 7.5) and everything newer, including Blackwell (10.x and 12.x). CUDA 13.4 adds Rubin (10.7) to its libraries. Rubin data center GPUs began shipping in the second half of 2026.
-
-> [!WARNING]
-> CUDA 13.0 removed Maxwell, Pascal and Volta, every GPU below compute capability 7.5. CUDA 13 can no longer build code for them. For those GPUs you have to stay on CUDA 12.x.
+- Weights only: 70 × 10⁹ × 2 bytes = 140 GB. That is already more than the 80 GB of an H100 and almost 3 times the 48 GB of the L40S.
+- Training needs much more. A common recipe keeps about 16 bytes per parameter: 2 for the BF16 weights, 2 for the gradients, 4 for an FP32 (32-bit floating point) master copy of the weights and 8 for the two values the Adam optimizer keeps per parameter. That is 70 × 10⁹ × 16 = 1,120 GB.
+- 1,120 GB / 80 GB = 14. So at least 14 H100 GPUs are needed just to hold this state, before a single activation (the intermediate results of each layer) is stored.
 
 > [!NOTE]
-> The toolkit is no longer one fixed package. Its parts carry their own version numbers: in CUDA 13.4 Update 1, `nvcc` is version 13.4.92 but cuBLAS is version 13.8.0.4. The GPU driver is not bundled any more either, on Windows since CUDA 13.1 and on Linux since CUDA 13.4. You install the driver separately.
+> Activations grow with the batch size and the sequence length, and for long inputs they can need more memory than the weights. This is why real training runs use far more GPUs than the 14 from this estimate.
 
-## Summary
+Time is the second reason. Training a large model takes a fixed amount of math. If one GPU would need years for it, 1,000 GPUs could in principle do it in days, but only if they can exchange results fast enough. The rest of this lesson is about that exchange.
 
-The CUDA Toolkit is the complete environment for GPU programming. With it you write code, compile it, run it, analyze it and improve it. To work seriously with NVIDIA GPUs, you need to understand CUDA. Everything else is built on it.
+## Scale Up and Scale Out
+
+GPUs are connected at two levels:
+
+- Scale up: GPUs that sit close together, in one server or one rack, are joined by a very fast link, NVLink. To a program they behave almost like one big GPU.
+- Scale out: many servers or racks are joined by a network, InfiniBand or Ethernet. This network is much slower per GPU, but it can grow to thousands of servers.
+
+The diagram shows four sizes, from one GPU to a cluster of racks, with the link type and the bandwidth each GPU gets at that level.
+
+<multi-gpu></multi-gpu>
+
+## PCIe and NVLink
+
+Every GPU talks to the CPU (Central Processing Unit) over PCIe (Peripheral Component Interconnect Express), see [Lesson 11](../Lesson-11/notes.md). The L40S used across these lessons has PCIe 4.0 x16, which gives 64 GB/s (gigabytes per second) in both directions together, 32 GB/s each way. Two L40S cards in one server can only talk over PCIe. The L40S has no NVLink.
+
+NVLink is NVIDIA's direct link from GPU to GPU. Each generation roughly doubled the bandwidth per GPU, both directions counted together. The newest ones reach several TB/s (terabytes per second):
+
+| NVLink | Architecture | Example GPU | Bandwidth per GPU |
+|---|---|---|---|
+| 1 | Pascal | P100 | 160 GB/s |
+| 2 | Volta | V100 | 300 GB/s |
+| 3 | Ampere | A100 | 600 GB/s |
+| 4 | Hopper | H100 | 900 GB/s |
+| 5 | Blackwell | B200 | 1.8 TB/s |
+| 6 | Rubin | Rubin | 3.6 TB/s |
+
+The H100 reaches its 900 GB/s with 18 NVLink links of 50 GB/s each. The B200 also has 18 links, at 100 GB/s each. Rubin systems with NVLink 6 have been shipping since the second half of 2026.
+
+> [!TIP]
+> Interconnect numbers usually count both directions together. The H100's 900 GB/s is 450 GB/s sending plus 450 GB/s receiving at the same time. For a transfer time, divide by the one-way number.
+
+## NVSwitch and the 8-GPU Server
+
+With 8 GPUs, wiring each GPU directly to every other one would split its 18 links into small groups. Instead, all GPUs connect to NVSwitch chips. An NVSwitch is a switch for NVLink: any GPU can reach any other GPU through it at the full rate of its links.
+
+A DGX H100 server has 8 H100 GPUs and 4 NVSwitch chips on one board. Every pair of GPUs can talk at 900 GB/s, and all 8 can do it at the same time. An 8-GPU B200 server works the same way at 1.8 TB/s per GPU.
+
+## The NVL72 Rack
+
+The GB200 NVL72 takes the same idea from one server to a whole rack. It holds 72 Blackwell GPUs and 36 Grace CPUs in 18 compute trays, plus 9 NVLink switch trays in the middle of the rack. All 72 GPUs are one NVLink domain: every GPU reaches every other GPU at 1.8 TB/s. Together that is 72 × 1.8 TB/s ≈ 130 TB/s.
+
+Because every link inside one NVLink domain is this fast, the 72 GPUs can share work that needs constant talking, which would be far too slow over a network. The Vera Rubin NVL72 keeps 72 GPUs per domain and doubles the link to 3.6 TB/s per GPU with NVLink 6.
+
+## Between Servers: InfiniBand and Ethernet
+
+Beyond one NVLink domain, servers and racks are joined by a network. Data centers for AI use InfiniBand or a fast Ethernet. Each GPU usually gets its own network card: a DGX H100 has 8 ConnectX-7 cards at 400 Gb/s (gigabits per second), one per GPU, and a GB300 NVL72 gives each GPU 800 Gb/s with ConnectX-8.
+
+> [!WARNING]
+> Network speeds are in Gb/s (bits), GPU links in GB/s (bytes). Divide by 8: 400 Gb/s = 50 GB/s and 800 Gb/s = 100 GB/s per direction. So an H100 can send 450 GB/s over NVLink but only 50 GB/s over its network card, 9 times less.
+
+This gap shapes everything about multi-GPU programs: put the most talkative work inside one NVLink domain, and send only what must cross the network.
+
+## NCCL and Collectives
+
+When GPUs train one model together, they must combine their results again and again. A pattern where all GPUs of a group take part in one exchange is called a collective. The most important one is all-reduce: every GPU starts with its own list of numbers, and at the end every GPU holds the sum of all the lists.
+
+The library that does this on NVIDIA GPUs is NCCL (NVIDIA Collective Communications Library). It finds the fastest path, NVLink, PCIe or the network, and runs collectives such as all-reduce, broadcast (one GPU sends the same data to all) and all-gather (every GPU gets every GPU's part).
+
+A common way to run all-reduce is the ring. The GPUs form a circle, each one sends pieces to its neighbour, and after two rounds around the circle every GPU has the full sum. With N GPUs and data of size S, each GPU sends 2 × (N - 1) / N × S. That is almost 2 × S, no matter how many GPUs are in the ring.
+
+## Worked Example: All-Reduce over PCIe and NVLink
+
+Take a model with 7 billion parameters, trained on 8 GPUs. After each step, the gradients in BF16 must be summed across all 8 GPUs:
+
+- Data size: 7 × 10⁹ × 2 bytes = 14 GB.
+- Each GPU sends 2 × (8 - 1) / 8 × 14 GB = 2 × 0.875 × 14 GB = 24.5 GB, and receives the same amount at the same time.
+
+Now divide by the one-way bandwidth of each link:
+
+| Link | One way | Time for 24.5 GB |
+|---|---|---|
+| PCIe 4.0 x16 (L40S) | 32 GB/s | 24.5 / 32 ≈ 0.77 s |
+| Network at 400 Gb/s | 50 GB/s | 24.5 / 50 = 0.49 s |
+| NVLink 4 (H100) | 450 GB/s | 24.5 / 450 ≈ 0.054 s |
+| NVLink 5 (B200) | 900 GB/s | 24.5 / 900 ≈ 0.027 s |
+
+These are the best cases on paper. In a real 8-GPU PCIe server, several cards share the same PCIe switches and CPU links, so it is slower still. If one training step computes for 0.5 s, the PCIe server would spend more time exchanging gradients than computing. NVLink makes the exchange about 14 times shorter.
+
+## Three Ways to Split the Work
+
+Data parallelism: every GPU holds the full model and works on a different part of the batch. After each step, an all-reduce sums the gradients, so all copies stay the same. It is the simplest method, but every GPU must fit the whole model. Variants such as FSDP (Fully Sharded Data Parallel) split the weights and optimizer values across GPUs and gather them only when needed.
+
+Tensor parallelism: each layer's large matrices are cut into pieces, and every GPU computes its piece of every layer. The GPUs must exchange partial results inside every layer, many times per step, so tensor parallelism is kept inside one NVLink domain.
+
+Pipeline parallelism: the layers are split into stages, for example layers 1 to 20 on the first GPU and 21 to 40 on the second. Activations flow from stage to stage like on an assembly line. Only the activations at stage borders travel, so a slower link is fine, but stages wait for each other unless the batch is cut into small micro-batches.
+
+Large training runs combine all three: tensor parallelism inside a server or rack, pipeline stages across them, and data parallelism over the whole cluster.
+
+## The Other Direction: MIG
+
+Sometimes one GPU is too big. A small model or a notebook user may need only a fraction of an H100. MIG (Multi-Instance GPU) splits one GPU into up to 7 isolated instances. Each instance gets its own SMs (Streaming Multiprocessors), its own part of the L2 cache and its own part of the memory, so one user cannot slow down or read the data of another. An H100 80 GB, for example, can become 7 instances with 10 GB each.
+
+MIG exists on data center GPUs since Ampere: the A100, H100, H200 and B200 allow up to 7 instances, the A30 up to 4. The RTX PRO 6000 Blackwell brings MIG to a workstation card, with up to 4 instances.
+
+> [!NOTE]
+> The L40S has no MIG and no NVLink. Several programs can still share it, but by taking turns (time slicing), without hardware isolation.
+
+## Why This Matters for CUDA
+
+In CUDA (Compute Unified Device Architecture), a kernel always runs on one GPU. A program that uses several GPUs selects each one with `cudaSetDevice` and launches kernels on each. Data moves between GPUs with `cudaMemcpyPeer`, over NVLink when it exists and over PCIe when it does not. For all-reduce and other collectives, programs call NCCL instead of writing their own.
+
+Communication should overlap with computation: while a GPU computes the gradients of one layer, NCCL can already send those of the previous layer. On a MIG instance, `cudaGetDeviceProperties` reports only the SMs of that instance, so a kernel should size its grid from the reported SM count, as in [Lesson 05](../Lesson-05/notes.md), never from a hardcoded number like 132.
 
 ## Glossary
 
-- CUDA (Compute Unified Device Architecture): NVIDIA's platform for parallel computing. It connects your code to the GPU.
-- GPU (Graphics Processing Unit): the processor with thousands of small cores that CUDA programs run on.
-- parallel computing: splitting work into many pieces that run at the same time.
-- toolkit (CUDA Toolkit): the complete environment to write, compile, run, analyze and improve GPU programs; version 13.4 is current.
-- compiler: a program that turns source code into code a processor can run.
-- `nvcc` (NVIDIA CUDA Compiler): the compiler at the center of the toolkit. It turns CUDA code into code the GPU can run.
-- PTX (Parallel Thread Execution): the intermediate form `nvcc` makes first, before machine code for one GPU architecture.
-- machine code: the binary instructions one specific processor runs directly; for NVIDIA GPUs it is called SASS (Streaming Assembler).
-- architecture: the hardware design of a GPU family, such as Ampere, Hopper or Blackwell.
-- compute capability: the version number of a GPU architecture, such as 8.9; `sm_89` is the same number written for `-arch`.
-- Ampere / Hopper / Blackwell / Rubin: NVIDIA GPU architectures from 2020, 2022, 2024 and 2026, each with its own instructions and data types.
-- compile target: the GPU architecture you compile for. The wrong one can change behavior and speed.
-- libraries: ready-made, tested code you call from your program, such as cuBLAS or cuFFT.
-- linear algebra: math with vectors and matrices, such as adding vectors or multiplying matrices.
-- Fourier transforms: a way to split a signal into its frequencies, used in audio, imaging and physics.
-- deep learning: AI built from neural networks with many layers; cuDNN is NVIDIA's library for it, downloaded separately.
-- FP8 / FP4: 8-bit and 4-bit floating-point formats; Hopper added FP8, Blackwell added FP4.
-- AI (Artificial Intelligence): software that learns from data, such as language models; most of it runs on GPUs.
-- workload: the kind of work a program gives the GPU, such as training a model.
-- runtime API (Application Programming Interface): the calls your program uses to allocate GPU memory, move data and launch kernels.
-- CPU (Central Processing Unit): the main processor; in a CUDA program it runs the main code and sends work to the GPU.
-- kernel: a function that runs on the GPU, launched from code on the CPU.
-- bottleneck: the slowest step, which limits the speed of the whole program; often the copy between CPU and GPU.
-- profiling: measuring where a program spends its time; Nsight Systems and Nsight Compute are the toolkit's profilers.
-- debugging: finding and fixing bugs; cuda-gdb steps through GPU code and Compute Sanitizer finds memory errors.
-- sample programs: small example CUDA programs from NVIDIA; since CUDA 11.6 they live in the cuda-samples repository on GitHub.
-- Turing: the 2018 architecture with compute capability 7.5, the oldest one CUDA 13 supports.
-- Maxwell / Pascal / Volta: older architectures (2014, 2016, 2017); CUDA 13 can no longer build code for them.
-- driver (GPU driver): the software that lets the operating system talk to the GPU; it is installed separately from the toolkit.
+- GPU (Graphics Processing Unit): the processor this track is about; this lesson connects many of them.
+- AI (artificial intelligence): software that learns from data; large AI models are why GPUs are connected in thousands.
+- parameter: a number the model learns; a 70-billion-parameter model has 70 × 10⁹ of them.
+- BF16 (brain floating point, 16 bits): a 2-byte number format used for weights and gradients in training.
+- FP32 (32-bit floating point): a 4-byte number format; training often keeps a master copy of the weights in it.
+- gradient: how much each parameter should change after a training step; data parallelism sums them across GPUs.
+- activation: the intermediate result of a layer; it can need more memory than the weights.
+- scale up / scale out: connecting GPUs close together with NVLink, or connecting servers with a network.
+- PCIe (Peripheral Component Interconnect Express): the link between CPU and GPU; PCIe 4.0 x16 gives 32 GB/s each way.
+- CPU (Central Processing Unit): the main processor of the server; GPUs reach it over PCIe.
+- NVLink: NVIDIA's direct GPU-to-GPU link; 900 GB/s per GPU on the H100, 1.8 TB/s on the B200.
+- GB/s (gigabytes per second) / Gb/s (gigabits per second): bytes or bits per second; 8 Gb/s = 1 GB/s.
+- NVSwitch: a switch chip for NVLink that lets every GPU reach every other GPU at full rate.
+- NVL72: a rack with 72 GPUs in one NVLink domain, such as the GB200 NVL72.
+- NVLink domain: a group of GPUs that all reach each other over NVLink.
+- InfiniBand / Ethernet: the networks that join servers and racks; 400 or 800 Gb/s per GPU.
+- collective: an exchange in which all GPUs of a group take part, such as all-reduce.
+- all-reduce: a collective after which every GPU holds the sum of all GPUs' data.
+- NCCL (NVIDIA Collective Communications Library): the library that runs collectives on NVIDIA GPUs.
+- ring: an all-reduce method where GPUs pass pieces around a circle; each sends about 2 × the data size.
+- data parallelism: every GPU holds the whole model and works on a different part of the batch.
+- FSDP (Fully Sharded Data Parallel): data parallelism that splits weights and optimizer values across GPUs.
+- tensor parallelism: each layer's matrices are split across GPUs, which talk inside every layer.
+- pipeline parallelism: the layers are split into stages on different GPUs, like an assembly line.
+- MIG (Multi-Instance GPU): splitting one GPU into up to 7 isolated instances.
+- SM (Streaming Multiprocessor): a GPU's building block; a MIG instance gets its own SMs.
+- time slicing: programs sharing a GPU by taking turns, without isolation.

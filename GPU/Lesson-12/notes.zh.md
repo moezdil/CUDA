@@ -1,99 +1,151 @@
-# 12 > CUDA Toolkit：GPU 编程的基础
+# 12 > 多 GPU 协同
 
-这一课讲什么是 CUDA Toolkit（工具包），以及它能为你提供什么。在 GPU（Graphics Processing Unit，图形处理器）上编写、编译、运行和研究程序，靠的就是这个环境。截至 2026 年 10 月，最新版本是 CUDA 13.4。
+大型 AI（artificial intelligence，人工智能）模型要同时用几百甚至几千块 GPU（Graphics Processing Unit，图形处理器）来训练。这一课讲为什么一块 GPU 不够用，GPU 在一台服务器、一个机柜和整个集群里是怎样连在一起的，以及工作怎样分给它们。最后反过来看：把一块大 GPU 切成几块小 GPU。
 
-## CUDA 是什么
+## 为什么一块 GPU 不够
 
-CUDA（Compute Unified Device Architecture，统一计算设备架构）是 NVIDIA 的并行计算平台，它把你的代码和 GPU 连接起来。没有它，你就无法完全掌控 NVIDIA GPU。
+用多块 GPU 有两个原因：模型放不进一块 GPU 的显存，或者用一块 GPU 训练要花太久。
 
-## 编译器：nvcc
+拿一个有 700 亿个参数（模型学到的那些数）的模型来说。用 BF16（brain floating point，16 位脑浮点）存储时，每个参数占 2 字节，见 [第 10 课](../Lesson-10/notes.md)：
 
-Toolkit 的核心是编译器 `nvcc`（NVIDIA CUDA Compiler）。它把你的 CUDA 代码转换成 GPU 能运行的代码。
-
-这个过程分两步：先把代码转换成一种中间形式 PTX（Parallel Thread Execution，并行线程执行）；再把 PTX 转换成针对某一种 GPU 架构的机器码，叫作 SASS（Streaming Assembler）。
-
-<nvcc-pipeline></nvcc-pipeline>
-
-你用计算能力来指定这个架构。参数 `-arch=sm_89` 表示计算能力 8.9：主版本号 8，次版本号 9。这是 Ada 一代，比如 L40S。Hopper 的 H100 是 `sm_90`（9.0），Blackwell 的 B200 是 `sm_100`（10.0）。
-
-Ampere、Hopper、Blackwell 等架构的指令、数据类型和执行模型各不相同，所以你必须针对正确的架构编译。同一份代码也许能在不同的 GPU 上运行，但如果编译目标不对，它的行为就会不一样，速度也达不到应有的水平。
-
-## 库
-
-Toolkit 还提供了经过优化的库。这些库能充分利用 GPU，你不必什么都自己写。涵盖的领域有：
-
-- 线性代数（cuBLAS）
-- 傅里叶变换（cuFFT）
-- 随机数生成（cuRAND）
-- 稀疏矩阵（cuSPARSE）
-
-深度学习方面，NVIDIA 提供 cuDNN。它需要单独下载，不包含在 Toolkit 里。
-
-这些库会随新硬件不断更新。新版 CUDA 支持低精度格式，比如 Hopper 上的 FP8（8 位浮点）和 Blackwell 上的 FP4（4 位浮点）。现代 AI（Artificial Intelligence，人工智能）工作负载用的正是这些格式。
-
-## 运行时 API
-
-你的程序通过 CUDA 运行时 API（Application Programming Interface，应用程序编程接口）和 GPU 打交道。借助显式的 API 调用，程序可以：
-
-- 在 GPU 上分配显存
-- 在 CPU（Central Processing Unit，中央处理器）和 GPU 之间搬运数据
-- 启动核函数（kernel）
-
-数据搬运常常是 GPU 程序的主要瓶颈，所以弄清数据在何时、以何种方式移动，和编写核函数一样重要。
-
-## 性能分析与调试工具
-
-你还需要了解程序实际的运行情况。Toolkit 提供了用于性能分析、调试和诊断 GPU 应用的工具：Nsight Systems、Nsight Compute、cuda-gdb 和 Compute Sanitizer。它们可以测量性能、找出瓶颈、发现显存问题。工作负载越大，性能调优就越是开发中必不可少的一环。
-
-## 示例程序
-
-NVIDIA 还发布了示例程序，展示如何管理显存、如何启动核函数，以及如何提升性能。从 CUDA 11.6 起，它们不再随 Toolkit 一起安装。你要从 GitHub 上的 cuda-samples 仓库获取。研究这些示例，是从理论走向真正理解的捷径。
-
-## Toolkit 紧跟硬件
-
-Toolkit 和 GPU 架构紧密绑定。每一代新架构都会带来新的硬件功能，Toolkit 也会随之加入相应的支持。
-
-- CUDA 13.0 于 2025 年 8 月发布，CUDA 13.4 是当前版本。
-- CUDA 13 支持 Turing（计算能力 7.5）及之后的所有架构，包括 Blackwell（10.x 和 12.x）。CUDA 13.4 的库加入了对 Rubin（10.7）的支持。Rubin 数据中心 GPU 于 2026 年下半年开始出货。
-
-> [!WARNING]
-> CUDA 13.0 移除了 Maxwell、Pascal 和 Volta，也就是计算能力低于 7.5 的所有 GPU。CUDA 13 已经不能再为它们编译代码。这些 GPU 只能继续用 CUDA 12.x。
+- 只算权重：70 × 10⁹ × 2 字节 = 140 GB。这已经超过 H100 的 80 GB，差不多是 L40S 48 GB 的 3 倍。
+- 训练需要的多得多。一种常见做法是每个参数大约占 16 字节：BF16 权重 2 字节，梯度 2 字节，FP32（32-bit floating point，32 位浮点）的权重主副本 4 字节，再加上 Adam 优化器为每个参数保存的两个值 8 字节。合计 70 × 10⁹ × 16 = 1,120 GB。
+- 1,120 GB / 80 GB = 14。所以光是放下这些状态就至少要 14 块 H100，这还没存任何一个激活值（每一层的中间结果）。
 
 > [!NOTE]
-> Toolkit 不再是一个固定不变的整体包，各个组件有自己的版本号：在 CUDA 13.4 Update 1 里，`nvcc` 的版本是 13.4.92，cuBLAS 的版本却是 13.8.0.4。GPU 驱动也不再捆绑在里面：Windows 从 CUDA 13.1 起，Linux 从 CUDA 13.4 起。驱动需要单独安装。
+> 激活值会随批大小和序列长度增长，输入很长时，它们占的显存可能比权重还多。这就是为什么真实的训练任务用的 GPU 远多于这里估算的 14 块。
 
-## 小结
+第二个原因是时间。训练一个大模型需要的计算量是固定的。如果一块 GPU 要算好几年，那么 1,000 块 GPU 理论上几天就能算完，但前提是它们交换结果的速度足够快。这一课剩下的部分讲的就是这种交换。
 
-CUDA Toolkit 是 GPU 编程的完整环境。有了它，你可以编写、编译、运行、分析和改进代码。想认真使用 NVIDIA GPU，就必须理解 CUDA，其他一切都建立在它之上。
+## 纵向扩展与横向扩展
+
+GPU 在两个层面上相连：
+
+- 纵向扩展（scale up）：离得很近的 GPU，在同一台服务器或同一个机柜里，用非常快的 NVLink 连接。对程序来说，它们几乎就像一块大 GPU。
+- 横向扩展（scale out）：许多服务器或机柜通过网络相连，也就是 InfiniBand 或以太网（Ethernet）。按每块 GPU 算，这个网络要慢得多，但它能扩展到几千台服务器。
+
+下面的图展示了从一块 GPU 到多个机柜组成的集群这四种规模，以及每一层的连接类型和每块 GPU 能分到的带宽。
+
+<multi-gpu></multi-gpu>
+
+## PCIe 与 NVLink
+
+每块 GPU 都通过 PCIe（Peripheral Component Interconnect Express，高速外设互连）和 CPU（Central Processing Unit，中央处理器）通信，见 [第 11 课](../Lesson-11/notes.md)。这些课一直使用的 L40S 是 PCIe 4.0 x16，两个方向加起来 64 GB/s（gigabytes per second，吉字节每秒），每个方向 32 GB/s。同一台服务器里的两块 L40S 只能通过 PCIe 通信，L40S 没有 NVLink。
+
+NVLink 是 NVIDIA 的 GPU 到 GPU 直连链路。每一代都把每块 GPU 的带宽大约翻一倍，两个方向合在一起算。最新的几代已经达到好几 TB/s（terabytes per second，太字节每秒）：
+
+| NVLink | 架构 | 示例 GPU | 每块 GPU 的带宽 |
+|---|---|---|---|
+| 1 | Pascal | P100 | 160 GB/s |
+| 2 | Volta | V100 | 300 GB/s |
+| 3 | Ampere | A100 | 600 GB/s |
+| 4 | Hopper | H100 | 900 GB/s |
+| 5 | Blackwell | B200 | 1.8 TB/s |
+| 6 | Rubin | Rubin | 3.6 TB/s |
+
+H100 用 18 条各 50 GB/s 的 NVLink 链路凑出 900 GB/s。B200 同样有 18 条链路，每条 100 GB/s。使用 NVLink 6 的 Rubin 系统从 2026 年下半年开始出货。
+
+> [!TIP]
+> 互连带宽的数字通常把两个方向加在一起。H100 的 900 GB/s 是同时发送 450 GB/s 加接收 450 GB/s。算传输时间时，要除以单向的数字。
+
+## NVSwitch 与 8 卡服务器
+
+有 8 块 GPU 时，如果让每块 GPU 直接连到其他每一块，它的 18 条链路就会被分成很小的几组。所以实际做法是所有 GPU 都连到 NVSwitch 芯片上。NVSwitch 是 NVLink 的交换机：任何一块 GPU 都能通过它以链路的全速访问任何另一块 GPU。
+
+一台 DGX H100 服务器在一块主板上有 8 块 H100 和 4 颗 NVSwitch 芯片。任意两块 GPU 之间都能以 900 GB/s 通信，而且 8 块可以同时这样做。8 卡 B200 服务器的原理一样，每块 GPU 1.8 TB/s。
+
+## NVL72 机柜
+
+GB200 NVL72 把同样的思路从一台服务器扩展到整个机柜。它在 18 个计算托盘里装了 72 块 Blackwell GPU 和 36 颗 Grace CPU，机柜中间还有 9 个 NVLink 交换托盘。这 72 块 GPU 构成一个 NVLink 域：每块 GPU 都能以 1.8 TB/s 访问其他任何一块。加起来是 72 × 1.8 TB/s ≈ 130 TB/s。
+
+因为一个 NVLink 域里的每条链路都这么快，72 块 GPU 可以分担那种需要不停通信的工作，这种工作放到网络上就会慢得没法用。Vera Rubin NVL72 仍然是每个域 72 块 GPU，但用 NVLink 6 把每块 GPU 的链路翻倍到 3.6 TB/s。
+
+## 服务器之间：InfiniBand 与以太网
+
+超出一个 NVLink 域之后，服务器和机柜通过网络相连。AI 数据中心用 InfiniBand 或高速以太网。通常每块 GPU 有自己的网卡：DGX H100 有 8 块 400 Gb/s（gigabits per second，吉比特每秒）的 ConnectX-7 网卡，每块 GPU 一块；GB300 NVL72 用 ConnectX-8 给每块 GPU 800 Gb/s。
+
+> [!WARNING]
+> 网络速度用 Gb/s（比特），GPU 链路用 GB/s（字节）。要除以 8：400 Gb/s = 50 GB/s，800 Gb/s = 100 GB/s，都是单向。所以 H100 通过 NVLink 能发送 450 GB/s，通过网卡却只有 50 GB/s，少了 9 倍。
+
+这个差距决定了多 GPU 程序的一切：把通信最多的工作放在一个 NVLink 域里，只把必须跨网络的数据送出去。
+
+## NCCL 与集合通信
+
+多块 GPU 一起训练一个模型时，必须一次又一次地合并各自的结果。一组 GPU 全部参与的一次交换叫做集合通信（collective）。最重要的是 all-reduce：每块 GPU 一开始有自己的一串数字，结束时每块 GPU 都拿到所有这些数字串的总和。
+
+在 NVIDIA GPU 上做这件事的库是 NCCL（NVIDIA Collective Communications Library，NVIDIA 集合通信库）。它会找出最快的路径，NVLink、PCIe 或网络，然后执行 all-reduce、broadcast（一块 GPU 把同样的数据发给所有 GPU）和 all-gather（每块 GPU 都拿到每块 GPU 的那一份）等集合通信。
+
+all-reduce 的一种常见做法是环（ring）。GPU 围成一个圈，每块都把数据块发给邻居，绕圈两轮之后，每块 GPU 都有了完整的总和。有 N 块 GPU、数据大小为 S 时，每块 GPU 发送 2 × (N - 1) / N × S。不管环里有多少块 GPU，这都接近 2 × S。
+
+## 算一算：PCIe 与 NVLink 上的 all-reduce
+
+拿一个 70 亿参数的模型，在 8 块 GPU 上训练。每一步之后，BF16 格式的梯度都要在 8 块 GPU 之间求和：
+
+- 数据大小：7 × 10⁹ × 2 字节 = 14 GB。
+- 每块 GPU 发送 2 × (8 - 1) / 8 × 14 GB = 2 × 0.875 × 14 GB = 24.5 GB，同时接收同样多的数据。
+
+现在除以每种链路的单向带宽：
+
+| 链路 | 单向 | 24.5 GB 所需时间 |
+|---|---|---|
+| PCIe 4.0 x16 (L40S) | 32 GB/s | 24.5 / 32 ≈ 0.77 s |
+| 400 Gb/s 网络 | 50 GB/s | 24.5 / 50 = 0.49 s |
+| NVLink 4 (H100) | 450 GB/s | 24.5 / 450 ≈ 0.054 s |
+| NVLink 5 (B200) | 900 GB/s | 24.5 / 900 ≈ 0.027 s |
+
+这些都是纸面上的最好情况。在真实的 8 卡 PCIe 服务器里，几块卡共用同一组 PCIe 交换芯片和 CPU 链路，所以还会更慢。如果一个训练步的计算要 0.5 s，PCIe 服务器花在交换梯度上的时间就比计算还多。NVLink 让这次交换缩短到大约 1/14。
+
+## 三种拆分工作的方式
+
+数据并行（data parallelism）：每块 GPU 都有完整的模型，各自处理批次中不同的一部分。每一步之后用 all-reduce 把梯度加起来，让所有副本保持一致。这是最简单的方法，但每块 GPU 都必须放得下整个模型。FSDP（Fully Sharded Data Parallel，完全分片数据并行）这类变体把权重和优化器的值分散到各块 GPU 上，只在需要时再收集。
+
+张量并行（tensor parallelism）：把每一层的大矩阵切成几块，每块 GPU 计算每一层中属于自己的那块。GPU 在每一层里都要交换部分结果，每一步要交换很多次，所以张量并行总是放在一个 NVLink 域里。
+
+流水线并行（pipeline parallelism）：把各层分成几个阶段，比如第 1 到 20 层放在第一块 GPU，第 21 到 40 层放在第二块。激活值像流水线一样一站一站往下传。只有阶段边界上的激活值需要传输，所以慢一些的链路也够用；但除非把批次切成很小的微批次，否则各阶段会互相等待。
+
+大型训练任务把三种方式结合起来：服务器或机柜内部用张量并行，跨服务器或机柜分流水线阶段，整个集群上用数据并行。
+
+## 反过来：MIG
+
+有时一块 GPU 太大了。一个小模型或一个写 notebook 的用户可能只需要 H100 的一小部分。MIG（Multi-Instance GPU，多实例 GPU）把一块 GPU 切成最多 7 个相互隔离的实例。每个实例有自己的 SM（Streaming Multiprocessor，流式多处理器）、自己那部分 L2 缓存和自己那部分显存，所以一个用户既不能拖慢另一个用户，也读不到对方的数据。比如一块 H100 80 GB 可以变成 7 个各 10 GB 的实例。
+
+从 Ampere 开始的数据中心 GPU 都有 MIG：A100、H100、H200 和 B200 最多 7 个实例，A30 最多 4 个。RTX PRO 6000 Blackwell 把 MIG 带到了工作站显卡上，最多 4 个实例。
+
+> [!NOTE]
+> L40S 既没有 MIG，也没有 NVLink。多个程序仍然可以共用它，但只能轮流使用（时间片，time slicing），没有硬件隔离。
+
+## 这对 CUDA 意味着什么
+
+在 CUDA（Compute Unified Device Architecture，统一计算设备架构）里，一个核函数总是运行在一块 GPU 上。使用多块 GPU 的程序用 `cudaSetDevice` 选中每一块，再在每一块上启动核函数。数据用 `cudaMemcpyPeer` 在 GPU 之间搬运，有 NVLink 时走 NVLink，没有时走 PCIe。all-reduce 和其他集合通信直接调用 NCCL，不用自己写。
+
+通信应该和计算重叠：一块 GPU 在计算某一层梯度的同时，NCCL 已经可以发送上一层的梯度。在 MIG 实例上，`cudaGetDeviceProperties` 只报告这个实例的 SM 数量，所以核函数应该按报告的 SM 数来决定网格大小，就像 [第 05 课](../Lesson-05/notes.md) 那样，而不是写死 132 这样的数字。
 
 ## 术语表
 
-- CUDA（Compute Unified Device Architecture）：NVIDIA 的并行计算平台，把你的代码和 GPU 连接起来。
-- GPU（Graphics Processing Unit）：拥有成千上万个小核心的处理器，CUDA 程序就在它上面运行。
-- 并行计算（parallel computing）：把工作拆成很多小块，让它们同时运行。
-- Toolkit（CUDA Toolkit）：用于编写、编译、运行、分析和改进 GPU 程序的完整环境；当前版本是 13.4。
-- 编译器（compiler）：把源代码变成处理器能运行的代码的程序。
-- `nvcc`（NVIDIA CUDA Compiler）：Toolkit 核心的编译器，把 CUDA 代码变成 GPU 能运行的代码。
-- PTX（Parallel Thread Execution）：`nvcc` 先生成的中间形式，之后才会变成针对某个 GPU 架构的机器码。
-- 机器码（machine code）：某个具体处理器直接执行的二进制指令；在 NVIDIA GPU 上它叫 SASS（Streaming Assembler）。
-- 架构（architecture）：一个 GPU 系列的硬件设计，比如 Ampere、Hopper 或 Blackwell。
-- 计算能力（compute capability）：GPU 架构的版本号，比如 8.9；`sm_89` 是写给 `-arch` 的同一个数字。
-- Ampere / Hopper / Blackwell / Rubin：NVIDIA 2020、2022、2024 和 2026 年的 GPU 架构，各有自己的指令和数据类型。
-- 编译目标（compile target）：你编译时针对的 GPU 架构。选错了会改变行为和速度。
-- 库（library）：现成的、经过测试的代码，可以在程序里直接调用，比如 cuBLAS 或 cuFFT。
-- 线性代数（linear algebra）：关于向量和矩阵的数学，比如向量相加或矩阵相乘。
-- 傅里叶变换（Fourier transforms）：把信号拆分成各个频率的方法，用于音频、图像和物理计算。
-- 深度学习（deep learning）：由多层神经网络构成的 AI；cuDNN 是 NVIDIA 为它准备的库，需要单独下载。
-- FP8 / FP4：8 位和 4 位浮点格式；Hopper 加入了 FP8，Blackwell 加入了 FP4。
-- AI（Artificial Intelligence）：从数据中学习的软件，比如语言模型；大部分在 GPU 上运行。
-- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练模型。
-- 运行时 API（runtime API）：程序用来分配 GPU 显存、搬运数据和启动核函数的调用。
-- CPU（Central Processing Unit）：主处理器；在 CUDA 程序里，它运行主代码，并把工作交给 GPU。
-- 核函数（kernel）：在 GPU 上运行的函数，由 CPU 上的代码启动。
-- 瓶颈（bottleneck）：最慢的那一步，它限制了整个程序的速度；常常是 CPU 和 GPU 之间的复制。
-- 性能分析（profiling）：测量程序把时间花在了哪里；Nsight Systems 和 Nsight Compute 是 Toolkit 里的性能分析工具。
-- 调试（debugging）：找出并修复错误；cuda-gdb 可以逐步调试 GPU 代码，Compute Sanitizer 可以检查显存错误。
-- 示例程序（sample programs）：NVIDIA 提供的小型 CUDA 示例程序；从 CUDA 11.6 起，它们放在 GitHub 上的 cuda-samples 仓库里。
-- Turing：2018 年的架构，计算能力 7.5，是 CUDA 13 支持的最老架构。
-- Maxwell / Pascal / Volta：较老的架构（2014、2016、2017）；CUDA 13 已经不能再为它们编译代码。
-- 驱动（GPU driver）：让操作系统和 GPU 通信的软件；它和 Toolkit 分开安装。
+- GPU（Graphics Processing Unit，图形处理器）：这条学习路线讲的处理器；这一课把很多块连在一起。
+- AI（artificial intelligence，人工智能）：从数据中学习的软件；正是大型 AI 模型让 GPU 成千上万地连在一起。
+- 参数（parameter）：模型学到的一个数；700 亿参数的模型有 70 × 10⁹ 个。
+- BF16（brain floating point，16 位脑浮点）：训练中用于权重和梯度的 2 字节数值格式。
+- FP32（32-bit floating point，32 位浮点）：4 字节数值格式；训练时常用它保存权重的主副本。
+- 梯度（gradient）：一个训练步之后每个参数应该改变多少；数据并行会在 GPU 之间把它们加起来。
+- 激活值（activation）：某一层的中间结果；它占的显存可能比权重还多。
+- 纵向扩展 / 横向扩展（scale up / scale out）：用 NVLink 连接离得近的 GPU，或用网络连接服务器。
+- PCIe（Peripheral Component Interconnect Express，高速外设互连）：CPU 和 GPU 之间的链路；PCIe 4.0 x16 每个方向 32 GB/s。
+- CPU（Central Processing Unit，中央处理器）：服务器的主处理器；GPU 通过 PCIe 访问它。
+- NVLink：NVIDIA 的 GPU 到 GPU 直连链路；H100 每块 GPU 900 GB/s，B200 是 1.8 TB/s。
+- GB/s（gigabytes per second，吉字节每秒）/ Gb/s（gigabits per second，吉比特每秒）：每秒的字节数或比特数；8 Gb/s = 1 GB/s。
+- NVSwitch：NVLink 的交换芯片，让每块 GPU 都能以全速访问其他每一块 GPU。
+- NVL72：一个机柜里 72 块 GPU 组成一个 NVLink 域，比如 GB200 NVL72。
+- NVLink 域（NVLink domain）：一组全部通过 NVLink 互相访问的 GPU。
+- InfiniBand / 以太网（Ethernet）：连接服务器和机柜的网络；每块 GPU 400 或 800 Gb/s。
+- 集合通信（collective）：一组 GPU 全部参与的一次交换，比如 all-reduce。
+- all-reduce：一种集合通信，结束后每块 GPU 都拿到所有 GPU 数据的总和。
+- NCCL（NVIDIA Collective Communications Library，NVIDIA 集合通信库）：在 NVIDIA GPU 上执行集合通信的库。
+- 环（ring）：一种 all-reduce 方法，GPU 沿着一个圈传递数据块；每块 GPU 大约发送 2 倍的数据量。
+- 数据并行（data parallelism）：每块 GPU 都有整个模型，各自处理批次中不同的一部分。
+- FSDP（Fully Sharded Data Parallel，完全分片数据并行）：把权重和优化器的值分散到各块 GPU 上的数据并行。
+- 张量并行（tensor parallelism）：把每一层的矩阵分到多块 GPU 上，它们在每一层里都要通信。
+- 流水线并行（pipeline parallelism）：把各层分成几个阶段放到不同的 GPU 上，就像流水线。
+- MIG（Multi-Instance GPU，多实例 GPU）：把一块 GPU 切成最多 7 个相互隔离的实例。
+- SM（Streaming Multiprocessor，流式多处理器）：GPU 的基本组成单元；每个 MIG 实例有自己的 SM。
+- 时间片（time slicing）：多个程序轮流使用一块 GPU，没有隔离。

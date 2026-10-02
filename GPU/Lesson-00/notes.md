@@ -101,7 +101,7 @@ So a GPU is not just "many cores". It is a structured system of specialized unit
 
 ## L2 Cache
 
-L2 cache is a cache layer for the whole GPU. It is not tied to one SM like L1 or shared memory. It is larger but slower. It helps reduce the cost of memory access.
+L2 cache is a cache layer for the whole GPU. It is not tied to one SM like L1 or shared memory. It is larger but slower. It helps reduce the cost of memory access. [Lesson 07](../Lesson-07/notes.md) shows every memory level with real sizes.
 
 <gpu-anatomy></gpu-anatomy>
 

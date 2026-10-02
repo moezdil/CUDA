@@ -1,152 +1,147 @@
-# 07 > Bellek Bant Genişliği, Çekirdekler ve Saat Hızı
+# 07 > Bellek Hiyerarşisi
 
-Bir GPU'yu (Graphics Processing Unit, grafik işlem birimi) hızlı yapan tek bir sayı değildir. Bu derste bellek bant genişliğini, çekirdek sayısını, saat hızını, enerjiyi ve özel donanımı göreceksin ve her birini güncel GPU'ların gerçek sayılarıyla hesaplayacaksın.
+Bir GPU'nun (Graphics Processing Unit, grafik işlem birimi) tek bir belleği yoktur. Bir merdiveni vardır: çekirdeklere yakın birkaç küçük ve çok hızlı bellek, uzakta da çok büyük ve yavaş bir bellek. Bu derste L40S üzerinde bu merdivenden aşağı iniyorsun; her basamağı kimin görebildiğine, ne kadar büyük ve hızlı olduğuna bakıyor ve nereye ne kadar veri sığdığını hesaplıyorsun.
 
-## Bellek Bant Genişliği
+## Bir Merdiven, Üç Soru
 
-GPU'nun işleyeceği veri bellekten gelir. Bellek bant genişliği (memory bandwidth), bellek ile GPU arasında saniyede ne kadar veri taşınabildiğidir; genelde GB/s (gigabytes per second, saniyede gigabayt) ya da TB/s (terabytes per second, saniyede terabayt) ile verilir.
+[Ders 00](../Lesson-00/notes.md) register'ları, paylaşımlı belleği ve L2 önbelleği tanıttı, [Ders 06](../Lesson-06/notes.md) de bellek bant genişliğinin bir GPU'yu neden sınırladığını gösterdi. Bu ders hepsini sıraya koyuyor. Bu sıraya bellek hiyerarşisi (memory hierarchy) denir.
 
-## Küçük Bir Örnek
+Her basamak için üç soru sor:
 
-4 çekirdekli bir GPU düşün. Her çekirdek, işe başlamadan önce veriye ihtiyaç duyar.
+- Nerede duruyor? Bir SM'nin (Streaming Multiprocessor) içinde mi, GPU çipinin başka bir yerinde mi, yoksa yanındaki ayrı bellek çiplerinde mi?
+- Kim görebiliyor? Tek bir thread mi, tek bir block mu (bir thread block'undaki bütün thread'ler), yoksa bütün GPU mu (her block'un her thread'i)?
+- Ne kadar büyük ve ne kadar hızlı? Küçük basamaklar hızlı, büyük basamaklar yavaştır. Hem büyük hem hızlı olan bir basamak yoktur.
 
-Belleğin bir seferde yalnızca bir çekirdeğe veri gönderebildiğini varsayalım. İlk çekirdek çalışmaya başlar, diğer üçü bekler. Sonra ikinci çekirdek veriyi alır, ardından üçüncü ve dördüncü. Yani 4 çekirdekten aynı anda yalnızca biri çalışır ve GPU verimli kullanılmaz.
+Hızın iki anlamı var. Bant genişliği (bandwidth), bir basamağın saniyede kaç bayt verebildiğidir. Gecikme (latency), tek bir yüklemenin verisi gelene kadar ne kadar beklediğidir ve saat döngüsü (clock cycle, GPU saatinin bir tıkı) ile sayılır.
 
-Şimdi belleğin 4 çekirdeğin hepsine aynı anda veri gönderebildiğini varsayalım. Bütün çekirdekler birlikte başlar ve paralel çalışır; hiçbiri beklemez.
+<mem-hierarchy></mem-hierarchy>
 
-GPU ancak veriyi yeterince hızlı alırsa hızlıdır, yoksa bekler. Buna "bellek darboğazı" (memory bottleneck) denir.
+## Register'lar
 
-<bandwidth-sim></bandwidth-sim>
+Register'lar her SM'nin içinde, çekirdeklerin hemen yanında durur. Her thread yerel değişkenleri için kendi register'larını alır ve başka hiçbir thread onları okuyamaz. Register kullanmanın ek bir bekleme maliyeti yoktur: çekirdek onu komutun bir parçası olarak okur.
 
-## Tüketici GPU'ları ve Veri Merkezi GPU'ları
-
-İki tür modern GPU var:
-
-- RTX 50 serisi gibi tüketici GPU'ları oyun ve genel kullanım için yapılır.
-- H100, Blackwell B200 ya da yeni Rubin GPU'ları gibi veri merkezi GPU'ları yapay zekâ (AI, artificial intelligence) ve büyük ölçekli hesaplama için yapılır.
-
-İki türde de çok sayıda çekirdek olabilir, hatta bazen mimarileri bile benzerdir. Asıl fark bellektedir.
-
-Veri merkezi GPU'ları HBM (High Bandwidth Memory, yüksek bant genişlikli bellek) kullanır. HBM, GPU çipinin hemen yanında aynı paketin içinde duran istiflenmiş bellektir; çok büyük miktarda veriyi çok hızlı iletebilir.
+Bir L40S SM'sinin register dosyası (register file) 32 bitlik 65.536 register tutar, yani 256 KB (kilobyte, kilobayt). Bir thread en fazla 255 tanesini kullanabilir. H100'de de SM başına 256 KB vardır.
 
 > [!NOTE]
-> HBM nesiller hâlinde gelir: H100 HBM3 (3,35 TB/s), B200 HBM3e (8 TB/s'ye kadar), 2026'nın ikinci yarısından beri teslim edilen Rubin GPU'ları ise HBM4 (22 TB/s'ye kadar) kullanır.
+> Bütün çip boyunca toplandığında register'lar hiç de az değildir. L40S'te 142 SM × 256 KB = 36.352 KB register vardır, yaklaşık 35,5 MB (megabyte, megabayt); bu, 142 × 100 KB = 14.200 KB'lık paylaşımlı bellekten fazladır.
 
-Tüketici GPU'ları GDDR (Graphics Double Data Rate) bellek kullanır: RTX 4090'da GDDR6X, RTX 50 serisinde GDDR7. Bunlar da hızlıdır ama HBM kadar değil.
+## Paylaşımlı Bellek ve L1
 
-İki GPU kâğıt üzerinde birbirine benzeyebilir. Bellek bant genişliği yüksek olan, çekirdeklerini sürekli meşgul tutar; diğeri ise veri bekleyebilir. Veri merkezi GPU'larının yapay zekâ iş yüklerinde bu kadar güçlü olmasının başlıca nedenlerinden biri budur.
+Her SM'de ayrıca çip üstünde (on-chip) hızlı bir bellek alanı vardır ve iki iş arasında bölünür:
 
-## Bellek Bant Genişliğini Ne Etkiler
+- paylaşımlı bellek (shared memory), kernel tarafından elle yönetilir. Bir block'taki bütün thread'ler onu okuyup yazabilir, bu yüzden veri paylaşmak için kullanırlar. Başka block'ların thread'leri onu göremez.
+- L1 önbellek (Level 1 cache, birinci seviye önbellek), donanım tarafından yönetilir. Global bellekten son yüklenen veriyi SM'ye yakın tutar, böylece aynı verinin ikinci yüklemesi hızlı olur.
 
-Bellek bant genişliğini üç ana etken belirler:
+CC (compute capability) 8.9 olan L40S'te bu alan SM başına 128 KB'tır. Bölüşümü kernel seçer, buna carveout (paylaştırma oranı) denir: paylaşımlı bellek için 0, 8, 16, 32, 64 ya da 100 KB, geri kalanı L1. CUDA (Compute Unified Device Architecture) her block için 1 KB'ı kendine ayırır, bu yüzden bir block en fazla 99 KB kullanabilir. H100'de bu alan SM başına 256 KB'tır ve en fazla 228 KB'ı paylaşımlı bellek olabilir.
 
-- Veri yolu genişliği bir yolun genişliği gibidir. Yol ne kadar genişse aynı anda o kadar çok veri geçer.
-- Bellek hızı yoldaki hız sınırı gibidir. Yol geniş olsa bile trafik yavaşsa gecikme olur.
-- Bellek teknolojisi, modern GPU'ların en çok ayrıştığı yerdir. HBM yalnızca veri için yapılmış bir otoban gibidir. GDDR daha genel amaçlıdır.
+Yayımlanmış mikro ölçümler (microbenchmark), L40S ile aynı AD102 çipini kullanan bir RTX 4090 üzerinde, paylaşımlı bellek yüklemesi için yaklaşık 30 döngü, L1 isabeti için yaklaşık 43 döngü ölçtü.
 
-<bandwidth-calc></bandwidth-calc>
+## L2 Önbellek
 
-> [!TIP]
-> Bant genişliği = bit cinsinden veri yolu genişliği × pin başına hız, Gbps (gigabits per second, saniyede gigabit) / 8. RTX 4090'ın 21 Gbps'de 384 bitlik bir yolu var: 384 × 21 / 8 = 1.008 GB/s. RTX 5090'ın 28 Gbps'de 512 bitlik bir yolu var: 512 × 28 / 8 = 1.792 GB/s, yani yaklaşık %78 fazla.
+L2 önbellek (Level 2 cache, ikinci seviye önbellek) GPU çipinin üzerinde ama SM'lerin dışında durur. Bütün SM'ler onu paylaşır, yani bütün GPU'ya hizmet eder. Global belleğe yapılan her okuma ve yazma ondan geçer.
 
-GPU performansı yalnızca çekirdeklerle ilgili değildir. Çekirdeklerin veriyi ne kadar hızlı aldığıyla da ilgilidir. En güçlü GPU bile belleği beklerse zayıflar.
+L40S'te 96 MB L2 vardır, H100'de 50 MB. Aynı mikro ölçümler RTX 4090'da bir L2 isabeti için yaklaşık 273 döngü ölçtü; bu, bir paylaşımlı bellek yüklemesinin kabaca 9 katıdır.
 
-## Daha Fazla Çekirdek Her Zaman Daha Hızlı Değildir
+## Global Bellek
 
-Veri geldikten sonra GPU'nun onu işlemesi gerekir. Her çekirdek komut çalıştırır. Daha fazla çekirdeğin daha iyi performans demek olduğunu düşünmek doğal, ama bu her zaman doğru değil.
+Global bellek (global memory) GPU'nun ana belleğidir, L40S'teki 48 GB'lık VRAM (GPU belleği). Ayrı bellek çiplerinde durur, böylece her block'un her thread'i ona ulaşabilir ve CPU (Central Processing Unit, merkezi işlem birimi) veriyi ona kopyalar ve geri alır. Global bellekteki veri kernel çalıştırmaları arasında da yerinde kalır.
 
-İki GPU düşün. Birincisinde 100, ikincisinde 200 çekirdek var. İkisi de 200 işlemlik aynı görevi çalıştırıyor.
+L40S'te bu bellek 864 GB/s (gigabytes per second, saniyede gigabayt) hızında GDDR6'dır (Graphics Double Data Rate 6). H100 SXM'de 3,35 TB/s (terabytes per second, saniyede terabayt) hızında 80 GB HBM3 (High Bandwidth Memory 3) vardır. Global bellek en yavaş basamaktır: RTX 4090'da yükleme başına yaklaşık 541 döngü, yani bir L2 isabetinin iki katı ve bir paylaşımlı bellek yüklemesinin yaklaşık 18 katı.
 
-- Birinci GPU aynı anda 100 işlem yapar, yani iki tur gerekir.
-- İkinci GPU 200 işlemin hepsini tek turda yapar.
+## Sabit Bellek ve Doku Belleği
 
-Şimdi tur başına süreyi ekle:
+Global belleğin iki özel görünümünün kendi küçük önbellekleri vardır.
 
-- Birinci GPU tur başına bir saniye harcar, yani 2 × 1 = 2 saniyede bitirir.
-- İkinci GPU tur başına dört saniye harcar, yani 1 × 4 = 4 saniyede bitirir.
+Sabit bellek (constant memory) 64 KB'lık salt okunur veridir. Her SM bunun 8 KB'ını önbellekte tutar. Bir warp'taki (birlikte çalışan 32 thread'lik grup) bütün thread'ler aynı adresi okuduğunda, tek okuma 32'sinin hepsine yayınlanır (broadcast). Farklı adresleri okuduklarında okumalar birbiri ardına yapılır.
 
-İkinci GPU'nun daha çok çekirdeği var ama daha yavaş. Demek ki çekirdeklerin ne kadar hızlı olduğunu da bilmemiz gerekiyor.
+Doku belleği (texture memory), L1 önbellekten geçen salt okunur bir yoldur; yan yana thread'lerin yan yana pikselleri okuduğu grafik için tasarlanmıştır. Ada ve Hopper'da doku önbelleği ile L1 tek bir birimdir, bu yüzden çoğu CUDA kodu doğrudan global belleği okur ve önbelleğe almayı L1'e bırakır.
 
-## Saat Hızı
+## Yerel Bellek ve Register Taşması
 
-Saat hızı (clock speed), her çekirdeğin komutları ne kadar hızlı çalıştırdığıdır; GHz (gigahertz, saniyede milyar döngü) ile verilir.
+Yerel bellek (local memory), bir register gibi tek bir thread'e özeldir ama global bellekte durur. L1 ve L2'de önbelleğe alınır, ama bulunamazsa herhangi bir global bellek yüklemesi kadar pahalıdır. Her thread bundan en fazla 512 KB kullanabilir.
 
-Performans iki şeye birlikte bağlıdır:
-
-- Daha fazla çekirdek daha fazla paralellik sağlar.
-- Daha yüksek saat hızı her çekirdeği hızlandırır.
-
-Biri çok düşükse bütün sistemi sınırlar. Amaç dengedir.
-
-<cores-clock></cores-clock>
-
-## İki Tasarım Yönü
-
-GPU'lar iki tasarım yönünü izler. Bazıları oyun ve genel kullanım için, bazıları da yapay zekâ ve büyük ölçekli hesaplama için yapılır.
-
-- Veri merkezi GPU'ları genelde daha düşük saat hızlarında çalışır; çip alanını ve gücü Tensor Core'lara ve bellek bant genişliğine harcar.
-- Tüketici GPU'ları genelde grafik için daha yüksek saat hızlarında çalışır.
-
-RTX 4090 ve H100 SXM bunu gösterir. FP32 (32-bit floating point, 32 bitlik kayan nokta) çekirdek sayıları neredeyse aynıdır: 16.384 ve 16.896. RTX 4090 2,52 GHz'e kadar boost yapar, H100 ise yalnızca 1,98 GHz'e kadar. Ama H100 bellekten 3,35 TB/s taşır; bu, RTX 4090'ın 1.008 GB/s'sinin 3 katından fazladır.
-
-Hiçbiri genel olarak daha iyi değildir. Her biri farklı iş yükleri için optimize edilmiştir.
-
-## Enerji
-
-Performans her zaman enerjiye bağlıdır. Daha fazla çekirdek ve daha yüksek saat hızı, daha fazla güç tüketimi demektir. RTX 5090 en fazla 575 W, H100 SXM en fazla 700 W için derecelendirilmiştir. Bu yüzden performans ile verimlilik arasında her zaman bir denge vardır.
-
-"Hangi GPU daha iyi?" yanlış bir soru. Daha iyi soru şu: "Ne için daha iyi?"
-
-## Özel Donanım
-
-Modern GPU'lar yalnızca genel amaçlı çekirdek gruplarından ibaret değildir. Özel donanımları da vardır.
-
-Tensor Core'lar bunun bir örneğidir. Özellikle yapay zekâdaki matris hesabı için yapılmış birimlerdir. Doğru iş yüküyle işleri çok hızlandırabilirler. Ama bu ancak iş yükü donanıma uyuyorsa işe yarar.
-
-## Throughput
-
-Çekirdek sayısı, saat hızı ve TFLOPS (trillions of floating-point operations per second, saniyede trilyon kayan noktalı işlem) tek başına hikâyenin tamamını anlatmaz. Daha iyi soru, GPU'nun belirli bir sürede ne kadar iş bitirebildiğidir. Buna "throughput" (iş hacmi) denir.
-
-Tepe FP32 TFLOPS değeri çekirdek × saat hızı × 2'den gelir, çünkü bir FMA (fused multiply-add, birleşik çarp-topla) 2 işlem sayılır. RTX 4090 için: 16.384 × 2,52 GHz × 2 ≈ 82,6 TFLOPS. H100 SXM için: 16.896 × 1,98 GHz × 2 ≈ 66,9 TFLOPS. Bu sayıda RTX 4090 kazanır, ama Tensor Core'ları ve bellek bant genişliği sayesinde yapay zekâ eğitiminde H100 çok daha hızlıdır.
+Register'lar yetmediğinde derleyici veriyi yerel belleğe koyar. Buna register taşması (register spill) denir. Bir thread'in bir diziyi yalnızca çalışma anında bilinen bir değerle indekslediği durumda da olur, çünkü register'lar bu şekilde indekslenemez.
 
 > [!WARNING]
-> Özellik tablosundaki TFLOPS, her çekirdeğin her döngüde bir FMA yaptığını varsayan bir tepe değerdir. Gerçek programlar bunun yalnızca bir kısmına ulaşır; belleği bekleyen bir program çok daha azına.
+> "Yerel" burada yakın değil, özel demektir. Yerel bellek çipin dışındadır ve global bellek kadar yavaştır. `-Xptxas -v` ile derlersen derleyici her kernel'ın register sayısını, taşma yazmalarını ve taşma okumalarını bayt olarak bildirir.
 
-Throughput ayrıca hesaplamanın türü, duyarlılık ve mimari gibi birçok şeye bağlıdır. Her şeyi tek bir sayı belirlemez.
+## Bir Bakışta
 
-## Özet
+| Basamak | Nerede | Kim görür | L40S | H100 SXM | Yükleme beklemesi (döngü) |
+|---|---|---|---|---|---|
+| Register'lar | her SM'nin içinde | tek thread | SM başına 256 KB | SM başına 256 KB | yok |
+| Paylaşımlı bellek | her SM'nin içinde | tek block | SM başına en fazla 100 KB | SM başına en fazla 228 KB | yaklaşık 30 |
+| L1 önbellek | her SM'nin içinde | tek SM | 128 KB'ın kalanı | 256 KB'ın kalanı | yaklaşık 43 |
+| L2 önbellek | çipin üzerinde | bütün GPU | 96 MB | 50 MB | yaklaşık 273 |
+| Global bellek | bellek çipleri | bütün GPU | 48 GB GDDR6 | 80 GB HBM3 | yaklaşık 541 |
 
-Bir GPU'nun hızlı belleğe, yeterli çekirdeğe, yeterli hıza, makul enerji kullanımına ve bazen de özel donanıma ihtiyacı vardır. Gerçek performans ancak bunlar dengede olduğunda ortaya çıkar.
+Döngüler bir RTX 4090'da ölçüldü. H100 gibi bir Hopper GPU'su olan H800'de neredeyse aynı değerler ölçüldü: 29, 41, 263 ve 479 döngü.
 
-GPU performansı tek bir sayı değildir. Bellek, hesaplama gücü, verimlilik ve özel donanımın birlikte çalıştığı bir sistemdir. Bunu bilmek özellik tablolarını okumayı ve CUDA (Compute Unified Device Architecture) kavramlarını anlamayı kolaylaştırır.
+## Örnek Hesap: Nereye Ne Sığar
+
+Bir float (32 bitlik kayan noktalı sayı) 4 bayt yer kaplar. CUDA'nın tablolarında 1 KB 1.024 bayt, 1 MB de 1.024 KB'tır.
+
+Bir L40S SM'sinde en fazla 100 KB paylaşımlı bellek vardır:
+
+- 100 × 1.024 = 102.400 bayt.
+- 102.400 / 4 = 25.600 float.
+- 32 × 32'lik bir float karosu (tile) 32 × 32 × 4 = 4.096 bayt = 4 KB eder, yani bir SM'ye 100 / 4 = 25 karo sığar.
+- Bir block en fazla 99 KB kullanabilir: 99 × 1.024 / 4 = 25.344 float.
+
+H100'de SM başına 228 KB, 228 × 1.024 / 4 = 58.368 float tutar; bu iki kattan fazladır.
+
+L40S'in L2 önbelleği 96 MB tutar:
+
+- 96 × 1.024 × 1.024 = 100.663.296 bayt.
+- 100.663.296 / 4 = 25.165.824 float, yaklaşık 25,2 milyon.
+- 5.000 × 5.000'lik bir float matrisi 25.000.000 float eder, yani tam sığar. 6.000 × 6.000'lik bir matris (36.000.000 float) sığmaz.
+
+> [!TIP]
+> Register'lar bir SM'deki bütün thread'ler arasında paylaşılır. Bir L40S SM'sinde 1.536 thread'in hepsini çalıştırmak için her thread'e 65.536 / 1.536 ≈ 42,7 register düşer. Donanım register'ları her warp'a 256'lık parçalar halinde verir, bu yüzden gerçek sınır thread başına 40'tır: 40 × 32 = 1.280 = 5 parça, ve 48 warp × 1.280 = 61.440, 65.536'ya sığar.
+
+## CUDA İçin Neden Önemli
+
+Bir kernel yazarken her veri parçası için bir basamak seçersin:
+
+- Sıradan yerel değişkenler register'lara gider. Az tut, yoksa yerel belleğe taşarlar ve global bellek kadar yavaş çalışırlar.
+- Bir block'un thread'lerinin defalarca okuduğu veri, `__shared__` ile tanımlanan paylaşımlı belleğe gider. Global bellekten bir kez yükle, sonra yaklaşık 541 yerine yaklaşık 30 döngüyle tekrar kullan.
+- Büyük diziler global bellekte durur. Onları bir warp'ın 32 thread'i komşu adreslere dokunacak şekilde oku; o zaman L1 ve L2 onları birkaç geniş aktarımla verebilir.
+
+Global bellekten bir yükleme yüzlerce döngü sürer. GPU bu beklemeyi başka warp'lara geçerek gizler; bu, [Ders 08](../Lesson-08/notes.md)'in konusudur. [Ders 09](../Lesson-09/notes.md) da bir kernel'ı hesabın mı yoksa belleğin mi sınırladığını nasıl anlayacağını gösterir.
 
 ## Sözlük
 
-- GPU (Graphics Processing Unit): bu derslerin konusu olan, paralel çalışan çok sayıda çekirdekten oluşan işlemci.
-- bellek bant genişliği (memory bandwidth): bellek ile GPU arasında saniyede ne kadar veri taşınabildiği.
-- GB/s (gigabytes per second) / TB/s (terabytes per second): saniyede bir milyar ya da bir trilyon bayt; RTX 4090 1.008 GB/s'ye, H100 3,35 TB/s'ye ulaşır.
-- çekirdek (core): komut çalıştıran birim; bir işçi gibi, başlamadan önce veriye ihtiyacı vardır.
-- paralel (parallel): çok sayıda çekirdeğin birbiri ardına değil, aynı anda çalışması.
-- bellek darboğazı (memory bottleneck): bellek veriyi yeterince hızlı gönderemediği için GPU çekirdeklerinin beklemesi.
-- RTX: Nvidia'nın oyun ve genel kullanım için tüketici GPU serisi, örneğin RTX 4090 ve RTX 5090.
-- H100: Nvidia'nın 2022'de çıkardığı, 80 GB HBM3 bellekli, Hopper tabanlı veri merkezi GPU'su.
-- Blackwell: Nvidia'nın Hopper'dan sonraki mimarisi; B200 veri merkezi GPU'su ve RTX 50 serisi bunu kullanır.
-- Rubin: Nvidia'nın Blackwell'den sonraki mimarisi; HBM4 bellek kullanır, 2026'nın ikinci yarısından beri teslim ediliyor.
-- yapay zekâ (AI, artificial intelligence): veriden öğrenen yazılım; eğitimi çok büyük miktarda veri taşımayı gerektirir, bu yüzden bellek bant genişliği çok önemlidir.
-- HBM (High Bandwidth Memory): veri merkezi GPU'larında GPU çipinin hemen yanında duran, son derece hızlı istiflenmiş bellek; HBM3, HBM3e ve HBM4 son nesilleridir.
-- GDDR (Graphics Double Data Rate) / GDDR6X / GDDR7: tüketici GPU'larında kullanılan bellek ailesi; hızlıdır ama HBM kadar değil.
-- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek ya da bir oyun çalıştırmak.
-- veri yolu genişliği (bus width): belleğin aynı anda kaç bit taşıyabildiği; bir yolun genişliği gibi.
-- bellek hızı (memory speed): her bellek pininin veriyi ne kadar hızlı gönderdiği; Gbps (gigabits per second) ile verilir.
-- komut (instruction): bir çekirdeğin çalıştırdığı temel bir emir, örneğin bir toplama ya da bir çarpma.
-- saat hızı (clock speed): her çekirdeğin komutları ne kadar hızlı çalıştırdığı; GHz (gigahertz) ile verilir.
-- FP32 (32-bit floating point): GPU hesabının standart sayı biçimi; özellik tablolarının "CUDA çekirdeği" diye saydığı şey FP32 çekirdekleridir.
-- verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
-- denge (trade-off): bir şeyden daha fazla almak için başka bir şeyden vazgeçmek, örneğin daha az güç için hızdan.
-- Tensor Core: matris hesabı, özellikle yapay zekâ için tasarlanmış özel donanım.
-- TFLOPS (trillions of floating-point operations per second): gerçek programların nadiren ulaştığı bir tepe değer.
-- FMA (fused multiply-add): a × b + c hesaplayan ve 2 kayan noktalı işlem sayılan tek bir komut.
-- throughput (iş hacmi): GPU'nun belirli bir sürede ne kadar iş bitirebildiği.
-- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32 ya da FP16; bit azaldıkça throughput artar ama hassasiyet düşer.
-- mimari (architecture): bir GPU'nun genel tasarımı; çekirdeklerin, belleğin ve özel birimlerin nasıl birlikte çalışacağını belirler.
-- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform.
+- GPU (Graphics Processing Unit): bu derslerin konusu olan, thread'leri paralel çalıştıran çok sayıda SM'den oluşan işlemci.
+- CPU (Central Processing Unit): bilgisayarın ana işlemcisi; veriyi global belleğe kopyalar ve geri alır.
+- bellek hiyerarşisi (memory hierarchy): küçük ve hızlı register'lardan büyük ve yavaş global belleğe uzanan GPU bellekleri merdiveni.
+- SM (Streaming Multiprocessor): GPU'nun içinde kendi çekirdekleri, register'ları, paylaşımlı belleği ve L1 önbelleği olan işlem birimi; L40S'te 142 tane vardır.
+- thread: tek bir komut akışı; her thread'in kendi register'ları ve yerel belleği vardır.
+- block: tek bir SM'de çalışan ve paylaşımlı bellek üzerinden veri paylaşabilen thread grubu.
+- warp: SM'nin birlikte çalıştırdığı 32 thread'lik grup.
+- kernel: GPU'da çok sayıda thread üzerinde çalıştırılan fonksiyon.
+- bant genişliği (bandwidth): bir bellek basamağının saniyede verebildiği bayt sayısı.
+- gecikme (latency): tek bir yüklemenin verisi gelene kadar ne kadar beklediği.
+- saat döngüsü (clock cycle): GPU saatinin bir tıkı; bu sayfadaki gecikmeler döngüyle sayılır.
+- register: tek bir thread'e özel en hızlı depolama; bir L40S SM'sinde 32 bitlik 65.536 tane vardır.
+- register dosyası (register file): bir SM'nin bütün register'ları; L40S'te ve H100'de 256 KB.
+- KB (kilobyte) / MB (megabyte): CUDA'nın tablolarında 1.024 bayt ve 1.024 KB.
+- çip üstünde (on-chip): register'lar, paylaşımlı bellek, L1 ve L2 gibi doğrudan GPU çipinin içine yapılmış.
+- paylaşımlı bellek (shared memory): her SM'deki, bir block'un bütün thread'lerinin okuyup yazabildiği hızlı çip üstü bellek.
+- L1 önbellek (Level 1 cache): her SM'nin çip üstü alanının donanımca yönetilen, son kullanılan veriyi yakında tutan kısmı.
+- carveout (paylaştırma oranı): çip üstü alanın paylaşımlı bellek ile L1 arasında nasıl bölündüğü; her kernel için seçilir.
+- CC (compute capability): bir GPU'nun özelliklerinin sürüm numarası; L40S CC 8.9'dur.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın kendi GPU'larında çalışan programlar yazmak için platformu.
+- mikro ölçüm (microbenchmark): tek bir şeyi, örneğin bir bellek basamağının gecikmesini ölçen küçük test programı.
+- L2 önbellek (Level 2 cache): bütün SM'lerin paylaştığı çip üstü önbellek; L40S'te 96 MB, H100'de 50 MB.
+- global bellek (global memory): her thread'in ve CPU'dan gelen kopyaların ulaştığı GPU ana belleği; en yavaş basamak.
+- VRAM (GPU belleği): bir GPU kartında global belleği tutan bellek çipleri.
+- GDDR6 (Graphics Double Data Rate 6): L40S'in bellek türü, 864 GB/s hızında 48 GB.
+- HBM3 (High Bandwidth Memory 3): GPU çipiyle aynı pakette üst üste yığılmış bellek; H100 SXM'de 3,35 TB/s hızında 80 GB.
+- GB/s (gigabytes per second) / TB/s (terabytes per second): bant genişliği birimleri.
+- sabit bellek (constant memory): her SM'de 8 KB önbelleği olan 64 KB'lık salt okunur veri; bütün warp tek adresi okuduğunda hızlıdır.
+- yayın (broadcast): değeri bir warp'ın 32 thread'inin hepsine aynı anda giden tek okuma.
+- doku belleği (texture memory): L1 önbellekten geçen, grafik için tasarlanmış salt okunur yol.
+- yerel bellek (local memory): thread'e özel ama global bellekte duran bellek; thread başına en fazla 512 KB.
+- register taşması (register spill): register'lar yetmediği için verinin register'lardan yerel belleğe taşınması.
+- float: 32 bitlik kayan noktalı sayı, 4 bayt.
+- karo (tile): büyük bir dizinin, tekrar kullanılmak üzere paylaşımlı belleğe yüklenen küçük kare parçası.

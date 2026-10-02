@@ -25,20 +25,22 @@ nav:
   - GPU Fundamentals:
       - "00 Starting CUDA": GPU/Lesson-00/notes.md
       - "01 Where GPUs Come From": GPU/Lesson-01/notes.md
-      - "02 Architecture vs Generation": GPU/Lesson-02/notes.md
-      - "03 Identifying a GPU": GPU/Lesson-03/notes.md
-      - "04 GPU vs GPU Chip": GPU/Lesson-04/notes.md
-      - "05 Architecture and Chips": GPU/Lesson-05/notes.md
-      - "06 Nvidia GPU Architectures": GPU/Lesson-06/notes.md
-      - "07 Memory Bandwidth": GPU/Lesson-07/notes.md
-      - "08 Identifying GPUs in Practice": GPU/Lesson-08/notes.md
-      - "09 Compute Capability": GPU/Lesson-09/notes.md
-      - "10 White Papers": GPU/Lesson-10/notes.md
-      - "11 Reading a White Paper": GPU/Lesson-11/notes.md
-      - "12 CUDA Toolkit": GPU/Lesson-12/notes.md
-      - "13 Dev Setup with JetBrains": GPU/Lesson-13/notes.md
-      - "14 Linux on Windows (WSL)": GPU/Lesson-14/notes.md
-      - "15 Installing CUDA on Linux": GPU/Lesson-15/notes.md
+      - "02 Architecture, Generation and Chips": GPU/Lesson-02/notes.md
+      - "03 Reading GPU Specs": GPU/Lesson-03/notes.md
+      - "04 NVIDIA GPU Architectures": GPU/Lesson-04/notes.md
+      - "05 Compute Capability": GPU/Lesson-05/notes.md
+      - "06 Memory Bandwidth": GPU/Lesson-06/notes.md
+      - "07 The Memory Hierarchy": GPU/Lesson-07/notes.md
+      - "08 Warps and Latency Hiding": GPU/Lesson-08/notes.md
+      - "09 Compute or Memory Bound": GPU/Lesson-09/notes.md
+      - "10 Number Formats and Tensor Cores": GPU/Lesson-10/notes.md
+      - "11 CPU to GPU Data Path": GPU/Lesson-11/notes.md
+      - "12 Many GPUs Together": GPU/Lesson-12/notes.md
+      - "13 Reading White Papers": GPU/Lesson-13/notes.md
+      - "14 CUDA Toolkit": GPU/Lesson-14/notes.md
+      - "15 Dev Setup with JetBrains": GPU/Lesson-15/notes.md
+      - "16 Linux on Windows (WSL)": GPU/Lesson-16/notes.md
+      - "17 Installing CUDA on Linux": GPU/Lesson-17/notes.md
   - CUDA Practice:
       - "00 One Block, One Thread": cuda/Lesson-00/notes.md
       - "01 One Block, Four Threads": cuda/Lesson-01/notes.md

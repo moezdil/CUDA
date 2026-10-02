@@ -1,127 +1,162 @@
-# 04 > GPU vs GPU Chip
+# 04 > NVIDIA GPU Architectures
 
-People say "GPU" (Graphics Processing Unit) for two different things: the piece of silicon that does the math, and the whole card or module you install. This lesson separates the two. Once you can tell them apart, spec sheets, chip names and data center hardware become much easier to read.
+Fermi, Ampere, Hopper, Blackwell and Rubin are names of NVIDIA GPU (Graphics Processing Unit) architectures. This lesson walks through them in order, from 2010 to the roadmap for 2028, and shows how GPUs moved from graphics to general compute to large-scale AI (artificial intelligence). It also shows which of them the current CUDA (Compute Unified Device Architecture) release still supports.
 
-## The GPU Chip
+## Why Architectures Matter
 
-The GPU chip is the actual silicon where all computation happens. On its own it has no cooling, no connectors and no external memory modules.
+Names like Fermi, Ampere and Hopper are more than labels. The goal is not to memorize them. The goal is to understand how GPUs changed over time.
 
-Inside the chip you find:
+## What "Architecture" Means
 
-- compute units doing parallel work  
-- controllers managing how data moves  
-- internal logic coordinating everything  
+A GPU architecture is the blueprint of the GPU. It defines how everything inside the chip is built.
 
-The chip is the real "engine". The GA100 chip inside the A100, for example, is one piece of silicon with about 54 billion transistors.
+It covers more than the cores. It also defines:
 
-## Chip Names
+- how data flows  
+- how memory is accessed  
+- what kind of operations are fast  
+- what the GPU is optimized for  
 
-Nvidia chip names link a chip to its architecture. The first letter is G (for GPU), the next letter or two name the architecture, and the number is the chip's place in that family:
+A new architecture is usually not a small upgrade. It is often a shift in design priorities.
 
-- GF100 → Fermi  
-- GA100 → Ampere  
-- AD102 → Ada Lovelace (RTX 4090, L40S)  
-- GB202 → Blackwell (RTX 5090)  
+## The Early Modern Era
 
-Read GB202 like this: G (GPU) + B (Blackwell) + 202 (one chip of the Blackwell family). So the prefix tells you the architecture before you look at any spec.
+It helps to read the timeline like a story. Early modern GPUs focused on general compute and graphics.
+
+These architectures improved performance and efficiency step by step:
+
+- Fermi (2010)  
+- Kepler (2012)  
+- Maxwell (2014)  
+- Pascal (2016)  
+
+The goal in this period was to make GPUs faster and more efficient for general workloads.
+
+## AI Becomes Central
+
+Volta (2017, V100) marks a clear shift. With Volta, NVIDIA started to push AI-specific hardware: the first Tensor Cores, units inside each SM (Streaming Multiprocessor) that multiply small matrices in one step.
+
+After that:
+
+- Turing (2018, RTX 20 series) brought Tensor Cores and ray tracing units to consumer cards  
+- Ampere (2020, A100 and RTX 30 series) scaled this idea further  
+- Ada Lovelace (2022, RTX 40 series and L40S) brought these units to consumer and workstation cards in the same year as Hopper  
+- Hopper (2022, H100) optimized heavily for AI workloads, especially transformers, with FP8 (8-bit floating point) math  
+
+From here, GPUs were no longer just graphics hardware. They became full compute platforms.
+
+## Recent Architectures
+
+### Blackwell (2024 to 2025)
+
+Blackwell was announced in 2024 and is designed around large-scale AI workloads. The B200 data center GPU joins two chips in one package and uses HBM3e (High Bandwidth Memory) with up to 8 TB/s. It also added NVFP4, a 4-bit number format for AI. Blackwell Ultra (B300, 2025) raised the memory to 288 GB per GPU. On the consumer side, the RTX 50 series (2025) uses Blackwell too.
+
+The real performance gains are not the same for every case. They depend on:
+
+- the workload  
+- the precision  
+- the system setup  
+
+So "faster GPU" is not always a simple statement.
+
+### Rubin (2026, Now Shipping)
+
+Rubin is the architecture after Blackwell. It is in full production, and the first Vera Rubin systems, which pair Rubin GPUs with NVIDIA's Vera CPU (Central Processing Unit), started shipping in September 2026, with its compute capability of 10.7 already supported in CUDA 13.4.
+
+Each Rubin GPU brings:
+
+- newer Tensor Core designs  
+- up to 288 GB of HBM4 memory  
+- up to 22 TB/s of memory bandwidth  
+
+Compare that with Blackwell: 22 / 8 = 2.75, so a Rubin GPU can move almost 3 times as many bytes per second.
+
+### Rubin Ultra and Feynman (Announced)
+
+> [!NOTE]
+> These are roadmap items, not products you can buy. Rubin Ultra is announced for the second half of 2027, and Feynman for 2028. Details can still change.
+
+The direction stays the same. Everything moves toward larger, more specialized AI systems.
+
+<arch-timeline focus="Volta"></arch-timeline>
+
+## Compute Capability
+
+CUDA does not use architecture names. Each GPU reports a CC (Compute Capability), a version number like 8.9. The major number usually follows the architecture, but not always one to one:
+
+- Ampere: 8.0 (A100) and 8.6 (RTX 30 series)  
+- Ada Lovelace: 8.9 (RTX 40 series, L40S)  
+- Hopper: 9.0 (H100)  
+- Blackwell: 10.0 (B200), 10.3 (B300) and 12.0 (RTX 50 series)  
+- Rubin: 10.7 (supported in CUDA 13.4)  
+
+So Ada (8.9) shares the major number 8 with Ampere, and Blackwell uses two different major numbers.
 
 > [!WARNING]
-> Not every name with these letters is a single GPU chip. GB200 is a "superchip": one Grace CPU (Central Processing Unit) and two Blackwell GPUs on one board. GH200 is the same idea with Hopper. When a name looks odd, check what it really is.
+> The current CUDA 13 releases (CUDA 13.4 came out in September 2026) support only Turing (CC 7.5) and newer. Maxwell, Pascal and Volta GPUs need an older CUDA 12 toolkit.
 
-## The GPU
+## Performance Depends on Context
 
-A GPU is the full product you use. It is a complete system built around the chip. It includes:
+Simple numbers make a poor comparison. Examples are:
 
-- the chip itself  
-- VRAM, the GPU's own memory attached next to the chip  
-- power delivery components  
-- output interfaces (like HDMI (High-Definition Multimedia Interface) or DisplayPort)  
-- a cooling system  
+- TFLOPS (trillions of floating-point operations per second)  
+- clock speed  
 
-So a GPU is the chip plus everything needed to make it usable.
+These numbers do not tell the full story. Performance depends on:
 
-## Consumer GPUs
+- what kind of workload you run  
+- what precision you use  
+- how memory behaves  
+- how the architecture is designed  
 
-GeForce GPUs, such as the RTX 40 and RTX 50 series, are built for normal environments:
+A GPU can look very powerful on paper but perform poorly on a specific task. Another GPU with lower raw numbers can do better in real use.
 
-- desktops  
-- laptops  
-- personal workstations  
+## Naming Changed Too
 
-These systems have no special cooling. The GPU must handle its own heat, and that heat is large: an RTX 5090 is rated for up to 575 W. That is why most consumer GPUs have:
+Data center GPUs up to the V100 carried the "Tesla" brand, such as the Tesla V100. From the A100 in 2020 on, NVIDIA dropped it and calls them Data Center GPUs.
 
-- large heatsinks  
-- multiple fans  
-- visible cooling designs  
+This shows a change in focus, from generic compute to AI and cloud systems.
 
-They are self-contained and must work inside a regular PC (Personal Computer) case.
+## Architectures Are Design Decisions
 
-## Data Center GPUs
+It is better to see architectures as design decisions, not versions. Each architecture answers one question. What kind of problems do we want to solve now?
 
-The A100 is based on Ampere, and its chip is GA100. But the full GPU looks very different from a GeForce card. It has no fan and no display outputs.
+With this view, GPU names make more sense. Performance differences become logical. CUDA concepts connect more easily.
 
-Data center GPUs live inside server racks, where cooling is handled outside the GPU:
+## Summary
 
-- airflow comes from the fans of the server  
-- cooling is handled at rack level  
-- the newest racks, such as the GB200 NVL72 with 72 Blackwell GPUs, use liquid cooling  
-
-This makes the GPU simpler, more compact and better suited for scale.
-
-<chip-vs-gpu></chip-vs-gpu>
-
-## Checking the Chip Online
-
-> [!TIP]
-> Spec sites like TechPowerUp make this clear. Search for "A100 TechPowerUp" and you will see the chip name → GA100. Follow that link to see the chip itself, with no cooling and no extras.
-
-## The Difference in Short
-
-The GPU chip is the brain. The GPU is the full system.
-
-chip = engine  
-GPU = complete machine  
-
-One chip can even end up in very different GPUs. The AD102 chip sits in the RTX 4090, a GeForce card with fans and HDMI ports, and in the L40S, a fanless data center card.
-
-## Why This Matters
-
-- architecture describes the chip, not the full product  
-- performance starts at the chip level  
-- real-world behavior depends on the full GPU system  
-
-If you mix these up, you can misunderstand:
-
-- specs  
-- performance comparisons  
-- even CUDA (Compute Unified Device Architecture) behavior  
-
-This makes deeper CUDA topics easier to follow.
+GPU architectures show how computing itself is changing. The path goes from graphics, to compute, to AI at scale, with a new data center architecture about every year: Hopper, Blackwell, Rubin. Understanding this shift is an important step before going deeper into CUDA.
 
 ## Glossary
 
-- GPU chip: the actual silicon where all computation happens, with no cooling or connectors.
-- silicon: the material chips are made from; the GA100 is one piece of silicon with about 54 billion transistors.
-- architecture: the design of the chip, meaning how its units, memory paths and controllers are organized.
-- prefix (chip name prefix): the first letters of a chip name, which show its architecture, like GA for Ampere or GB for Blackwell.
-- Fermi: an Nvidia architecture from 2010 whose chips have names like GF100.
-- Ampere: an Nvidia architecture from 2020 whose chips start with GA, such as the GA100 in the A100.
-- GA100: the chip inside the A100; the G stands for GPU and the A for Ampere.
-- AD102: the largest Ada Lovelace chip, used in the RTX 4090 and the L40S.
-- GB202: the largest consumer Blackwell chip, used in the RTX 5090.
-- superchip: a board that joins a CPU and GPUs, such as GB200 (one Grace CPU and two Blackwell GPUs).
-- GPU (Graphics Processing Unit): the full product built around the chip, with memory, power parts, outputs and cooling.
-- VRAM: the GPU's own memory, attached next to the chip; an RTX 5090 has 32 GB of it.
-- power delivery: the parts on the card that turn power from the power supply into the steady voltages the chip needs.
-- output interfaces: ports on a GPU such as HDMI or DisplayPort.
-- cooling: removing the heat the chip makes, with fans on the card, airflow from the server or liquid.
-- GeForce: Nvidia's consumer GPUs, such as the RTX 5090, which carry their own heatsinks and fans.
-- heatsink: a cooling part that consumer GPUs use to handle their own heat.
-- PC (Personal Computer) case: the box that holds a desktop computer's parts; a consumer GPU must cool itself inside it.
-- A100: an Nvidia data center GPU built on the GA100 chip, with no fan of its own.
-- server rack: where data center GPUs live, with cooling handled at rack level instead of on the GPU.
-- airflow: air pushed through a server by its own fans, which cools the fanless GPUs inside.
-- liquid cooling: cooling with liquid that flows through plates on the chips, used in dense racks such as the GB200 NVL72.
-- spec: a published technical number of a GPU, such as its chip name, core count or memory size.
-- TechPowerUp: a website that lists GPU specs and links each GPU to the chip it uses.
-- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
+- architecture: the blueprint of the GPU that defines how everything inside the chip is built.
+- GPU (Graphics Processing Unit): the processor this track is about, built from many small cores that work in parallel.
+- Fermi: an NVIDIA architecture from 2010, the first one designed with general GPU computing in mind, adding a real L1/L2 cache hierarchy.
+- Ampere: an NVIDIA architecture from 2020 (A100, RTX 30 series) that scaled up Tensor Cores for AI.
+- Hopper: an NVIDIA architecture from 2022 (H100) built for AI, with a Transformer Engine that can use 8-bit numbers.
+- core: a unit that does arithmetic; the core count is only one part of an architecture.
+- efficiency: how much work a GPU gets done for each watt of power it uses.
+- Kepler / Maxwell / Pascal: NVIDIA architectures from 2012, 2014 and 2016 that made GPUs steadily faster and more power efficient.
+- workload: the kind of work a program gives the GPU, such as training a model or rendering a game.
+- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math, which suits GPUs.
+- Volta: the 2017 architecture (V100) where NVIDIA started to push AI-specific hardware, with the first Tensor Cores.
+- Turing: the 2018 architecture (RTX 20 series) that brought Tensor Cores and ray tracing units to consumer GPUs; CC 7.5.
+- Ada Lovelace: the 2022 consumer and workstation architecture (RTX 40 series, L40S); CC 8.9.
+- transformer: the neural network design behind modern language models; it is built mostly from large matrix multiplications.
+- FP8 / NVFP4: 8-bit and 4-bit number formats for AI; Hopper added FP8 and Blackwell added NVFP4.
+- Blackwell: the 2024 to 2025 architecture (B200, B300, RTX 50 series) designed around large-scale AI workloads.
+- Blackwell Ultra: the 2025 upgrade of Blackwell (B300) with 288 GB of HBM3e per GPU.
+- bandwidth: how many bytes per second can move between memory and the chip.
+- precision: how many bits each number uses, such as FP32, FP16 or FP8; fewer bits means faster math but less accuracy.
+- Rubin: the architecture after Blackwell, in full production and shipping to cloud providers in the second half of 2026.
+- Tensor Core: a unit inside each SM that does small matrix multiplications in one step, the core of AI speed.
+- HBM (High Bandwidth Memory) / HBM3e / HBM4: stacked memory next to the chip; Blackwell uses HBM3e, Rubin uses HBM4.
+- SM (Streaming Multiprocessor): the building block of an NVIDIA GPU that holds its cores, Tensor Cores and shared memory.
+- cloud: computers rented over the internet from a provider's data centers.
+- Rubin Ultra / Feynman: announced architectures after Rubin, planned for 2027 and 2028.
+- CC (Compute Capability): the version number a GPU reports to CUDA, such as 8.9 for Ada Lovelace or 10.0 for the B200.
+- TFLOPS (trillions of floating-point operations per second): a simple performance number that does not tell the full story.
+- clock speed: another simple number that makes a poor comparison on its own.
+- Tesla: the old brand for NVIDIA data center GPUs up to the V100, dropped from the A100 on.
+- Data Center GPU: NVIDIA's current name for its server GPUs, such as the A100, H100 and the Blackwell parts.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs; CUDA 13 supports Turing and every newer architecture.

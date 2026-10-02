@@ -1,152 +1,147 @@
-# 07 > Memory Bandwidth, Cores and Clock Speed
+# 07 > The Memory Hierarchy
 
-What makes a GPU (Graphics Processing Unit) fast is not one number. This lesson covers memory bandwidth, core count, clock speed, energy and specialized hardware, and works through each one with real numbers from current GPUs.
+A GPU (Graphics Processing Unit) does not have one memory. It has a ladder of them: a few tiny, very fast ones close to the cores and one huge, slow one far away. This lesson walks down that ladder on the L40S, shows who can see each level and how big and fast it is, and counts how much data fits where.
 
-## Memory Bandwidth
+## One Ladder, Three Questions
 
-A GPU needs data to work on, and that data comes from memory. Memory bandwidth is how much data can move between memory and the GPU every second, usually given in GB/s (gigabytes per second) or TB/s (terabytes per second).
+[Lesson 00](../Lesson-00/notes.md) introduced registers, shared memory and the L2 cache, and [Lesson 06](../Lesson-06/notes.md) showed why memory bandwidth limits a GPU. This lesson puts all of them in order. That order is called the memory hierarchy.
 
-## A Small Example
+For every level, ask three questions:
 
-Take a GPU with 4 cores. Each core needs data before it can start.
+- Where is it? Inside an SM (Streaming Multiprocessor), elsewhere on the GPU chip, or on separate memory chips next to it.
+- Who can see it? One thread, one block (all threads of a thread block), or the whole GPU (every thread of every block).
+- How big and how fast is it? Small levels are fast, big levels are slow. No level is both big and fast.
 
-Suppose the memory can send data to only one core at a time. The first core starts working and the other three wait. Then the second core gets data, then the third, then the fourth. So only one of the 4 cores works at a time. The GPU is not used efficiently.
+Speed comes in two flavors. Bandwidth is how many bytes per second a level can deliver. Latency is how long one load waits before its data arrives, counted in clock cycles (ticks of the GPU clock).
 
-Now suppose the memory can send data to all 4 cores at once. All cores start together and run in parallel. Nothing waits.
+<mem-hierarchy></mem-hierarchy>
 
-A GPU is only fast if it gets data fast enough. Otherwise, it waits. This is called a "memory bottleneck".
+## Registers
 
-<bandwidth-sim></bandwidth-sim>
+Registers sit inside each SM, right next to the cores. Each thread gets its own registers for its local variables, and no other thread can read them. Using a register costs no extra wait: the core reads it as part of the instruction.
 
-## Consumer GPUs and Data Center GPUs
-
-There are two kinds of modern GPUs:
-
-- Consumer GPUs, like the RTX 50 series, are made for gaming and general use.
-- Data center GPUs, like the H100, the Blackwell B200 or the new Rubin GPUs, are made for AI (artificial intelligence) and large-scale computation.
-
-Both kinds can have many cores and sometimes similar architectures. The big difference is memory.
-
-Data center GPUs use HBM (High Bandwidth Memory). HBM is stacked memory that sits right next to the GPU chip in the same package. It can deliver huge amounts of data very quickly.
+The register file of one L40S SM holds 65,536 registers of 32 bits, which is 256 KB (kilobytes). One thread can use at most 255 of them. The H100 has the same 256 KB per SM.
 
 > [!NOTE]
-> HBM comes in generations: the H100 uses HBM3 (3.35 TB/s), the B200 uses HBM3e (up to 8 TB/s), and Rubin GPUs, shipping since the second half of 2026, use HBM4 (up to 22 TB/s).
+> Added up over the chip, registers are not small. The L40S has 142 SMs × 256 KB = 36,352 KB of registers, about 35.5 MB (megabytes), more than its 142 × 100 KB = 14,200 KB of shared memory.
 
-Consumer GPUs use GDDR (Graphics Double Data Rate) memory: GDDR6X on the RTX 4090 and GDDR7 on the RTX 50 series. This is fast, but not as fast as HBM.
+## Shared Memory and L1
 
-Two GPUs can look similar on paper. The one with higher memory bandwidth keeps its cores busy. The other may wait for data. This is one main reason why data center GPUs are so strong in AI workloads.
+Each SM also has one pool of fast on-chip memory, split between two jobs:
 
-## What Affects Memory Bandwidth
+- shared memory, which a kernel manages by hand. All threads of one block can read and write it, so they use it to share data. Threads of other blocks cannot see it.
+- the L1 cache (Level 1 cache), which the hardware manages. It keeps recently loaded global memory data close to the SM, so a second load of the same data is fast.
 
-Three main factors affect memory bandwidth:
+On the L40S, a CC (compute capability) 8.9 GPU, the pool is 128 KB per SM. A kernel picks the split, called the carveout: 0, 8, 16, 32, 64 or 100 KB of shared memory, the rest is L1. CUDA (Compute Unified Device Architecture) keeps 1 KB per block for itself, so one block can use at most 99 KB. On the H100 the pool is 256 KB per SM, with up to 228 KB of shared memory.
 
-- Bus width is like the width of a road. A wider road moves more data at the same time.
-- Memory speed is like the speed limit on the road. Even a wide road causes delays if traffic is slow.
-- Memory technology is where modern GPUs differ most. HBM is like a high-speed highway built only for data. GDDR is more general-purpose.
+Published microbenchmarks on an RTX 4090, which uses the same AD102 chip as the L40S, measured about 30 cycles for a shared memory load and about 43 cycles for an L1 hit.
 
-<bandwidth-calc></bandwidth-calc>
+## L2 Cache
 
-> [!TIP]
-> Bandwidth = bus width in bits × speed per pin in Gbps (gigabits per second) / 8. The RTX 4090 has a 384-bit bus at 21 Gbps: 384 × 21 / 8 = 1,008 GB/s. The RTX 5090 has a 512-bit bus at 28 Gbps: 512 × 28 / 8 = 1,792 GB/s, about 78% more.
+The L2 cache (Level 2 cache) sits on the GPU chip but outside the SMs. All SMs share it, so it serves the whole GPU. Every read from and write to global memory passes through it.
 
-GPU performance is not only about cores. It is also about how fast the cores get data. Even the strongest GPU becomes weak if it waits for memory.
+The L40S has 96 MB of L2. The H100 has 50 MB. The same microbenchmarks measured about 273 cycles for an L2 hit on the RTX 4090, roughly 9 times a shared memory load.
 
-## More Cores Is Not Always Faster
+## Global Memory
 
-Once data arrives, the GPU must process it. Each core executes instructions. It seems natural that more cores means better performance, but this is not always true.
+Global memory is the GPU's main memory, the 48 GB of VRAM (GPU memory) on the L40S. It lives on separate memory chips, so every thread of every block can reach it, and the CPU (Central Processing Unit) copies data in and out of it. Data in global memory also stays there between kernel launches.
 
-Take two GPUs. The first has 100 cores. The second has 200 cores. Both run the same task with 200 operations.
+On the L40S it is GDDR6 (Graphics Double Data Rate 6) at 864 GB/s (gigabytes per second). The H100 SXM has 80 GB of HBM3 (High Bandwidth Memory 3) at 3.35 TB/s (terabytes per second). Global memory is the slowest level: about 541 cycles per load on the RTX 4090, twice an L2 hit and about 18 times a shared memory load.
 
-- The first GPU processes 100 operations at a time, so it needs two rounds.
-- The second GPU processes all 200 operations in one round.
+## Constant and Texture Memory
 
-Now add the time per round:
+Two special views of global memory have their own small caches.
 
-- The first GPU needs one second per round, so it finishes in 2 × 1 = 2 seconds.
-- The second GPU needs four seconds per round, so it finishes in 1 × 4 = 4 seconds.
+Constant memory is 64 KB of read-only data. Each SM caches 8 KB of it. When every thread of a warp (a group of 32 threads that run together) reads the same address, one read is broadcast to all 32. When they read different addresses, the reads are done one after another.
 
-The second GPU has more cores, but it is slower. So we also need to know how fast the cores are.
+Texture memory is a read-only path through the L1 cache, built for graphics, where nearby threads read nearby pixels. On Ada and Hopper the texture cache and L1 are one unit, so most CUDA code simply reads global memory and lets L1 cache it.
 
-## Clock Speed
+## Local Memory and Register Spills
 
-Clock speed is how quickly each core executes instructions, given in GHz (gigahertz, billions of cycles per second).
+Local memory is private to one thread, like a register, but it lives in global memory. It is cached in L1 and L2, but a miss costs as much as any global memory load. Each thread can use up to 512 KB of it.
 
-Performance depends on two things together:
-
-- More cores give more parallelism.
-- Higher clock speed makes each core faster.
-
-If one of them is too low, it limits the whole system. The goal is balance.
-
-<cores-clock></cores-clock>
-
-## Two Design Directions
-
-GPUs follow two design directions. Some are built for gaming and general use. Others are built for AI and large-scale computation.
-
-- Data center GPUs often run at lower clock speeds and spend their chip area and power on Tensor Cores and memory bandwidth.
-- Consumer GPUs often run at higher clock speeds for graphics.
-
-The RTX 4090 and the H100 SXM show this. They have almost the same number of FP32 (32-bit floating point) cores, 16,384 and 16,896. The RTX 4090 boosts to 2.52 GHz, the H100 only to 1.98 GHz. But the H100 moves 3.35 TB/s from memory, more than 3 times the 1,008 GB/s of the RTX 4090.
-
-Neither is better in general. Each is optimized for different workloads.
-
-## Energy
-
-Performance is always tied to energy. More cores and higher clock speed also mean more power use. An RTX 5090 is rated for up to 575 W, and an H100 SXM for up to 700 W. So there is always a trade-off between performance and efficiency.
-
-"Which GPU is better?" is the wrong question. The better question is "Better for what?"
-
-## Specialized Hardware
-
-Modern GPUs are not just groups of general-purpose cores. They also have specialized hardware.
-
-Tensor Cores are one example. They are units built for matrix math, especially in AI. With the right workload, they can speed things up a lot. This only works if the workload matches the hardware.
-
-## Throughput
-
-Core count, clock speed and TFLOPS (trillions of floating-point operations per second) alone do not tell the full story. A better question is how much work the GPU can finish in a given time. This is called "throughput".
-
-Peak FP32 TFLOPS come from cores × clock × 2, because one FMA (fused multiply-add) counts as 2 operations. For the RTX 4090: 16,384 × 2.52 GHz × 2 ≈ 82.6 TFLOPS. For the H100 SXM: 16,896 × 1.98 GHz × 2 ≈ 66.9 TFLOPS. On this number the RTX 4090 wins, yet the H100 is far faster for AI training, thanks to its Tensor Cores and memory bandwidth.
+The compiler puts data in local memory when registers run out. This is called a register spill. It also happens for an array that a thread indexes with a value known only at run time, because registers cannot be indexed that way.
 
 > [!WARNING]
-> TFLOPS on a spec sheet is a peak that assumes every core does an FMA on every cycle. Real programs reach only part of it, and a program that waits for memory reaches much less.
+> "Local" means private, not close. Local memory is off-chip and as slow as global memory. Compile with `-Xptxas -v` and the compiler reports each kernel's registers and its spill stores and spill loads in bytes.
 
-Throughput also depends on many things, such as the type of computation, the precision and the architecture. No single number defines everything.
+## At a Glance
 
-## Summary
+| Level | Where | Who sees it | L40S | H100 SXM | Load wait (cycles) |
+|---|---|---|---|---|---|
+| Registers | inside each SM | one thread | 256 KB per SM | 256 KB per SM | none |
+| Shared memory | inside each SM | one block | up to 100 KB per SM | up to 228 KB per SM | about 30 |
+| L1 cache | inside each SM | one SM | rest of 128 KB | rest of 256 KB | about 43 |
+| L2 cache | on the chip | whole GPU | 96 MB | 50 MB | about 273 |
+| Global memory | memory chips | whole GPU | 48 GB GDDR6 | 80 GB HBM3 | about 541 |
 
-A GPU needs fast memory, enough cores, enough speed, reasonable energy use, and sometimes specialized hardware. Real performance comes only when these are balanced.
+The cycles were measured on an RTX 4090. An H800, a Hopper GPU like the H100, measured almost the same: 29, 41, 263 and 479 cycles.
 
-GPU performance is not a single number. It is a system where memory, compute power, efficiency and specialized hardware work together. Knowing this makes specifications easier to read and CUDA (Compute Unified Device Architecture) concepts easier to understand.
+## Worked Example: What Fits Where
+
+A float (a 32-bit floating point number) takes 4 bytes. In CUDA's tables 1 KB is 1,024 bytes and 1 MB is 1,024 KB.
+
+One L40S SM has up to 100 KB of shared memory:
+
+- 100 × 1,024 = 102,400 bytes.
+- 102,400 / 4 = 25,600 floats.
+- A 32 × 32 tile of floats is 32 × 32 × 4 = 4,096 bytes = 4 KB, so 100 / 4 = 25 such tiles fit in one SM.
+- One block can use at most 99 KB: 99 × 1,024 / 4 = 25,344 floats.
+
+On the H100, 228 KB per SM holds 228 × 1,024 / 4 = 58,368 floats, more than twice as many.
+
+The L40S L2 cache holds 96 MB:
+
+- 96 × 1,024 × 1,024 = 100,663,296 bytes.
+- 100,663,296 / 4 = 25,165,824 floats, about 25.2 million.
+- A 5,000 × 5,000 matrix of floats is 25,000,000 floats, so it just fits. A 6,000 × 6,000 matrix (36,000,000 floats) does not.
+
+> [!TIP]
+> Registers are shared among all threads on an SM. To run the full 1,536 threads on one L40S SM, each thread gets 65,536 / 1,536 ≈ 42.7 registers. The hardware hands out registers to each warp in chunks of 256, so the real limit is 40 per thread: 40 × 32 = 1,280 = 5 chunks, and 48 warps × 1,280 = 61,440 fits in 65,536.
+
+## Why This Matters for CUDA
+
+When you write a kernel, you pick the level for each piece of data:
+
+- Plain local variables go to registers. Keep them few, or they spill to local memory and run as slowly as global memory.
+- Data that the threads of a block read many times goes to shared memory, declared with `__shared__`. Load it from global memory once, then reuse it at about 30 cycles instead of about 541.
+- Big arrays live in global memory. Read them so that the 32 threads of a warp touch neighboring addresses; then L1 and L2 can serve them in a few wide transactions.
+
+A load from global memory takes hundreds of cycles. A GPU hides that wait by switching to other warps, which is the topic of [Lesson 08](../Lesson-08/notes.md). [Lesson 09](../Lesson-09/notes.md) then shows how to tell whether a kernel is limited by its math or by its memory.
 
 ## Glossary
 
-- GPU (Graphics Processing Unit): the processor this track is about, built from many cores that work in parallel.
-- memory bandwidth: how much data can move between memory and the GPU every second.
-- GB/s (gigabytes per second) / TB/s (terabytes per second): a billion or a trillion bytes moving every second; an RTX 4090 reaches 1,008 GB/s, an H100 3.35 TB/s.
-- core: a unit that executes instructions; like a worker, it needs data before it can start.
-- parallel: many cores working at the same time instead of one after another.
-- memory bottleneck: when GPU cores wait because memory cannot send data fast enough.
-- RTX: Nvidia's consumer GPU line for gaming and general use, such as the RTX 4090 and the RTX 5090.
-- H100: Nvidia's Hopper data center GPU from 2022, with 80 GB of HBM3 memory.
-- Blackwell: Nvidia's architecture after Hopper; the B200 data center GPU and the RTX 50 series use it.
-- Rubin: Nvidia's architecture after Blackwell, with HBM4 memory, shipping since the second half of 2026.
-- AI (artificial intelligence): software that learns from data; training it moves huge amounts of data, so memory bandwidth matters a lot.
-- HBM (High Bandwidth Memory): extremely fast stacked memory that sits right next to the GPU chip in data center GPUs; HBM3, HBM3e and HBM4 are its recent generations.
-- GDDR (Graphics Double Data Rate) / GDDR6X / GDDR7: the memory family used in consumer GPUs; fast, but not as fast as HBM.
-- workload: the kind of work a program gives the GPU, such as training a model or running a game.
-- bus width: how many bits memory can move at the same time, like the width of a road.
-- memory speed: how fast each memory pin sends data, given in Gbps (gigabits per second).
-- instruction: one basic command a core runs, such as an add or a multiply.
-- clock speed: how quickly each core executes instructions, given in GHz (gigahertz).
-- FP32 (32-bit floating point): the standard number format for GPU math; FP32 cores are what spec sheets count as "CUDA cores".
-- efficiency: how much work a GPU gets done for each watt of power it uses.
-- trade-off: giving up some of one thing to get more of another, such as speed for lower power use.
-- Tensor Cores: specialized hardware built for matrix math, especially in AI.
-- TFLOPS (trillions of floating-point operations per second): a peak number that real programs rarely reach.
-- FMA (fused multiply-add): one instruction that computes a × b + c and counts as 2 floating-point operations.
-- throughput: how much work the GPU can finish in a given time.
-- precision: how many bits each number uses, such as FP32 or FP16; fewer bits give more throughput but less accuracy.
-- architecture: the overall design of a GPU, which decides how cores, memory and special units work together.
+- GPU (Graphics Processing Unit): the processor this track is about, built from many SMs that run threads in parallel.
+- CPU (Central Processing Unit): the main processor of the computer; it copies data into and out of global memory.
+- memory hierarchy: the ladder of GPU memories, from small and fast registers to big and slow global memory.
+- SM (Streaming Multiprocessor): a processing unit inside the GPU with its own cores, registers, shared memory and L1 cache; the L40S has 142.
+- thread: one stream of instructions; each thread has its own registers and local memory.
+- block: a group of threads that runs on one SM and can share data through shared memory.
+- warp: a group of 32 threads that the SM runs together.
+- kernel: a function that runs on the GPU, launched over many threads.
+- bandwidth: how many bytes per second a memory level can deliver.
+- latency: how long one load waits before its data arrives.
+- clock cycle: one tick of the GPU clock; latencies on this page are counted in cycles.
+- register: the fastest storage, private to one thread; an L40S SM has 65,536 of 32 bits.
+- register file: all the registers of one SM, 256 KB on the L40S and on the H100.
+- KB (kilobyte) / MB (megabyte): 1,024 bytes and 1,024 KB in CUDA's tables.
+- on-chip: built into the GPU chip itself, like registers, shared memory, L1 and L2.
+- shared memory: fast on-chip memory in each SM that all threads of one block can read and write.
+- L1 cache (Level 1 cache): the hardware-managed part of each SM's on-chip pool that keeps recently used data close.
+- carveout: how the on-chip pool is split between shared memory and L1, chosen per kernel.
+- CC (compute capability): the version number of a GPU's features; the L40S is CC 8.9.
 - CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
+- microbenchmark: a tiny test program that measures one thing, such as the latency of one memory level.
+- L2 cache (Level 2 cache): the on-chip cache that all SMs share; 96 MB on the L40S, 50 MB on the H100.
+- global memory: the GPU's main memory, visible to every thread and to copies from the CPU; the slowest level.
+- VRAM (GPU memory): the memory chips on a GPU card that hold global memory.
+- GDDR6 (Graphics Double Data Rate 6): the memory type of the L40S, 48 GB at 864 GB/s.
+- HBM3 (High Bandwidth Memory 3): stacked memory in the same package as the GPU chip; the H100 SXM has 80 GB at 3.35 TB/s.
+- GB/s (gigabytes per second) / TB/s (terabytes per second): units of bandwidth.
+- constant memory: 64 KB of read-only data with an 8 KB cache in each SM; fast when a whole warp reads one address.
+- broadcast: one read whose value goes to all 32 threads of a warp at once.
+- texture memory: a read-only path through the L1 cache, built for graphics.
+- local memory: per-thread memory that lives in global memory; up to 512 KB per thread.
+- register spill: moving data from registers to local memory because registers ran out.
+- float: a 32-bit floating point number, 4 bytes.
+- tile: a small square piece of a bigger array, loaded into shared memory to be reused.

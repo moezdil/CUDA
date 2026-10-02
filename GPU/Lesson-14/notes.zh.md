@@ -1,97 +1,99 @@
-# 14 > 在 Windows 上运行 Linux（用 WSL 搭建实用环境）
+# 14 > CUDA Toolkit：GPU 编程的基础
 
-这一课讲怎样用 WSL（Windows Subsystem for Linux，适用于 Linux 的 Windows 子系统）在 Windows 里运行 Linux。它还会介绍 GPU（Graphics Processing Unit，图形处理器）和 CUDA 在 WSL 里是怎样工作的，以及有哪些限制。
+这一课讲什么是 CUDA Toolkit（工具包），以及它能为你提供什么。在 GPU（Graphics Processing Unit，图形处理器）上编写、编译、运行和研究程序，靠的就是这个环境。截至 2026 年 10 月，最新版本是 CUDA 13.4。
 
-## 为什么是 Linux
+## CUDA 是什么
 
-认真做 CUDA 开发，最终通常都会走向 Linux。Windows 也能用，但多年来 GPU 生态一直是围绕 Linux 建立的，大多数工具、文档和实际部署都默认使用 Linux。用于 AI（Artificial Intelligence，人工智能）和 HPC（High-Performance Computing，高性能计算）的 GPU 系统几乎全都运行 Linux。
+CUDA（Compute Unified Device Architecture，统一计算设备架构）是 NVIDIA 的并行计算平台，它把你的代码和 GPU 连接起来。没有它，你就无法完全掌控 NVIDIA GPU。
 
-## WSL 是什么
+## 编译器：nvcc
 
-WSL 在 Windows 里运行一个真正的 Linux 环境。它不像早期的一些方案那样只是一个模拟层：WSL2 在一个小巧、轻量的虚拟机里运行真正的 Linux 内核。这让它在行为、兼容性和性能上都大不一样。
+Toolkit 的核心是编译器 `nvcc`（NVIDIA CUDA Compiler）。它把你的 CUDA 代码转换成 GPU 能运行的代码。
 
-## 安装 WSL
+这个过程分两步：先把代码转换成一种中间形式 PTX（Parallel Thread Execution，并行线程执行）；再把 PTX 转换成针对某一种 GPU 架构的机器码，叫作 SASS（Streaming Assembler）。
 
-在 Windows 上打开一个终端，比如 PowerShell，然后运行：
+<nvcc-pipeline></nvcc-pipeline>
 
-```bash
-wsl --install
-wsl --update
-```
+你用计算能力来指定这个架构。参数 `-arch=sm_89` 表示计算能力 8.9：主版本号 8，次版本号 9。这是 Ada 一代，比如 L40S。Hopper 的 H100 是 `sm_90`（9.0），Blackwell 的 B200 是 `sm_100`（10.0）。
 
-- `wsl --install` 会启用 WSL，并安装默认的发行版 Ubuntu。
-- `wsl --update` 把 WSL 内核更新到最新版本。
+Ampere、Hopper、Blackwell 等架构的指令、数据类型和执行模型各不相同，所以你必须针对正确的架构编译。同一份代码也许能在不同的 GPU 上运行，但如果编译目标不对，它的行为就会不一样，速度也达不到应有的水平。
 
-一定要用 WSL2。WSL1 兼容性较差，而且完全不支持 GPU。新安装默认就是 WSL2。想确认的话，运行 `wsl -l -v`：你的发行版在 VERSION 列里必须显示 2。
+## 库
 
-## 第一次启动
+Toolkit 还提供了经过优化的库。这些库能充分利用 GPU，你不必什么都自己写。涵盖的领域有：
 
-第一次启动 Linux 发行版时，你需要创建一个用户名和密码。这是同一台机器上一个独立的 Linux 环境，和你的 Windows 环境是分开的。它有自己的用户、文件系统和包管理器。从现在起，你要同时在两个系统里工作。
+- 线性代数（cuBLAS）
+- 傅里叶变换（cuFFT）
+- 随机数生成（cuRAND）
+- 稀疏矩阵（cuSPARSE）
 
-## 访问 GPU
+深度学习方面，NVIDIA 提供 cuDNN。它需要单独下载，不包含在 Toolkit 里。
 
-有了 WSL2，Linux 就能通过 Windows 的驱动程序使用 GPU。CUDA 应用在 WSL 里运行，几乎和在原生 Linux 系统上一样。所以你可以在 Linux 里开发，同时继续把 Windows 当作主系统。
+这些库会随新硬件不断更新。新版 CUDA 支持低精度格式，比如 Hopper 上的 FP8（8 位浮点）和 Blackwell 上的 FP4（4 位浮点）。现代 AI（Artificial Intelligence，人工智能）工作负载用的正是这些格式。
 
-GPU 驱动程序装在 Windows 一侧，而不是 WSL 里。你安装普通的 Windows 版 NVIDIA 驱动程序，WSL 就会使用宿主系统上的这个驱动。在 WSL 里，CUDA 驱动表现为一个叫 `libcuda.so` 的库，它是从 Windows 映射进来的。
+## 运行时 API
+
+你的程序通过 CUDA 运行时 API（Application Programming Interface，应用程序编程接口）和 GPU 打交道。借助显式的 API 调用，程序可以：
+
+- 在 GPU 上分配显存
+- 在 CPU（Central Processing Unit，中央处理器）和 GPU 之间搬运数据
+- 启动核函数（kernel）
+
+数据搬运常常是 GPU 程序的主要瓶颈，所以弄清数据在何时、以何种方式移动，和编写核函数一样重要。
+
+## 性能分析与调试工具
+
+你还需要了解程序实际的运行情况。Toolkit 提供了用于性能分析、调试和诊断 GPU 应用的工具：Nsight Systems、Nsight Compute、cuda-gdb 和 Compute Sanitizer。它们可以测量性能、找出瓶颈、发现显存问题。工作负载越大，性能调优就越是开发中必不可少的一环。
+
+## 示例程序
+
+NVIDIA 还发布了示例程序，展示如何管理显存、如何启动核函数，以及如何提升性能。从 CUDA 11.6 起，它们不再随 Toolkit 一起安装。你要从 GitHub 上的 cuda-samples 仓库获取。研究这些示例，是从理论走向真正理解的捷径。
+
+## Toolkit 紧跟硬件
+
+Toolkit 和 GPU 架构紧密绑定。每一代新架构都会带来新的硬件功能，Toolkit 也会随之加入相应的支持。
+
+- CUDA 13.0 于 2025 年 8 月发布，CUDA 13.4 是当前版本。
+- CUDA 13 支持 Turing（计算能力 7.5）及之后的所有架构，包括 Blackwell（10.x 和 12.x）。CUDA 13.4 的库加入了对 Rubin（10.7）的支持。Rubin 数据中心 GPU 于 2026 年下半年开始出货。
 
 > [!WARNING]
-> 永远不要在 WSL 里安装 Linux 版的 NVIDIA 驱动程序。它会覆盖从 Windows 映射进来的驱动，让 GPU 无法访问。
+> CUDA 13.0 移除了 Maxwell、Pascal 和 Volta，也就是计算能力低于 7.5 的所有 GPU。CUDA 13 已经不能再为它们编译代码。这些 GPU 只能继续用 CUDA 12.x。
 
-<wsl-layers></wsl-layers>
-
-## 在 WSL 里安装 CUDA
-
-在 WSL 里，你要安装 Linux 版的 CUDA Toolkit，而不是 Windows 版。NVIDIA 为此准备了单独的 WSL-Ubuntu 软件源。里面的软件包只有 Toolkit，没有驱动程序，所以不会覆盖宿主系统的驱动。安装过程看起来和普通 Linux 一样，实际上并不完全相同。[第 15 课](../Lesson-15/notes.md)会一步步带你完成安装。
-
-## WSL 的限制
-
-WSL 是一个正经的开发环境。不过，有几件事和原生 Linux 不一样：
-
-- GPU 支持需要处于 WDDM（Windows Display Driver Model，Windows 显示驱动模型）模式的 GeForce 或 RTX 显卡，这是桌面显卡的普通模式。数据中心 GPU 不受支持。
-- 统一内存的功能有限。CPU（Central Processing Unit，中央处理器）和 GPU 不能同时访问同一块托管内存。
-- `nvidia-smi` 不能显示所有数值，比如 GPU 利用率。
-
-还要确认你的 GPU 适用于 CUDA 13。WSL 本身支持 Pascal 及更新的架构，但 CUDA 13 要求计算能力 7.5 或更高。GeForce GTX 1080 的计算能力是 6.1，6.1 低于 7.5，所以 CUDA 13 不能为它编译代码。GeForce RTX 2060 的计算能力是 7.5，所以可以用。
-
-> [!TIP]
-> 出问题时，从下往上逐层检查：先是 Windows 驱动程序，然后是 WSL 本身（`wsl --update`），再是 Linux 发行版，最后是 CUDA Toolkit。
+> [!NOTE]
+> Toolkit 不再是一个固定不变的整体包，各个组件有自己的版本号：在 CUDA 13.4 Update 1 里，`nvcc` 的版本是 13.4.92，cuBLAS 的版本却是 13.8.0.4。GPU 驱动也不再捆绑在里面：Windows 从 CUDA 13.1 起，Linux 从 CUDA 13.4 起。驱动需要单独安装。
 
 ## 小结
 
-WSL 是一座实用的桥梁：你可以留在 Windows 里，以接近真实生产系统的方式使用基于 Linux 的 GPU 工具。这是最自然的入门方式之一。
-
-> [!NOTE]
-> 从这里开始，这些课程只在 Linux 里进行。Windows 只作为装有驱动程序的宿主系统出现。
+CUDA Toolkit 是 GPU 编程的完整环境。有了它，你可以编写、编译、运行、分析和改进代码。想认真使用 NVIDIA GPU，就必须理解 CUDA，其他一切都建立在它之上。
 
 ## 术语表
 
-- Linux：免费、开源的操作系统；大多数 GPU 服务器和 CUDA 工具都是围绕它建立的。
+- CUDA（Compute Unified Device Architecture）：NVIDIA 的并行计算平台，把你的代码和 GPU 连接起来。
 - GPU（Graphics Processing Unit）：拥有成千上万个小核心的处理器，CUDA 程序就在它上面运行。
-- 生态（ecosystem）：围绕一个平台（比如 GPU）发展起来的所有工具、库、文档和驱动程序。
-- AI（Artificial Intelligence）：从数据中学习的软件，比如语言模型；大部分在 GPU 上训练。
-- HPC（High-Performance Computing，高性能计算）：许多强大的处理器协同解决大型问题，比如天气或物理仿真。
-- WSL（Windows Subsystem for Linux）：在 Windows 里运行一个真正的 Linux 环境。
-- 模拟（emulation）：用软件模仿另一个系统，而不是真正运行它，通常更慢，兼容性也更差。
-- WSL2：运行真正 Linux 内核的 WSL 版本，是在 Windows 上使用 CUDA 的基础。
-- Linux 内核（Linux kernel）：Linux 操作系统的核心，负责管理内存、进程和硬件；它和 CUDA 的核函数不是一回事。
-- 虚拟机（virtual machine）：用软件模拟出来的一整台计算机，有自己的操作系统，运行在真实的机器上。
-- 终端（terminal）：输入命令的文本窗口，比如 PowerShell 或 Windows Terminal。
-- `wsl --install`：在 Windows 终端里运行的命令，用来安装 WSL 和 Ubuntu。
-- `wsl --update`：把 WSL 内核更新到最新版本。
-- WSL1：较老的 WSL 版本，兼容性更差，也不支持 GPU。
-- Linux 发行版（Linux distribution）：一个独立的 Linux 环境，有自己的用户、文件系统和包管理器；做 CUDA 通常选 Ubuntu。
-- 文件系统（file system）：操作系统存储和组织文件的方式；WSL 发行版有自己的文件系统，和 Windows 的磁盘分开。
-- 包管理器（package manager）：从在线软件列表安装和更新软件的工具，比如 Ubuntu 上的 apt。
-- 驱动程序（GPU driver）：让操作系统和 GPU 通信的软件；对 WSL 来说，它只装在 Windows 这一侧。
-- 原生 Linux（native Linux）：直接装在机器上的 Linux，而不是运行在另一个系统里面。
-- 宿主系统（host）：WSL 所运行的 Windows 系统。WSL 使用它的 GPU 驱动程序，不需要自己的 NVIDIA 驱动程序。
-- `libcuda.so`：CUDA 驱动库；在 WSL 里，它是从 Windows 驱动映射进来的。
-- CUDA Toolkit：NVIDIA 的编译器、库和工具；在 WSL 里你要从 WSL-Ubuntu 软件源安装 Linux 版。
-- WSL-Ubuntu 软件源（WSL-Ubuntu repository）：NVIDIA 为 WSL 中的 CUDA 提供的软件包来源；里面的软件包只有 Toolkit，没有驱动程序。
-- WDDM（Windows Display Driver Model）：Windows 上桌面显卡的普通驱动模式；WSL 的 GPU 支持需要它。
-- 统一内存（unified memory）：CPU 和 GPU 通过同一个指针共享的内存；在 WSL 里只得到部分支持。
-- CPU（Central Processing Unit）：计算机的主处理器。
-- `nvidia-smi`：NVIDIA 的命令行工具，显示 GPU、驱动程序和显存使用情况。
-- 计算能力（compute capability）：GPU 架构的版本号，比如 Turing 是 7.5；CUDA 13 要求 7.5 或更高。
-- Pascal：NVIDIA 2016 年的架构，比如 GTX 1080；WSL 能运行它，CUDA 13 却不能为它编译。
-- 生产系统（production）：完成的软件真正为用户运行的系统。
+- 并行计算（parallel computing）：把工作拆成很多小块，让它们同时运行。
+- Toolkit（CUDA Toolkit）：用于编写、编译、运行、分析和改进 GPU 程序的完整环境；当前版本是 13.4。
+- 编译器（compiler）：把源代码变成处理器能运行的代码的程序。
+- `nvcc`（NVIDIA CUDA Compiler）：Toolkit 核心的编译器，把 CUDA 代码变成 GPU 能运行的代码。
+- PTX（Parallel Thread Execution）：`nvcc` 先生成的中间形式，之后才会变成针对某个 GPU 架构的机器码。
+- 机器码（machine code）：某个具体处理器直接执行的二进制指令；在 NVIDIA GPU 上它叫 SASS（Streaming Assembler）。
+- 架构（architecture）：一个 GPU 系列的硬件设计，比如 Ampere、Hopper 或 Blackwell。
+- 计算能力（compute capability）：GPU 架构的版本号，比如 8.9；`sm_89` 是写给 `-arch` 的同一个数字。
+- Ampere / Hopper / Blackwell / Rubin：NVIDIA 2020、2022、2024 和 2026 年的 GPU 架构，各有自己的指令和数据类型。
+- 编译目标（compile target）：你编译时针对的 GPU 架构。选错了会改变行为和速度。
+- 库（library）：现成的、经过测试的代码，可以在程序里直接调用，比如 cuBLAS 或 cuFFT。
+- 线性代数（linear algebra）：关于向量和矩阵的数学，比如向量相加或矩阵相乘。
+- 傅里叶变换（Fourier transforms）：把信号拆分成各个频率的方法，用于音频、图像和物理计算。
+- 深度学习（deep learning）：由多层神经网络构成的 AI；cuDNN 是 NVIDIA 为它准备的库，需要单独下载。
+- FP8 / FP4：8 位和 4 位浮点格式；Hopper 加入了 FP8，Blackwell 加入了 FP4。
+- AI（Artificial Intelligence）：从数据中学习的软件，比如语言模型；大部分在 GPU 上运行。
+- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练模型。
+- 运行时 API（runtime API）：程序用来分配 GPU 显存、搬运数据和启动核函数的调用。
+- CPU（Central Processing Unit）：主处理器；在 CUDA 程序里，它运行主代码，并把工作交给 GPU。
+- 核函数（kernel）：在 GPU 上运行的函数，由 CPU 上的代码启动。
+- 瓶颈（bottleneck）：最慢的那一步，它限制了整个程序的速度；常常是 CPU 和 GPU 之间的复制。
+- 性能分析（profiling）：测量程序把时间花在了哪里；Nsight Systems 和 Nsight Compute 是 Toolkit 里的性能分析工具。
+- 调试（debugging）：找出并修复错误；cuda-gdb 可以逐步调试 GPU 代码，Compute Sanitizer 可以检查显存错误。
+- 示例程序（sample programs）：NVIDIA 提供的小型 CUDA 示例程序；从 CUDA 11.6 起，它们放在 GitHub 上的 cuda-samples 仓库里。
+- Turing：2018 年的架构，计算能力 7.5，是 CUDA 13 支持的最老架构。
+- Maxwell / Pascal / Volta：较老的架构（2014、2016、2017）；CUDA 13 已经不能再为它们编译代码。
+- 驱动（GPU driver）：让操作系统和 GPU 通信的软件；它和 Toolkit 分开安装。
