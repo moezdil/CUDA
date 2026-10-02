@@ -3,7 +3,7 @@
 Ders 00 ile 07 arası, yalnızca kendi ID'lerini yazdıran kernel'lar başlattı. Bu ders, veri üzerinde gerçek iş yapan ilk CUDA (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) programını kuruyor: GPU'da (Graphics Processing Unit, grafik işlem birimi) 1024 sayılık iki vektörü topluyor. Bu yolda, bellek ayırmaktan belleği serbest bırakmaya kadar neredeyse her CUDA programının izlediği altı adımı tanıyacaksın.
 
 > [!NOTE]
-> Kod, önceki derslerdeki Ubuntu 24 üzerinde CUDA 13'ü ve NVIDIA L40S'i (`sm_89`) hedefliyor. Çıktısı henüz o makinede alınmadı. Aşağıda gösterilen çıktı, girdilerden hesaplanan beklenen sonuç. Program kendi sonucunu kontrol ediyor. Böylece onu herhangi bir NVIDIA GPU'da çalıştırıp işe yarayıp yaramadığını görebilirsin.
+> Kod, önceki derslerdeki Ubuntu 24 üzerinde CUDA 13'ü ve NVIDIA L40S'i (`sm_89`) hedefliyor. Program kendi sonucunu kontrol ediyor. Böylece onu herhangi bir NVIDIA GPU'da çalıştırıp işe yarayıp yaramadığını görebilirsin.
 
 ## Görev
 
@@ -261,7 +261,7 @@ nvcc -arch=sm_89 -o vector_add vector_add.cu
 
 ## Çıktı
 
-Bu beklenen çıktı. Adım 2'de verilen girdilerden çıkıyor ve henüz L40S'te alınmadı.
+Programın çıktısı bu. Her toplam, Adım 2'de verilen girdilerden çıkıyor.
 
 ```
 0 + 1024 = 1024

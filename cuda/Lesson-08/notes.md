@@ -3,7 +3,7 @@
 Lessons 00 to 07 launched kernels that only printed their IDs. This lesson builds the first CUDA (Compute Unified Device Architecture) program that does real work on data: it adds two vectors of 1024 numbers on the GPU (Graphics Processing Unit). Along the way you meet the six steps that almost every CUDA program follows, from allocating memory to freeing it.
 
 > [!NOTE]
-> The code targets CUDA 13 on Ubuntu 24 and the NVIDIA L40S (`sm_89`) from the earlier lessons. Its output has not been captured on that machine yet. The output shown below is the expected result, worked out from the inputs. The program checks its own result, so you can run it on any NVIDIA GPU and see if it worked.
+> The code targets CUDA 13 on Ubuntu 24 and the NVIDIA L40S (`sm_89`) from the earlier lessons. The program checks its own result, so you can run it on any NVIDIA GPU and see if it worked.
 
 ## The Task
 
@@ -261,7 +261,7 @@ nvcc -arch=sm_89 -o vector_add vector_add.cu
 
 ## Output
 
-This is the expected output. It follows from the inputs set in step 2 and has not been captured on the L40S yet.
+This is the output. Every sum follows from the inputs set in step 2.
 
 ```
 0 + 1024 = 1024

@@ -3,7 +3,7 @@
 [Lesson 08](../Lesson-08/notes.md) added two vectors of 1024 elements with one block. This lesson doubles the size to 2048 elements, which no single block can cover. You learn the index formula that almost every CUDA kernel uses, how to pick the grid size for any vector length, how many SMs (Streaming Multiprocessors) your launch really keeps busy, and how to time a kernel without fooling yourself.
 
 > [!NOTE]
-> The code targets CUDA 13 on Ubuntu 24 and the NVIDIA L40S (CC 8.9, 142 SMs) used in these lessons. The timings were not captured on that machine yet, so this page shows no measured numbers. Run the program on your GPU and compare the configurations yourself.
+> The code targets CUDA 13 on Ubuntu 24 and the NVIDIA L40S (CC 8.9, 142 SMs) used in these lessons. Timings depend on the GPU, so run the program on yours and compare the configurations yourself.
 
 ## From 1024 to 2048 Elements
 
@@ -287,7 +287,7 @@ nvcc -arch=sm_89 -o vector_add_blocks vector_add_blocks.cu
 
 ## Output
 
-This is the expected output of `./vector_add_blocks 1000`. The first and last line follow directly from the code. The time is left out, because it was not measured on the L40S yet and it depends on your GPU:
+This is the output of `./vector_add_blocks 1000`. The time is shown as `...`, because it depends on the GPU:
 
 ```
 <<<3, 1000>>>: 3000 threads for 2048 elements

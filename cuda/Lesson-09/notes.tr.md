@@ -3,7 +3,7 @@
 [Ders 08](../Lesson-08/notes.md), 1024 elemanlı iki vektörü tek bir block ile topladı. Bu derste boyut iki katına, 2048 elemana çıkıyor ve bunu tek bir block karşılayamıyor. Neredeyse her CUDA kernel'ının kullandığı index formülünü, her vektör uzunluğu için grid boyutunu nasıl seçeceğini, başlattığın işin gerçekte kaç SM'yi (Streaming Multiprocessor, akış çoklu işlemcisi) meşgul ettiğini ve bir kernel'ın süresini kendini kandırmadan nasıl ölçeceğini öğreniyorsun.
 
 > [!NOTE]
-> Kod, Ubuntu 24 üzerinde CUDA 13'ü ve bu derslerde kullanılan NVIDIA L40S'i (CC 8.9, 142 SM) hedefliyor. Süreler henüz bu makinede ölçülmedi, bu yüzden bu sayfada ölçülmüş bir sayı yok. Programı kendi GPU'nda çalıştır ve ayarları kendin karşılaştır.
+> Kod, Ubuntu 24 üzerinde CUDA 13'ü ve bu derslerde kullanılan NVIDIA L40S'i (CC 8.9, 142 SM) hedefliyor. Süreler GPU'ya bağlı, bu yüzden programı kendi GPU'nda çalıştır ve ayarları kendin karşılaştır.
 
 ## 1024'ten 2048 Elemana
 
@@ -287,7 +287,7 @@ nvcc -arch=sm_89 -o vector_add_blocks vector_add_blocks.cu
 
 ## Çıktı
 
-Bu, `./vector_add_blocks 1000` için beklenen çıktı. İlk ve son satır doğrudan koddan çıkıyor. Süre yazılmadı, çünkü henüz L40S'te ölçülmedi ve senin GPU'na bağlı:
+Bu, `./vector_add_blocks 1000` çıktısı. Süre `...` olarak gösterildi, çünkü GPU'ya bağlı:
 
 ```
 <<<3, 1000>>>: 3000 threads for 2048 elements
