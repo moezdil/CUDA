@@ -110,7 +110,7 @@ customElements.define("cuda-launch", class extends HTMLElement {
       '<label>' + T("blocks") + ' <input type="range" min="1" max="8" value="' + B + '"></label>' +
       '<label>' + T("threads / block") + ' <input type="range" min="0" max="' + (steps.length - 1) + '" value="' + steps.indexOf(N) + '"></label>' +
       '<button class="dg-btn" type="button">' + T("run") + '</button></div></div><div class="dg-stats"></div><div class="dg-grid"></div>' +
-      '<div class="dg-legend"><span><i style="background:var(--accent)"></i><i style="background:var(--cool)"></i><i style="background:#e3b341"></i><i style="background:#bc8cff"></i>' + T("warps 0 1 2 3, repeating") + '</span><span><i style="background:var(--border)"></i>' + T("idle lane") + '</span><span>' + T("one row = one warp = 32 lanes") + '</span></div>' +
+      '<div class="dg-legend"><span><i style="background:var(--accent)"></i><i style="background:var(--cool)"></i><i style="background:var(--y)"></i><i style="background:var(--v)"></i>' + T("warps 0 1 2 3, repeating") + '</span><span><i style="background:var(--border)"></i>' + T("idle lane") + '</span><span>' + T("one row = one warp = 32 lanes") + '</span></div>' +
       '<div class="dg-read"></div>';
     var ins = el.querySelectorAll("input"), grid = el.querySelector(".dg-grid"), read = el.querySelector(".dg-read");
     var idle = T("Hover or tap a lane to see the IDs that thread reads.");
