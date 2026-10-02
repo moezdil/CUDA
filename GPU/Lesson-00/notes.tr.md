@@ -73,6 +73,8 @@ GPU → sonuçları geri gönderir
 
 Bu akış kötü yönetilirse performans düşer.
 
+<cpu-gpu-trip></cpu-gpu-trip>
+
 ## Streaming Multiprocessor
 
 GPU'nun içindeki en önemli birim SM'dir. SM küçük bir işlem birimidir. Bir GPU, birlikte çalışan çok sayıda SM'den oluşur.
@@ -83,6 +85,8 @@ Her SM'de paralel iş çalıştırmak için gereken her şey bulunur:
 - paylaşımlı bellek, thread'lerin veri alışverişi yaptığı yer  
 - neyin ne zaman çalışacağına karar veren kontrol birimleri  
 - asıl işi yapan yürütme birimleri  
+
+<sm-inside></sm-inside>
 
 ## Yürütme Birimleri
 

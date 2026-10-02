@@ -73,6 +73,8 @@ GPU → sends results back
 
 If this flow is handled badly, performance drops.
 
+<cpu-gpu-trip></cpu-gpu-trip>
+
 ## The Streaming Multiprocessor
 
 The most important unit inside a GPU is the SM. An SM is a small processing unit. A GPU is many SMs working together.
@@ -83,6 +85,8 @@ Each SM has everything needed to run parallel work:
 - shared memory, where threads exchange data  
 - control units that decide what runs and when  
 - execution units that do the actual work  
+
+<sm-inside></sm-inside>
 
 ## Execution Units
 

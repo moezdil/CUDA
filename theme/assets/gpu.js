@@ -902,3 +902,56 @@ def("roofline-chart", function(el){
   pick($(".rf-ks"), function(i){ k = ks[+i]; draw(); });
   $(".rf-ks button").click();
 });
+
+// CPU and GPU working together: copy in over PCIe, compute on the SMs, copy back.
+def("cpu-gpu-trip", function(el){
+  el.classList.add("cgt");
+  var steps = [
+    [T("start"), T("The input starts in system RAM, next to the CPU. The GPU cannot see it yet.")],
+    [T("1 copy in"), T("The CPU sends the input over PCIe into VRAM. On the L40S this link moves about 32 GB/s each way, far slower than VRAM itself.")],
+    [T("2 compute"), T("The SMs work on the data in VRAM, all at the same time. The CPU is free to do other work meanwhile.")],
+    [T("3 copy back"), T("The results travel back over PCIe into system RAM, where the CPU can use them.")]
+  ];
+  var cells = ""; for (var i = 0; i < 8; i++) { cells += "<i></i>"; }
+  var sms = ""; for (var j = 0; j < 8; j++) { sms += "<i></i>"; }
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("CPU and GPU, step by step") + "</span>" + tabs(steps.map(function(s){ return s[0]; }), 0) + "</div>" +
+    '<div class="hdf-row"><div class="hdf-box hdf-host"><b>CPU</b><span>' + T("system RAM") + '</span><div class="hdf-mem hdf-ram">' + cells + "</div></div>" +
+    '<div class="hdf-link"><span>PCIe</span><div class="hdf-lane"><i></i><i></i><i></i></div></div>' +
+    '<div class="hdf-box hdf-dev"><b>GPU</b><span>SM</span><div class="hdf-sms">' + sms + '</div><span>VRAM</span><div class="hdf-mem hdf-vram">' + cells + "</div></div></div>" +
+    '<div class="dg-head" style="margin:14px 0 0"><button class="dg-btn" type="button">' + T("play all steps") + '</button></div><div class="dg-info"></div>';
+  var info = el.querySelector(".dg-info"), btns = el.querySelectorAll(".dg-tabs button"), timer = 0;
+  function show(i){
+    el.dataset.step = i;
+    btns.forEach(function(b, k){ b.classList.toggle("on", k === i); });
+    info.innerHTML = "<b>" + steps[i][0] + "</b><br>" + steps[i][1];
+  }
+  onTabs(el.querySelector(".dg-tabs"), function(i){ clearInterval(timer); show(i); });
+  el.querySelector(".dg-btn").addEventListener("click", function(){
+    clearInterval(timer); var i = 0; show(0);
+    timer = setInterval(function(){ i++; if (i >= steps.length) { clearInterval(timer); return; } show(i); }, 1800);
+  });
+  show(0);
+});
+
+// Inside one SM: the four kinds of parts every SM has.
+def("sm-inside", function(el){
+  var P = {
+    reg: [T("Registers"), T("The fastest storage there is. Every thread keeps its own variables here. On the L40S each SM has 65,536 registers, 256 KB in total.")],
+    smem: [T("Shared memory"), T("A small, fast memory that the threads of one block use to swap data. On the L40S each SM has 128 KB, shared with the L1 cache.")],
+    ctrl: [T("Control"), T("Warp schedulers decide which group of 32 threads runs next, every clock cycle. The L40S has 4 per SM.")],
+    exec: [T("Execution units"), T("The units that do the actual math: 128 FP32 cores and 4 Tensor Cores per SM on the L40S, plus integer and special function units.")]
+  };
+  var tiles = ""; for (var i = 0; i < 24; i++) { tiles += "<i" + (i ? "" : ' class="on"') + "></i>"; }
+  var units = ""; for (var j = 0; j < 32; j++) { units += "<i></i>"; }
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Inside one SM") + '</span><span class="dg-note">' + T("click a part") + "</span></div>" +
+    '<div class="smi-gpu"><div class="smi-tiles">' + tiles + "</div><span>" + T("one GPU is many SMs · the L40S has 142") + "</span></div>" +
+    '<div class="smi-sm"><span class="smi-lbl">SM</span>' +
+    '<button type="button" data-k="ctrl" class="smi-ctrl">' + T("control · warp schedulers") + "</button>" +
+    '<button type="button" data-k="reg" class="smi-reg">' + T("registers") + "</button>" +
+    '<button type="button" data-k="exec" class="smi-exec"><span>' + T("execution units") + '</span><span class="smi-units">' + units + "</span></button>" +
+    '<button type="button" data-k="smem" class="smi-smem">' + T("shared memory / L1") + "</button></div>" +
+    '<div class="dg-info"></div>';
+  var info = el.querySelector(".dg-info");
+  pick(el.querySelector(".smi-sm"), function(k){ info.innerHTML = "<b>" + P[k][0] + "</b><br>" + P[k][1]; });
+  el.querySelector('[data-k="reg"]').click();
+});
