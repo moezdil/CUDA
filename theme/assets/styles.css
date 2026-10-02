@@ -96,8 +96,8 @@ html[data-mode="light"] .gpu-bg::before,html[data-mode="light"] .gpu-bg::after,h
 img{max-width:100%;display:block}
 a{color:var(--accent2);text-underline-offset:3px}
 [hidden]{display:none!important}
-.wrap{max-width:1100px;margin:0 auto;padding-inline:20px}
-@media (max-width:420px){.wrap{padding-inline:16px}}
+.wrap{max-width:none;margin:0;padding-inline:clamp(16px,3vw,40px)}
+@media (max-width:700px){.wrap{padding-inline:16px}}
 .wrap.narrow{max-width:760px}
 code,.mono,kbd,table,.eyebrow{font-family:var(--mono)}
 /* No ligatures in code: a beginner must see != and -> exactly as they type them. */
@@ -1036,3 +1036,33 @@ footer{padding:13px 0 16px}
 .prose details>summary:focus-visible{outline:2px solid var(--co);outline-offset:2px}
 .prose details[open]>summary{border-bottom:1px solid var(--divider);border-radius:10px 10px 0 0;margin-bottom:14px}
 .prose details[open]{padding-bottom:4px}
+
+
+/* Left-anchored page: the hero keeps a readable width, the rest starts at the left gutter. */
+.hero .wrap>*{max-width:1100px}
+@media (min-width:701px){
+  .nav-sections{justify-self:start}
+  footer .row{justify-content:flex-start;column-gap:32px}
+}
+@media (min-width:901px){nav .wrap{grid-template-columns:230px 1fr auto;column-gap:48px}}
+
+/* Right rail (wide screens): glossary terms of the section in view. */
+.rail{display:none}
+@media (min-width:1280px){
+  .doc{grid-template-columns:230px minmax(0,1fr) minmax(230px,290px)}
+  .rail{display:block}
+}
+.rail-in{position:sticky;top:78px;max-height:calc(100vh - 100px);overflow:auto;padding-bottom:12px}
+.rail-h{display:block;font-family:var(--head);font-weight:600;font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.rail-s{margin:.2em 0 12px;font-size:.8rem;color:var(--dimmer);line-height:1.45}
+.rail ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rail li{margin:0;border:1px solid var(--border);border-left:2px solid var(--accent-line);border-radius:10px;padding:10px 12px;background:var(--card);
+  display:grid;gap:3px;font-family:var(--mono);overflow-wrap:anywhere}
+.rail .g-term{font-size:.8rem;color:var(--accent)}
+.rail .g-term code{color:var(--accent);font-size:1em}
+.rail li span{font-size:.78rem;color:var(--dim);line-height:1.5}
+.rail li span code{font-size:.92em}
+@media (prefers-reduced-motion: no-preference){
+  .rail li{animation:rail-in .35s ease both;animation-delay:calc(var(--i) * 45ms)}
+}
+@keyframes rail-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}

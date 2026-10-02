@@ -71,10 +71,65 @@ document.querySelectorAll(".prose h2").forEach(function(h){
   if (h.textContent.trim() !== T("Glossary") || !ul || ul.tagName !== "UL") { return; }
   ul.className = "glossary";
   ul.querySelectorAll("li").forEach(function(li){
-    var i = li.innerHTML.indexOf(": ");
-    if (i > 0) { li.innerHTML = '<b class="g-term">' + li.innerHTML.slice(0, i) + "</b><span>" + li.innerHTML.slice(i + 2) + "</span>"; }
+    var m = li.innerHTML.match(/: |：/);
+    if (m && m.index > 0) { li.innerHTML = '<b class="g-term">' + li.innerHTML.slice(0, m.index) + "</b><span>" + li.innerHTML.slice(m.index + m[0].length) + "</span>"; }
   });
+  glossaryRail(h, ul);
 });
+
+// Wide screens: a right rail shows the glossary terms of the section in view. Each term
+// belongs to the first section (heading plus text, code blocks left out) that mentions it.
+function glossaryRail(gh, ul){
+  var doc = document.querySelector(".doc"), hs = [].slice.call(document.querySelectorAll(".prose h2"));
+  if (!doc) { return; }
+  var texts = hs.map(function(h){
+    var s = h.textContent;
+    for (var n = h.nextElementSibling; n && n.tagName !== "H2"; n = n.nextElementSibling) {
+      if (n.tagName === "PRE" || n.classList.contains("highlight")) { continue; }
+      var c = n.cloneNode(true);
+      c.querySelectorAll("pre,.highlight").forEach(function(x){ x.remove(); });
+      s += "\n" + c.textContent;
+    }
+    return h === gh ? "" : s;
+  });
+  var groups = hs.map(function(){ return []; }), found = false, tr = document.documentElement.lang === "tr";
+  ul.querySelectorAll("li").forEach(function(li){
+    var g = li.querySelector(".g-term");
+    if (!g) { return; }
+    var t = g.textContent, paren = t.match(/[（(]([^,，)）]+)/);
+    var name = t.split(/\s*[（(]/)[0].trim();
+    var words = [name].concat(name.split(" / "), [].map.call(g.querySelectorAll("code"), function(c){ return c.textContent.trim(); }), paren ? [paren[1].trim()] : []);
+    var res = words.filter(Boolean).map(function(w){
+      return new RegExp("(?<![A-Za-z0-9_])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/[A-Za-z0-9]$/.test(w) && !(tr && w.length > 3) ? "(?:e?s)?(?![A-Za-z0-9_])" : ""), "i");
+    });
+    for (var k = 0; k < texts.length; k++) {
+      if (res.some(function(r){ return r.test(texts[k]); })) { groups[k].push(li.innerHTML); found = true; return; }
+    }
+  });
+  if (!found) { return; }
+  var rail = doc.appendChild(document.createElement("aside")), cur = -2, queued = false;
+  rail.className = "rail";
+  rail.setAttribute("aria-label", T("Terms in this section"));
+  rail.innerHTML = '<div class="rail-in" hidden><b class="rail-h">' + T("In this section") + '</b><p class="rail-s"></p><ul></ul></div>';
+  var box = rail.firstChild;
+  function draw(){
+    queued = false;
+    var k = -1;
+    hs.forEach(function(h, i){ if (h.getBoundingClientRect().top < innerHeight * 0.3) { k = i; } });
+    if (k === cur) { return; }
+    cur = k;
+    var list = k < 0 ? [] : groups[k];
+    box.hidden = !list.length;
+    if (!list.length) { return; }
+    box.querySelector(".rail-s").textContent = hs[k].textContent.replace(/¶$/, "").trim();
+    box.querySelector("ul").innerHTML = list.map(function(x, i){ return '<li style="--i:' + i + '">' + x + "</li>"; }).join("");
+  }
+  function ask(){ if (!queued) { queued = true; requestAnimationFrame(draw); } }
+  addEventListener("scroll", ask, { passive: true });
+  addEventListener("resize", ask);
+  addEventListener("load", ask);
+  draw();
+}
 
 // GitHub alert syntax (> [!NOTE], > [!TIP], > [!WARNING]) becomes titled callouts.
 // Markdown merges back-to-back quotes, so each marked paragraph starts its own box.
@@ -983,3 +1038,4 @@ cuda("event-timing", function(el){
 })();
 
 document.querySelectorAll(".side details").forEach(function(d){ if (matchMedia("(max-width:900px)").matches) { d.open = false; } });
+

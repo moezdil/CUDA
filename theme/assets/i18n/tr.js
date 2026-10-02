@@ -492,5 +492,7 @@ window.I18N = {
   "<b>Wait skipped.</b> Without <code>cudaEventSynchronize(stop)</code> the CPU goes straight on, while the GPU is still busy with the kernels.": "<b>Bekleme atlandı.</b> <code>cudaEventSynchronize(stop)</code> olmadan CPU hemen devam eder, GPU ise hâlâ kernel'lerle meşgul.",
   "<b>Too early.</b> The GPU has not reached stop yet, so there is no time to read. <code>cudaEventElapsedTime</code> returns <code>cudaErrorNotReady</code>, and <code>CHECK</code> stops the program.": "<b>Çok erken.</b> GPU henüz stop'a ulaşmadı, okunacak bir zaman yok. <code>cudaEventElapsedTime</code> <code>cudaErrorNotReady</code> döner ve <code>CHECK</code> programı durdurur.",
   "<b>Read the time.</b> <code>ms</code> is the time between the two markers, so it covers only the timed launches. <code>ms / RUNS</code> is the time of one launch.": "<b>Süreyi oku.</b> <code>ms</code> iki işaret arasındaki süredir, yani sadece ölçülen launch'ları kapsar. <code>ms / RUNS</code> tek bir launch'ın süresidir.",
-  "<b>Too large.</b> The time between the markers now includes the slow first launch, so <code>ms / RUNS</code> comes out larger than one normal launch.": "<b>Çok büyük.</b> İşaretler arasındaki süre artık yavaş ilk launch'ı da içeriyor, bu yüzden <code>ms / RUNS</code> normal bir launch'tan büyük çıkar."
+  "<b>Too large.</b> The time between the markers now includes the slow first launch, so <code>ms / RUNS</code> comes out larger than one normal launch.": "<b>Çok büyük.</b> İşaretler arasındaki süre artık yavaş ilk launch'ı da içeriyor, bu yüzden <code>ms / RUNS</code> normal bir launch'tan büyük çıkar.",
+  "In this section": "Bu bölümde",
+  "Terms in this section": "Bu bölümdeki terimler"
 };

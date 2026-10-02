@@ -492,5 +492,7 @@ window.I18N = {
   "<b>Wait skipped.</b> Without <code>cudaEventSynchronize(stop)</code> the CPU goes straight on, while the GPU is still busy with the kernels.": "<b>跳过了等待。</b>没有 <code>cudaEventSynchronize(stop)</code>，CPU 直接往下走，而 GPU 还在忙着执行核函数。",
   "<b>Too early.</b> The GPU has not reached stop yet, so there is no time to read. <code>cudaEventElapsedTime</code> returns <code>cudaErrorNotReady</code>, and <code>CHECK</code> stops the program.": "<b>太早了。</b>GPU 还没到达 stop，所以没有时间可读。<code>cudaEventElapsedTime</code> 返回 <code>cudaErrorNotReady</code>，<code>CHECK</code> 会让程序停止。",
   "<b>Read the time.</b> <code>ms</code> is the time between the two markers, so it covers only the timed launches. <code>ms / RUNS</code> is the time of one launch.": "<b>读取时间。</b><code>ms</code> 是两个标记之间的时间，所以只包含计时的那些启动。<code>ms / RUNS</code> 就是一次启动的时间。",
-  "<b>Too large.</b> The time between the markers now includes the slow first launch, so <code>ms / RUNS</code> comes out larger than one normal launch.": "<b>太大了。</b>两个标记之间的时间现在包含了慢的首次启动，所以 <code>ms / RUNS</code> 会比一次正常启动更大。"
+  "<b>Too large.</b> The time between the markers now includes the slow first launch, so <code>ms / RUNS</code> comes out larger than one normal launch.": "<b>太大了。</b>两个标记之间的时间现在包含了慢的首次启动，所以 <code>ms / RUNS</code> 会比一次正常启动更大。",
+  "In this section": "本节术语",
+  "Terms in this section": "本节出现的术语"
 };
