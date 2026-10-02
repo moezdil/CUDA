@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="{{ 'assets/styles.css'|url }}?v={{ build_date_utc.strftime('%s') }}">
 <script>try{if((localStorage.getItem("cuda-mode")||(matchMedia("(prefers-color-scheme: light)").matches?"light":""))==="light")document.documentElement.setAttribute("data-mode","light")}catch(e){}</script>
 </head>
-<body>
+<body{% if page.is_homepage %} class="home"{% endif %}>
 <a class="skip-link" href="#top">{{ S.skip }}</a>
 <div class="gpu-bg" aria-hidden="true"><div class="grid-lines"></div></div>
 

@@ -291,7 +291,7 @@ main{min-width:0;max-width:820px}
 
 /* Reading column: 16px JetBrains Mono, 1.75 leading, lines capped near 72 characters. Diagrams and code may use the full width. */
 .prose{font-size:1rem;line-height:1.75}
-.prose>p,.prose>ul,.prose>ol,.prose>blockquote:not(.callout),.prose>h2,.prose>h3{max-width:72ch}
+.prose>p,.prose>ul,.prose>ol,.prose>blockquote:not(.callout),.prose>h2,.prose>h3{max-width:none}
 .prose>blockquote.callout,.prose>details{max-width:76ch}
 .prose h1{font-size:clamp(1.9rem,4.6vw,2.9rem);margin:0 0 .65em;letter-spacing:-.03em}
 .prose h1::after{content:"";display:block;width:72px;height:3px;margin-top:.45em;border-radius:3px;background:linear-gradient(90deg,var(--cool),var(--violet),transparent)}
@@ -1066,3 +1066,28 @@ footer{padding:13px 0 16px}
   .rail li{animation:rail-in .35s ease both;animation-delay:calc(var(--i) * 45ms)}
 }
 @keyframes rail-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+:root{--g:clamp(20px,2.4vw,40px)}
+/* Lesson pages: the outer margins and the gaps between the columns are always the same size.
+   Fixed column widths, and justify-content spreads the free space evenly over all of them. */
+@media (min-width:701px){
+  .doc{padding-inline:var(--g);column-gap:var(--g);justify-content:space-evenly;
+    grid-template-columns:230px minmax(0,760px)}
+}
+@media (min-width:1280px){
+  .doc{grid-template-columns:230px minmax(0,760px) 290px}
+}
+
+/* Home page keeps the classic centered layout. */
+.home .wrap{max-width:1100px;margin-inline:auto;padding-inline:clamp(16px,3vw,40px)}
+.home .hero .wrap>*{max-width:none}
+@media (min-width:701px){
+  .home .nav-sections{justify-self:center}
+  .home footer .row{justify-content:space-between}
+}
+@media (min-width:901px){.home nav .wrap{grid-template-columns:auto 1fr auto;column-gap:20px}}
+@media (min-width:1280px){
+  body:not(.home) nav .wrap{padding-inline:var(--g);column-gap:var(--g);justify-content:space-evenly;
+    grid-template-columns:230px minmax(0,760px) 290px}
+  body:not(.home) .nav-right{justify-self:end}
+}
