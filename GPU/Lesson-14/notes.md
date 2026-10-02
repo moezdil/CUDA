@@ -1,16 +1,16 @@
 # 14 > CUDA Toolkit, The Foundation of GPU Programming
 
-This lesson explains what the CUDA Toolkit is and what it gives you. It is the environment you use to write, compile, run and study programs on a GPU (Graphics Processing Unit). As of October 2026 the newest release is CUDA 13.4.
+This lesson explains what the CUDA Toolkit is and what it gives you. It is the environment you use to write, compile, run and study programs on a GPU. As of October 2026 the newest release is CUDA 13.4.
 
 ## What CUDA is
 
-CUDA (Compute Unified Device Architecture) is NVIDIA's platform for parallel computing. It connects your code to the GPU. Without it, you cannot fully control an NVIDIA GPU.
+CUDA is NVIDIA's platform for parallel computing. It connects your code to the GPU. Without it, you cannot fully control an NVIDIA GPU.
 
 ## The compiler: nvcc
 
-The center of the toolkit is the compiler, `nvcc` (NVIDIA CUDA Compiler). It turns your CUDA code into code the GPU can run.
+The center of the toolkit is the compiler, `nvcc`. It turns your CUDA code into code the GPU can run.
 
-This happens in two steps. First your code becomes an intermediate form, PTX (Parallel Thread Execution). Then PTX becomes machine code, called SASS (Streaming Assembler), for one specific GPU architecture.
+This happens in two steps. First your code becomes an intermediate form, PTX. Then PTX becomes machine code, called SASS, for one specific GPU architecture.
 
 <nvcc-pipeline></nvcc-pipeline>
 
@@ -29,14 +29,14 @@ The toolkit also gives you optimized libraries. They use the GPU well, so you do
 
 For deep learning, NVIDIA has cuDNN. It is a separate download, not part of the toolkit.
 
-These libraries get updates for new hardware. Recent CUDA versions support low precision formats such as FP8 (8-bit floating point) on Hopper and FP4 (4-bit floating point) on Blackwell. Modern AI (Artificial Intelligence) workloads use these formats.
+These libraries get updates for new hardware. Recent CUDA versions support low precision formats such as FP8 on Hopper and FP4 on Blackwell. Modern AI workloads use these formats.
 
 ## The runtime API
 
-Your program talks to the GPU through the CUDA runtime API (Application Programming Interface). With explicit API calls, your program:
+Your program talks to the GPU through the CUDA runtime API. With explicit API calls, your program:
 
 - allocates memory on the GPU
-- moves data between the CPU (Central Processing Unit) and the GPU
+- moves data between the CPU and the GPU
 - launches kernels
 
 Data movement is often a main bottleneck in GPU programs. So knowing when and how data moves is as important as writing the kernel.
@@ -76,6 +76,7 @@ The CUDA Toolkit is the complete environment for GPU programming. With it you wr
 - `nvcc` (NVIDIA CUDA Compiler): the compiler at the center of the toolkit. It turns CUDA code into code the GPU can run.
 - PTX (Parallel Thread Execution): the intermediate form `nvcc` makes first, before machine code for one GPU architecture.
 - machine code: the binary instructions one specific processor runs directly; for NVIDIA GPUs it is called SASS (Streaming Assembler).
+- SASS (Streaming Assembler): the machine code of NVIDIA GPUs, made from PTX for one architecture.
 - architecture: the hardware design of a GPU family, such as Ampere, Hopper or Blackwell.
 - compute capability: the version number of a GPU architecture, such as 8.9; `sm_89` is the same number written for `-arch`.
 - Ampere / Hopper / Blackwell / Rubin: NVIDIA GPU architectures from 2020, 2022, 2024 and 2026, each with its own instructions and data types.
@@ -84,7 +85,7 @@ The CUDA Toolkit is the complete environment for GPU programming. With it you wr
 - linear algebra: math with vectors and matrices, such as adding vectors or multiplying matrices.
 - Fourier transforms: a way to split a signal into its frequencies, used in audio, imaging and physics.
 - deep learning: AI built from neural networks with many layers; cuDNN is NVIDIA's library for it, downloaded separately.
-- FP8 / FP4: 8-bit and 4-bit floating-point formats; Hopper added FP8, Blackwell added FP4.
+- FP8 / FP4 (8-bit / 4-bit floating point): 8-bit and 4-bit floating-point formats; Hopper added FP8, Blackwell added FP4.
 - AI (Artificial Intelligence): software that learns from data, such as language models; most of it runs on GPUs.
 - workload: the kind of work a program gives the GPU, such as training a model.
 - runtime API (Application Programming Interface): the calls your program uses to allocate GPU memory, move data and launch kernels.

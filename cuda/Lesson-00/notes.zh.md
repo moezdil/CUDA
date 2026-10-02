@@ -1,13 +1,13 @@
 # 00 > 一个线程块，一个线程
 
-这一课会运行一个最简单的 CUDA（Compute Unified Device Architecture，统一计算设备架构）程序。它的核函数只用一个线程块、一个线程，完全没有并行。这样在内容变复杂之前，你就能先看到第一行输出。后面每一课都会在这个程序的基础上做一点小改动。
+这一课会运行一个最简单的 CUDA 程序。它的核函数只用一个线程块、一个线程，完全没有并行。这样在内容变复杂之前，你就能先看到第一行输出。后面每一课都会在这个程序的基础上做一点小改动。
 
 > [!NOTE]
 > 本页所有输出都来自一块 NVIDIA L40S，环境是 CUDA 13.0 和 Ubuntu 24。
 
 ## GPU 和 CPU 的区别
 
-在 CPU（Central Processing Unit，中央处理器）上，一个函数只在一个核心上运行一次。在 GPU（Graphics Processing Unit，图形处理器）上，一个核函数会并行运行很多次。核函数就是在 GPU 上运行的函数，它的每一份运行中的副本叫作一个线程。运行多少个线程由两个数决定：线程块的数量，以及每个线程块里的线程数。
+在 CPU 上，一个函数只在一个核心上运行一次。在 GPU 上，一个核函数会并行运行很多次。核函数就是在 GPU 上运行的函数，它的每一份运行中的副本叫作一个线程。运行多少个线程由两个数决定：线程块的数量，以及每个线程块里的线程数。
 
 比如 2 个线程块、每块 3 个线程，一共会启动 2 x 3 = 6 个线程。这 6 个线程运行的是同一份核函数代码。
 
@@ -38,9 +38,9 @@ printIDs<<<1, 1>>>();
 
 每次启动核函数，都会形成三个层级：
 
-- 线程（thread）：最小的单位。一个线程运行核函数的一份副本。
-- 线程块（block）：在同一个 SM（Streaming Multiprocessor，流式多处理器）上运行的一组线程。SM 是 GPU 内部众多小处理器中的一个。同一个线程块里的线程可以共享内存。
-- 网格（grid）：一次核函数启动中的全部线程块。启动一次，就有一个网格。
+- 线程：最小的单位。一个线程运行核函数的一份副本。
+- 线程块：在同一个 SM 上运行的一组线程。SM 是 GPU 内部众多小处理器中的一个。同一个线程块里的线程可以共享内存。
+- 网格：一次核函数启动中的全部线程块。启动一次，就有一个网格。
 
 <cuda-hierarchy></cuda-hierarchy>
 
@@ -53,13 +53,13 @@ printIDs<<<1, 1>>>();
 printf("Block ID: %d  Thread ID: %d", blockIdx.x, threadIdx.x);
 ```
 
-`blockIdx.x` 是当前线程所在线程块的编号，`threadIdx.x` 是当前线程在所在线程块里的编号，两者都从 0 开始。它们都有 `.x`、`.y` 和 `.z` 三个分量，因为网格和线程块可以是 1D、2D 或 3D（一维、二维或三维）的。处理一维的工作时，只用 `.x` 就够了。在 `<<<1, 1>>>` 下，两者始终为 0。
+`blockIdx.x` 是当前线程所在线程块的编号，`threadIdx.x` 是当前线程在所在线程块里的编号，两者都从 0 开始。它们都有 `.x`、`.y` 和 `.z` 三个分量，因为网格和线程块可以是 1D、2D 或 3D 的。处理一维的工作时，只用 `.x` 就够了。在 `<<<1, 1>>>` 下，两者始终为 0。
 
 ## 头文件
 
-- `cuda_runtime.h`：CUDA 运行时 API（Application Programming Interface，应用程序编程接口）。它声明了 `cudaDeviceSynchronize()` 和各种错误检查函数。
+- `cuda_runtime.h`：CUDA 运行时 API。它声明了 `cudaDeviceSynchronize()` 和各种错误检查函数。
 - `stdio.h`：标准 C 头文件，`printf` 需要它。
-- `device_launch_parameters.h`：使用 MSVC（Microsoft Visual C++）或某些 IDE（Integrated Development Environment，集成开发环境）时，有了它，编辑器才能认出 `blockIdx`、`threadIdx`、`blockDim` 和 `gridDim`。`nvcc` 不需要它，但加上也没有坏处。
+- `device_launch_parameters.h`：使用 MSVC 或某些 IDE 时，有了它，编辑器才能认出 `blockIdx`、`threadIdx`、`blockDim` 和 `gridDim`。`nvcc` 不需要它，但加上也没有坏处。
 
 ## `cudaDeviceSynchronize()`
 
@@ -195,3 +195,8 @@ int main()
 - `cudaDeviceSynchronize()`：让 CPU 一直等到 GPU 完成所有工作。
 - 异步（asynchronous）：CPU 不等待，向 GPU 发出命令后就立刻往下执行。
 - API（Application Programming Interface，应用程序编程接口）：一个库对外提供的一组函数，这里指 CUDA 运行时函数。
+- 3D（three-dimensional，三维）：有 `x`、`y`、`z` 三个尺寸的形状。1D 只用 `x`，2D 用 `x` 和 `y`。
+- 编译器（compiler）：把源代码变成机器能运行的程序的工具。CUDA 的编译器是 `nvcc`。
+- 执行配置（execution configuration）：核函数启动里的 `<<<blocks, threads>>>` 部分，决定运行多少个线程。
+- MSVC（Microsoft Visual C++）：微软在 Windows 上的 C 和 C++ 编译器。
+- IDE（Integrated Development Environment，集成开发环境）：带有构建和调试工具的编辑器，比如 Visual Studio。

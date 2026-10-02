@@ -1,6 +1,6 @@
 # 04 > NVIDIA GPU Mimarileri
 
-Fermi, Ampere, Hopper, Blackwell ve Rubin, NVIDIA GPU (Graphics Processing Unit, grafik işlem birimi) mimarilerinin adlarıdır. Bu derste 2010'dan 2028 yol haritasına kadar hepsini sırayla geziyorsun ve GPU'ların grafikten genel hesaplamaya, oradan da büyük ölçekli yapay zekâya (AI, artificial intelligence) nasıl geçtiğini görüyorsun. Güncel CUDA (Compute Unified Device Architecture) sürümünün bunlardan hangilerini hâlâ desteklediğini de öğreneceksin.
+Fermi, Ampere, Hopper, Blackwell ve Rubin, NVIDIA GPU mimarilerinin adlarıdır. Bu derste 2010'dan 2028 yol haritasına kadar hepsini sırayla geziyorsun ve GPU'ların grafikten genel hesaplamaya, oradan da büyük ölçekli yapay zekâya nasıl geçtiğini görüyorsun. Güncel CUDA sürümünün bunlardan hangilerini hâlâ desteklediğini de öğreneceksin.
 
 ## Mimariler Neden Önemli
 
@@ -34,14 +34,14 @@ Bu dönemdeki hedef, GPU'ları genel iş yüklerinde daha hızlı ve daha veriml
 
 ## Yapay Zekâ Merkeze Geçiyor
 
-Volta (2017, V100) net bir dönüm noktasıdır. NVIDIA, Volta ile yapay zekâya özel donanımı öne çıkarmaya başladı: ilk Tensor Core'lar, yani her SM'nin (Streaming Multiprocessor) içinde küçük matrisleri tek adımda çarpan birimler.
+Volta (2017, V100) net bir dönüm noktasıdır. NVIDIA, Volta ile yapay zekâya özel donanımı öne çıkarmaya başladı: ilk Tensor Core'lar, yani her SM'nin içinde küçük matrisleri tek adımda çarpan birimler.
 
 Ondan sonra:
 
 - Turing (2018, RTX 20 serisi) Tensor Core'ları ve ışın izleme birimlerini tüketici kartlarına getirdi  
 - Ampere (2020, A100 ve RTX 30 serisi) bu fikri daha da büyüttü  
 - Ada Lovelace (2022, RTX 40 serisi ve L40S) bu birimleri Hopper'la aynı yıl tüketici ve iş istasyonu kartlarına getirdi  
-- Hopper (2022, H100) yapay zekâ iş yükleri, özellikle transformer'lar için yoğun biçimde optimize edildi ve FP8 (8-bit floating point, 8 bitlik kayan nokta) hesabını getirdi  
+- Hopper (2022, H100) yapay zekâ iş yükleri, özellikle transformer'lar için yoğun biçimde optimize edildi ve FP8 hesabını getirdi  
 
 Buradan sonra GPU'lar artık yalnızca grafik donanımı değildi. Tam birer hesaplama platformuna dönüştüler.
 
@@ -49,7 +49,7 @@ Buradan sonra GPU'lar artık yalnızca grafik donanımı değildi. Tam birer hes
 
 ### Blackwell (2024 ile 2025 arası)
 
-Blackwell 2024'te duyuruldu ve büyük ölçekli yapay zekâ iş yükleri etrafında tasarlandı. B200 veri merkezi GPU'su iki çipi tek pakette birleştirir ve 8 TB/s'ye kadar bant genişliği veren HBM3e (High Bandwidth Memory) kullanır. Ayrıca yapay zekâ için 4 bitlik bir sayı biçimi olan NVFP4'ü getirdi. Blackwell Ultra (B300, 2025) GPU başına belleği 288 GB'a çıkardı. Tüketici tarafında RTX 50 serisi (2025) de Blackwell kullanır.
+Blackwell 2024'te duyuruldu ve büyük ölçekli yapay zekâ iş yükleri etrafında tasarlandı. B200 veri merkezi GPU'su iki çipi tek pakette birleştirir ve 8 TB/s'ye kadar bant genişliği veren HBM3e kullanır. Ayrıca yapay zekâ için 4 bitlik bir sayı biçimi olan NVFP4'ü getirdi. Blackwell Ultra (B300, 2025) GPU başına belleği 288 GB'a çıkardı. Tüketici tarafında RTX 50 serisi (2025) de Blackwell kullanır.
 
 Gerçek performans kazançları her durumda aynı değildir. Şunlara bağlıdır:
 
@@ -61,7 +61,7 @@ Yani "daha hızlı GPU" her zaman basit bir ifade değildir.
 
 ### Rubin (2026, Teslimatlar Başladı)
 
-Rubin, Blackwell'den sonraki mimaridir. Tam üretimdedir ve Rubin GPU'larını NVIDIA'nın Vera CPU'suyla (Central Processing Unit, merkezi işlem birimi) eşleştiren ilk Vera Rubin sistemleri Eylül 2026'da sevk edilmeye başladı; 10.7 olan compute capability değeri CUDA 13.4'te zaten destekleniyor.
+Rubin, Blackwell'den sonraki mimaridir. Tam üretimdedir ve Rubin GPU'larını NVIDIA'nın Vera CPU'suyla eşleştiren ilk Vera Rubin sistemleri Eylül 2026'da sevk edilmeye başladı; 10.7 olan compute capability değeri CUDA 13.4'te zaten destekleniyor.
 
 Her Rubin GPU'su şunları getirir:
 
@@ -82,7 +82,7 @@ Yön aynı kalıyor. Her şey daha büyük ve daha uzmanlaşmış yapay zekâ si
 
 ## Hesaplama Yeteneği
 
-CUDA mimari adlarını kullanmaz. Her GPU, 8.9 gibi bir sürüm numarası olan bir CC (Compute Capability, hesaplama yeteneği) bildirir. Ana numara genelde mimariyi izler ama her zaman bire bir değil:
+CUDA mimari adlarını kullanmaz. Her GPU, 8.9 gibi bir sürüm numarası olan bir CC bildirir. Ana numara genelde mimariyi izler ama her zaman bire bir değil:
 
 - Ampere: 8.0 (A100) ve 8.6 (RTX 30 serisi)  
 - Ada Lovelace: 8.9 (RTX 40 serisi, L40S)  
@@ -99,7 +99,7 @@ Yani Ada (8.9), 8 ana numarasını Ampere'le paylaşır; Blackwell ise iki farkl
 
 Basit sayılar kötü bir karşılaştırma ölçüsüdür. Örnekler:
 
-- TFLOPS (trillions of floating-point operations per second, saniyede trilyon kayan noktalı işlem)  
+- TFLOPS  
 - saat hızı  
 
 Bu sayılar hikâyenin tamamını anlatmaz. Performans şunlara bağlıdır:
@@ -149,8 +149,9 @@ GPU mimarileri, hesaplamanın kendisinin nasıl değiştiğini gösterir. Yol gr
 - bant genişliği (bandwidth): bellek ile çip arasında saniyede kaç bayt taşınabildiği.
 - duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32, FP16 ya da FP8; bit azaldıkça hesap hızlanır ama hassasiyet düşer.
 - Rubin: Blackwell'den sonraki mimari; tam üretimde ve 2026'nın ikinci yarısında bulut sağlayıcılarına teslim ediliyor.
+- CPU (Central Processing Unit, merkezi işlem birimi): bir bilgisayarın ana işlemcisi; Vera, NVIDIA'nın Rubin GPU'larıyla eşleştirdiği kendi CPU'sudur.
 - Tensor Core: her SM'nin içinde küçük matris çarpımlarını tek adımda yapan birim; yapay zekâ hızının kalbi.
-- HBM (High Bandwidth Memory) / HBM3e / HBM4: çipin hemen yanına istiflenmiş bellek; Blackwell HBM3e, Rubin HBM4 kullanır.
+- HBM3e / HBM4 (High Bandwidth Memory): çipin hemen yanına istiflenmiş bellek; Blackwell HBM3e, Rubin HBM4 kullanır.
 - SM (Streaming Multiprocessor): NVIDIA GPU'sunun yapı taşı; çekirdekleri, Tensor Core'ları ve paylaşımlı belleği içinde barındırır.
 - bulut (cloud): bir sağlayıcının veri merkezlerinden internet üzerinden kiralanan bilgisayarlar.
 - Rubin Ultra / Feynman: Rubin'den sonra gelecek, 2027 ve 2028 için duyurulmuş mimariler.

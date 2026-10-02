@@ -1,13 +1,13 @@
 # 07 > Warp ID'leri
 
-[Ders 01](../Lesson-01/notes.md) ve [Ders 02](../Lesson-02/notes.md) block ve thread ID'lerini anlattı. Bu ders warp'u ekliyor: GPU'nun (Graphics Processing Unit, grafik işlem birimi) gerçekte zamanladığı 32 thread'lik grubu. Bir thread'in kernel içinde kendi warp ID'sini ve lane ID'sini nasıl hesapladığını da göreceksin.
+[Ders 01](../Lesson-01/notes.md) ve [Ders 02](../Lesson-02/notes.md) block ve thread ID'lerini anlattı. Bu ders warp'u ekliyor: GPU'nun gerçekte zamanladığı 32 thread'lik grubu. Bir thread'in kernel içinde kendi warp ID'sini ve lane ID'sini nasıl hesapladığını da göreceksin.
 
 > [!NOTE]
 > Bu sayfadaki tüm çıktılar, Ubuntu 24 üzerinde CUDA 13.0 ile çalışan bir NVIDIA L40S'ten alındı.
 
 ## CUDA Hiyerarşisi
 
-CUDA'daki (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) seviyeler şunlardır: grid, grid'in içindeki block'lar, her block'un içindeki warp'lar ve her warp'un içindeki thread'ler:
+CUDA'daki seviyeler şunlardır: grid, grid'in içindeki block'lar, her block'un içindeki warp'lar ve her warp'un içindeki thread'ler:
 
 <cuda-hierarchy warps></cuda-hierarchy>
 
@@ -17,11 +17,11 @@ Block sayısını ve block başına thread sayısını `<<<num_blocks, threads_p
 > Warp sınırları donanıma bağlıdır. Bu değerler L40S'te `cudaGetDeviceProperties` ile ölçüldü:
 >
 > - Block başına en fazla warp: 32 (en fazla 1024 thread / 32, tüm GPU'lar için geçerli)
-> - SM (Streaming Multiprocessor, akış çoklu işlemcisi) başına aynı anda en fazla warp: 48, yani 48 × 32 = 1536 thread
+> - SM başına aynı anda en fazla warp: 48, yani 48 × 32 = 1536 thread
 > - SM sayısı: 142
 > - Tüm GPU'da aynı anda en fazla warp: 142 × 48 = 6.816
 >
-> L40S'in compute capability'si (CC, hesaplama yeteneği) 8.9'dur. CC 8.6, 8.9 ve 12.0 olan GPU'lar SM başına 48 warp tutar; A100 (CC 8.0) ve H100 (CC 9.0) gibi veri merkezi GPU'ları ise SM başına 64 warp, yani 2048 thread tutar ([Ders 03](../Lesson-03/notes.md)).
+> L40S'in compute capability'si 8.9'dur. CC 8.6, 8.9 ve 12.0 olan GPU'lar SM başına 48 warp tutar; A100 (CC 8.0) ve H100 (CC 9.0) gibi veri merkezi GPU'ları ise SM başına 64 warp, yani 2048 thread tutar ([Ders 03](../Lesson-03/notes.md)).
 
 ## `warp_id` Yerleşik Bir Değişken Değil
 
@@ -99,7 +99,7 @@ Block boyutunu değiştirmek için kaydırıcıyı oynat; iki sayıyı da görme
 
 ### `warp_ids.cu`
 
-Kernel, 128 thread'lik 1 block ile çalışır. `test01` fonksiyonu GPU'da çalışır: her thread `warp_id`'sini `threadIdx.x / 32` ile hesaplar ve block ID'sini, thread ID'sini ve warp ID'sini yazdırır. Başlatmadan sonra `cudaDeviceSynchronize()`, CPU'nun (Central Processing Unit, merkezi işlem birimi) GPU'yu beklemesini sağlar; böylece program bittiğinde çıktı kaybolmaz.
+Kernel, 128 thread'lik 1 block ile çalışır. `test01` fonksiyonu GPU'da çalışır: her thread `warp_id`'sini `threadIdx.x / 32` ile hesaplar ve block ID'sini, thread ID'sini ve warp ID'sini yazdırır. Başlatmadan sonra `cudaDeviceSynchronize()`, CPU'nun GPU'yu beklemesini sağlar; böylece program bittiğinde çıktı kaybolmaz.
 
 ```c
 #include "cuda_runtime.h"
@@ -324,6 +324,7 @@ int main()
 ## Sözlük
 
 - GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran işlemci.
+- CPU (Central Processing Unit, merkezi işlem birimi): bilgisayarın ana işlemcisi; kernel'ları başlatır ve GPU'yu bekler.
 - SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içinde block'ları ve onların warp'larını çalıştıran işlemci; L40S'te 142 tane var.
 - warp: GPU'nun tek bir birim olarak çalıştırdığı 32 thread'lik grup; GPU tek tek thread'leri değil, warp'ları zamanlar.
 - warp boyutu: NVIDIA GPU'larında her zaman 32; yazılım onu değiştiremez.

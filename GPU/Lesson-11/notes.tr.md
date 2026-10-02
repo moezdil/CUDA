@@ -1,21 +1,21 @@
 # 11 > CPU'dan GPU'ya Veri Yolu
 
-Bir kernel yalnızca zaten GPU (Graphics Processing Unit, grafik işlem birimi) belleğinde duran veriyle çalışabilir, o veri ise neredeyse her zaman CPU belleğinde başlar. Bu ders baytları yol boyunca takip ediyor: PCIe bağlantısı, sabitlenmiş host belleği, asenkron kopyalar, birleşik bellek ve Grace Hopper ile Grace Blackwell'deki daha hızlı bağlantılar. [Ders 00](../Lesson-00/notes.md) kısa halini anlatmıştı; burada bu yolun neden yavaş olduğunu ve bununla ilgili neler yapabileceğini göreceksin.
+Bir kernel yalnızca zaten GPU belleğinde duran veriyle çalışabilir, o veri ise neredeyse her zaman CPU belleğinde başlar. Bu ders baytları yol boyunca takip ediyor: PCIe bağlantısı, sabitlenmiş host belleği, asenkron kopyalar, birleşik bellek ve Grace Hopper ile Grace Blackwell'deki daha hızlı bağlantılar. [Ders 00](../Lesson-00/notes.md) kısa halini anlatmıştı; burada bu yolun neden yavaş olduğunu ve bununla ilgili neler yapabileceğini göreceksin.
 
 ## İki Bellek, Tek Bağlantı
 
 Sıradan bir GPU sunucusunda birbirinden ayrı iki bellek vardır:
 
-- host belleği (host memory): anakarttaki, CPU'nun (Central Processing Unit, merkezi işlem birimi) yanındaki sistem RAM'i (Random Access Memory, rastgele erişimli bellek)
-- device belleği (device memory): GPU kartının üzerindeki, GPU'nun kendi belleği; GDDR (Graphics Double Data Rate) ya da HBM (High Bandwidth Memory, yüksek bant genişlikli bellek)
+- host belleği: anakarttaki, CPU'nun yanındaki sistem RAM'i
+- device belleği: GPU kartının üzerindeki, GPU'nun kendi belleği; GDDR ya da HBM
 
-CPU, device belleğini kendi RAM'i gibi okuyamaz; bir kernel de host belleğini tam hızda öylece okuyamaz. Aralarında bir bağlantı vardır, çoğu makinede PCIe (Peripheral Component Interconnect Express). GPU'nun işlediği her bayt bu bağlantıdan en az bir kez geçer.
+CPU, device belleğini kendi RAM'i gibi okuyamaz; bir kernel de host belleğini tam hızda öylece okuyamaz. Aralarında bir bağlantı vardır, çoğu makinede PCIe. GPU'nun işlediği her bayt bu bağlantıdan en az bir kez geçer.
 
-Bu derslerde kullanılan L40S'te iki taraf çok dengesizdir. 48 GB'lık GDDR6 belleği SM'leri (Streaming Multiprocessor, akış çoklu işlemcisi) 864 GB/s ile besler. CPU'ya giden PCIe 4.0 x16 bağlantısı ise her yönde yaklaşık 31,5 GB/s taşır. [Ders 07](../Lesson-07/notes.md) verinin GPU'ya girdikten sonra başına geleni anlatır; bu ders onu oraya ulaştırmakla ilgili.
+Bu derslerde kullanılan L40S'te iki taraf çok dengesizdir. 48 GB'lık GDDR6 belleği SM'leri 864 GB/s ile besler. CPU'ya giden PCIe 4.0 x16 bağlantısı ise her yönde yaklaşık 31,5 GB/s taşır. [Ders 07](../Lesson-07/notes.md) verinin GPU'ya girdikten sonra başına geleni anlatır; bu ders onu oraya ulaştırmakla ilgili.
 
 ## PCIe Bağlantısı
 
-PCIe, lane'lerden oluşur. Her lane, her yön için bir tane olmak üzere iki tel çiftidir; bu yüzden bağlantı aynı anda hem gönderir hem alır (full duplex). Bir GPU yuvasında 16 lane vardır, x16 diye yazılır. Her yeni nesil bir lane'in hızını ikiye katlar; bu hız GT/s (gigatransfers per second, saniyede milyar aktarım) ile ölçülür:
+PCIe, lane'lerden oluşur. Her lane, her yön için bir tane olmak üzere iki tel çiftidir; bu yüzden bağlantı aynı anda hem gönderir hem alır; buna full duplex denir. Bir GPU yuvasında 16 lane vardır, x16 diye yazılır. Her yeni nesil bir lane'in hızını ikiye katlar; bu hız GT/s ile ölçülür:
 
 | Nesil | Lane başına | x16, yön başına | Kullanan GPU'lar |
 |---|---|---|---|
@@ -51,17 +51,17 @@ Kopya ancak GPU aldığı her bayt başına çok iş yaptığında baskın olmak
 - veri birçok kernel boyunca GPU'da kalır; kopyayı bir kez ödersin, sonra 864 GB/s ile okursun
 - programın CPU kısmı zaten kopyadan da uzun sürerdi
 
-[Ders 09](../Lesson-09/notes.md) "bayt başına iş" fikrini arithmetic intensity (aritmetik yoğunluk) olarak ölçer. Aynı fikir bağlantı için de geçerli: bir PCIe 4.0 kopyasını gizlemek için, L40S belleğinden bir okumayı gizlemekten yaklaşık 27 kat fazla bayt başına iş gerekir.
+[Ders 09](../Lesson-09/notes.md) "bayt başına iş" fikrini aritmetik yoğunluk olarak ölçer. Aynı fikir bağlantı için de geçerli: bir PCIe 4.0 kopyasını gizlemek için, L40S belleğinden bir okumayı gizlemekten yaklaşık 27 kat fazla bayt başına iş gerekir.
 
 > [!WARNING]
 > Asla yalnızca kernel'i ölçüp bunu programının hızlanması diye sunma. Veri CPU'dan gelmek zorundaysa, içeri ve dışarı kopyalar da ölçüme dahildir ve basit kernel'lerde sürenin çoğu onlardır.
 
 ## Pageable ve Pinned Host Belleği
 
-Kopyanın kendisini GPU üzerindeki bir DMA (Direct Memory Access, doğrudan bellek erişimi) motoru yapar: CPU her baytı tek tek taşımadan, host belleğini PCIe üzerinden kendi başına okuyan bir donanım. DMA motorunun sabit bir fiziksel adrese ihtiyacı vardır ve host belleğinin türü tam burada önem kazanır.
+Kopyanın kendisini GPU üzerindeki bir DMA motoru yapar: CPU her baytı tek tek taşımadan, host belleğini PCIe üzerinden kendi başına okuyan bir donanım. DMA motorunun sabit bir fiziksel adrese ihtiyacı vardır ve host belleğinin türü tam burada önem kazanır.
 
-- pageable bellek (pageable memory): `malloc` ya da `new` ile aldığın bellek. OS (operating system, işletim sistemi) bu sayfaları her an RAM'de başka bir yere taşıyabilir ya da diske atabilir (swap), bu yüzden DMA motoru onları güvenle okuyamaz.
-- pinned bellek (pinned memory, page-locked memory): OS'in asla taşımayacağına söz verdiği host belleği. CUDA'da (Compute Unified Device Architecture) onu `cudaMallocHost` ya da `cudaHostAlloc` ile alırsın veya var olan bir tamponu `cudaHostRegister` ile kilitlersin.
+- pageable bellek: `malloc` ya da `new` ile aldığın bellek. OS bu sayfaları her an RAM'de başka bir yere taşıyabilir ya da swap ile diske atabilir, bu yüzden DMA motoru onları güvenle okuyamaz.
+- pinned bellek: OS'in asla taşımayacağına söz verdiği host belleği; buna page-locked bellek de denir. CUDA'da onu `cudaMallocHost` ya da `cudaHostAlloc` ile alırsın veya var olan bir tamponu `cudaHostRegister` ile kilitlersin.
 
 Pageable bellekten kopyaladığında sürücü bu sorunun etrafından dolaşır. Verini önce CPU ile kendine ait pinned bir ara tampona kopyalar, sonra DMA motorunun o tamponu parça parça GPU'ya göndermesini sağlar. Her bayt iki kez kopyalanır: bir kez CPU tarafından, bir kez PCIe üzerinden. Pinned bellekten ise DMA motoru doğrudan senin tamponunu okur; ara kopya ortadan kalkar ve bağlantı tepe hızına yakın çalışabilir.
 
@@ -80,19 +80,19 @@ Asenkron kopyalar pinned host belleği ister. Pageable bellekten `cudaMemcpyAsyn
 
 ## Birleşik Bellek
 
-Birleşik bellek (unified memory) sana iki tarafta da çalışan tek bir pointer verir. Onu `cudaMallocManaged` ile ayırırsın, CPU'da içine yazarsın, bir kernel'e verirsin ve sonucu CPU'da okursun; kodunda hiç `cudaMemcpy` olmaz.
+Birleşik bellek sana iki tarafta da çalışan tek bir pointer verir. Onu `cudaMallocManaged` ile ayırırsın, CPU'da içine yazarsın, bir kernel'e verirsin ve sonucu CPU'da okursun; kodunda hiç `cudaMemcpy` olmaz.
 
-Veri yine de bağlantıdan geçmek zorundadır. Pascal'dan beri GPU'lar page fault (sayfa hatası) alabilir: bir kernel hâlâ host belleğinde duran bir sayfaya dokunduğunda GPU o erişimi durdurur, sürücü sayfayı device belleğine taşır ve erişim devam eder. Bu isteğe bağlı page migration (sayfa taşıma) rahattır, ama çok sayıda küçük fault tek büyük bir kopyadan yavaştır. `cudaMemPrefetchAsync` sürücüye sayfaları önceden taşımasını söyler ve açık bir kopyanın hızının çoğunu geri getirir.
+Veri yine de bağlantıdan geçmek zorundadır. Pascal'dan beri GPU'lar page fault alabilir: bir kernel hâlâ host belleğinde duran bir sayfaya dokunduğunda GPU o erişimi durdurur, sürücü sayfayı device belleğine taşır ve erişim devam eder. Bu isteğe bağlı page migration rahattır, ama çok sayıda küçük fault tek büyük bir kopyadan yavaştır. `cudaMemPrefetchAsync` sürücüye sayfaları önceden taşımasını söyler ve açık bir kopyanın hızının çoğunu geri getirir.
 
 ## Coherent Bağlantılar: Grace Hopper ve Grace Blackwell
 
-NVIDIA'nın süper çipleri CPU ile GPU arasındaki PCIe'yi kaldırır. GH200 Grace Hopper Superchip, bir Grace CPU'yu (Arm, 480 GB'a kadar LPDDR5X (Low-Power Double Data Rate 5X) bellekle) ve bir Hopper GPU'yu tek kartta birleştirir ve NVLink-C2C (NVLink Chip-to-Chip) ile bağlar. GB200 Grace Blackwell Superchip de bir Grace CPU'yu iki B200 GPU'ya aynı şekilde bağlar.
+NVIDIA'nın süper çipleri CPU ile GPU arasındaki PCIe'yi kaldırır. GH200 Grace Hopper Superchip, bir Grace CPU'yu (Arm, 480 GB'a kadar LPDDR5X bellekle) ve bir Hopper GPU'yu tek kartta birleştirir ve NVLink-C2C ile bağlar. GB200 Grace Blackwell Superchip de bir Grace CPU'yu iki B200 GPU'ya aynı şekilde bağlar.
 
-NVLink-C2C toplamda 900 GB/s, her yönde 450 GB/s taşır; bu, PCIe 5.0 x16'nın yaklaşık 7 katıdır. Ayrıca coherent'tır (tutarlı): CPU ve GPU tek bir ortak adres alanı görür ve önbelleklerini uyumlu tutar; bu sayede GPU, CPU belleğini doğrudan okuyabilir, `malloc` ile alınmış sıradan belleği bile, ara kopya olmadan. GPU'nun tekrar tekrar okuduğu veriyi kopyalamak yine de kazandırır, çünkü HBM daha da hızlıdır; ama bağlantı artık PCIe'deki gibi en dar nokta değildir.
+NVLink-C2C toplamda 900 GB/s, her yönde 450 GB/s taşır; bu, PCIe 5.0 x16'nın yaklaşık 7 katıdır. Ayrıca coherent'tır: CPU ve GPU tek bir ortak adres alanı görür ve önbelleklerini uyumlu tutar; bu sayede GPU, CPU belleğini doğrudan okuyabilir, `malloc` ile alınmış sıradan belleği bile, ara kopya olmadan. GPU'nun tekrar tekrar okuduğu veriyi kopyalamak yine de kazandırır, çünkü HBM daha da hızlıdır; ama bağlantı artık PCIe'deki gibi en dar nokta değildir.
 
 ## GPUDirect
 
-GPUDirect, NVIDIA'nın host belleğini tamamen atlayan yollara verdiği addır. GPUDirect P2P (peer to peer, eşten eşe) aynı makinedeki iki GPU'nun doğrudan birbirine kopyalamasını sağlar. GPUDirect RDMA (Remote Direct Memory Access, uzak doğrudan bellek erişimi) bir NIC'in (Network Interface Card, ağ kartı) GPU belleğini doğrudan okuyup yazmasını sağlar; böylece başka bir sunucudan gelen veri CPU RAM'inde durmadan GPU'ya ulaşır. GPUDirect Storage aynısını NVMe (Non-Volatile Memory Express) sürücüler ve ağ depolaması için yapar. [Ders 12](../Lesson-12/notes.md) birçok GPU'nun bu yolları birlikte nasıl kullandığını gösterir.
+GPUDirect, NVIDIA'nın host belleğini tamamen atlayan yollara verdiği addır. GPUDirect P2P aynı makinedeki iki GPU'nun doğrudan birbirine kopyalamasını sağlar. GPUDirect RDMA bir NIC'in GPU belleğini doğrudan okuyup yazmasını sağlar; böylece başka bir sunucudan gelen veri CPU RAM'inde durmadan GPU'ya ulaşır. GPUDirect Storage aynısını NVMe sürücüler ve ağ depolaması için yapar. [Ders 12](../Lesson-12/notes.md) birçok GPU'nun bu yolları birlikte nasıl kullandığını gösterir.
 
 ## Bunun CUDA İçin Önemi
 
@@ -122,10 +122,11 @@ En hızlı kernel bile yavaş bir veri yolunu telafi edemez. CUDA yazarken:
 - yön başına (per direction): yalnızca tek yöndeki bant genişliği; GPU'ya kopya tek yön kullanır, yani PCIe 4.0 x16'da 31,5 GB/s.
 - L40S: bu derslerde kullanılan NVIDIA Ada Lovelace veri merkezi GPU'su; 864 GB/s bellek ve PCIe 4.0 x16.
 - kernel: GPU'da çalışan, CPU tarafından başlatılan fonksiyon.
-- arithmetic intensity (aritmetik yoğunluk): taşınan bayt başına yapılan iş; bayt başına iş arttıkça yavaş bir kopya daha iyi gizlenir.
+- aritmetik yoğunluk (arithmetic intensity): taşınan bayt başına yapılan iş; bayt başına iş arttıkça yavaş bir kopya daha iyi gizlenir.
 - DMA (Direct Memory Access): CPU her baytı kopyalamadan, veriyi PCIe üzerinden kendi başına taşıyan GPU donanımı.
 - pageable bellek (pageable memory): `malloc` ya da `new` ile alınan, OS'in taşıyabileceği ya da diske atabileceği sıradan host belleği.
 - OS (operating system): belleği yöneten ve sayfaların nerede duracağına karar veren yazılım, örneğin Linux.
+- swap: RAM yetmediğinde bellek sayfalarını diske taşımak.
 - pinned bellek (pinned memory): yerine kilitlenmiş (page-locked) host belleği; DMA motoru onu doğrudan okuyabilir; `cudaMallocHost` ile alınır.
 - ara tampon (staging buffer): sürücünün, pageable veriyi GPU'ya göndermeden önce içine kopyaladığı pinned tampon.
 - CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform.
@@ -145,6 +146,7 @@ En hızlı kernel bile yavaş bir veri yolunu telafi edemez. CUDA yazarken:
 - NVLink-C2C (NVLink Chip-to-Chip): NVIDIA'nın coherent CPU-GPU bağlantısı; toplam 900 GB/s, yön başına 450 GB/s.
 - coherent (tutarlı): CPU ve GPU tek bir adres alanını paylaşır ve önbelleklerini uyumlu tutar, böylece her biri diğerinin belleğini okuyabilir.
 - GPUDirect: veriyi host belleğinde durdurmadan GPU belleğine taşıyan ya da oradan alan NVIDIA yolları ailesi.
+- P2P (peer to peer): aynı makinedeki iki GPU arasında, host belleğine uğramadan doğrudan kopya.
 - RDMA (Remote Direct Memory Access): başka bir makinenin belleğini, onun CPU'su olmadan ağ üzerinden okumak ya da yazmak.
 - NIC (Network Interface Card): bir sunucuyu ağa bağlayan kart.
 - NVMe (Non-Volatile Memory Express): PCIe üzerindeki SSD (solid state drive) depolaması için hızlı arayüz.

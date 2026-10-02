@@ -1,6 +1,6 @@
 # 13 > 阅读白皮书
 
-这一课讲什么是 GPU（Graphics Processing Unit，图形处理器）白皮书、怎样找到白皮书，以及怎样读懂它。想知道新一代 GPU 到底改变了什么，白皮书是最好的资料。后半部分带你通读一份真实的白皮书，也就是 V100 白皮书，它记录了 GPU 转向 AI（artificial intelligence，人工智能）的那一刻。
+这一课讲什么是 GPU 白皮书、怎样找到白皮书，以及怎样读懂它。想知道新一代 GPU 到底改变了什么，白皮书是最好的资料。后半部分带你通读一份真实的白皮书，也就是 V100 白皮书，它记录了 GPU 转向 AI 的那一刻。
 
 ## 什么是白皮书
 
@@ -8,10 +8,10 @@
 
 ## 找到白皮书
 
-用芯片名称加上“white paper”搜索，例如 `GA100 white paper` 或 `H100 white paper`。对于最新的架构，NVIDIA 常把这份文档叫作技术简报（technical brief），比如“NVIDIA Blackwell Architecture Technical Brief”，所以也要搜这个名字。[第 03 课](../Lesson-03/notes.md)讲了怎样找出一款产品背后的芯片名称。
+用芯片名称加上“white paper”搜索，例如 `GA100 white paper` 或 `H100 white paper`。对于最新的架构，NVIDIA 常把这份文档叫作技术简报，比如“NVIDIA Blackwell Architecture Technical Brief”，所以也要搜这个名字。[第 03 课](../Lesson-03/notes.md)讲了怎样找出一款产品背后的芯片名称。
 
 > [!TIP]
-> 并非每个搜索结果都有用。博客文章、总结和对比能帮上一些忙，但还不够。一定要找 NVIDIA 官方的 PDF（Portable Document Format，便携式文档格式）文件。
+> 并非每个搜索结果都有用。博客文章、总结和对比能帮上一些忙，但还不够。一定要找 NVIDIA 官方的 PDF 文件。
 
 ## 统一的结构
 
@@ -28,18 +28,18 @@ NVIDIA 的白皮书结构很统一。每个新架构都会拿上一代来对比�
 
 <whitepaper-map></whitepaper-map>
 
-## 流式多处理器（SM）
+## 流式多处理器
 
-白皮书里最重要的部分是流式多处理器（Streaming Multiprocessor，SM）。SM 是 GPU 的核心组成单元，它把 CUDA（Compute Unified Device Architecture，统一计算设备架构）核心、Tensor Core、调度和显存访问集中在一起。
+白皮书里最重要的部分是流式多处理器。SM 是 GPU 的核心组成单元，它把 CUDA 核心、Tensor Core、调度和显存访问集中在一起。
 
 想看出一个架构到底改了什么，就看 SM。纵观各代，Tensor Core 最能说明问题：
 
 - Pascal 没有 Tensor Core，基本上还是一个通用计算架构。
 - Volta 引入了 Tensor Core，GPU 开始明确地针对 AI 工作负载做优化。
 - Ampere 改进并扩大了 Tensor Core 的规模，带来更高的吞吐量、更好的能效和稀疏性支持。
-- Hopper 针对 Transformer 工作负载优化了 Tensor Core，并加入了 FP8（8 位浮点）。
-- Blackwell 用新的指令和 NVFP4（NVIDIA 4 位浮点）这样的格式扩展了 Tensor Core，把超低精度直接做进硬件。
-- Blackwell Ultra（B300，2025 年）带来更大的显存，每块 GPU 288 GB HBM3e（High Bandwidth Memory 3e，高带宽显存），以及更高的 NVFP4 吞吐量。
+- Hopper 针对 Transformer 工作负载优化了 Tensor Core，并加入了 FP8。
+- Blackwell 用新的指令和 NVFP4 这样的格式扩展了 Tensor Core，把超低精度直接做进硬件。
+- Blackwell Ultra（B300，2025 年）带来更大的显存，每块 GPU 288 GB HBM3e，以及更高的 NVFP4 吞吐量。
 - 接下来是采用 HBM4 显存的 Rubin；它在 2026 年的进展见[第 04 课](../Lesson-04/notes.md)。
 
 每一步都改变了 GPU 的设计目标。GPU 不再只是计算设备，而是 AI 系统的基础设施。
@@ -52,22 +52,22 @@ Volta（2017 年）是最适合拿来练手的白皮书，因为它记录了 GPU
 
 ### 从关键特性开始
 
-不要一上来就钻进图表或数字里。先看“Key Features”（关键特性）这一部分。它很短，能告诉你这个架构想做什么。Volta 的重点很明确：这个架构是为 AI 打造的。这是用途上的转变，而不只是比 Pascal 那一代有所改进。
+不要一上来就钻进图表或数字里。先看“Key Features”这一部分。它很短，能告诉你这个架构想做什么。Volta 的重点很明确：这个架构是为 AI 打造的。这是用途上的转变，而不只是比 Pascal 那一代有所改进。
 
 ### Tensor Core
 
 Volta 最重要的变化就是 Tensor Core。在 Volta 之前，GPU 用通用的 CUDA 核心执行矩阵运算。这样可行，但效率不高。Volta 为矩阵运算配备了专用硬件：V100 有 80 个 SM，每个 SM 有 8 个 Tensor Core，所以一共 80 * 8 = 640 个 Tensor Core。
 
-白皮书给出的数字足够让你自己核对它的标题数据。每个 Tensor Core 每个时钟周期做 64 次 FMA（fused multiply-add，融合乘加），一次 FMA 算 2 次浮点运算：
+白皮书给出的数字足够让你自己核对它的标题数据。每个 Tensor Core 每个时钟周期做 64 次 FMA，一次 FMA 算 2 次浮点运算：
 
-- Tensor Core：640 * 64 * 2 = 81,920 次运算每时钟周期。在 1.53 GHz 的加速频率下，就是 81,920 * 15.3 亿 ≈ 125 TFLOPS（tera floating point operations per second，每秒万亿次浮点运算）。
-- CUDA 核心：80 个 SM * 64 个 FP32（32 位浮点）核心 = 5,120 个核心。5,120 * 2 * 15.3 亿 ≈ 15.7 TFLOPS。
+- Tensor Core：640 * 64 * 2 = 81,920 次运算每时钟周期。在 1.53 GHz 的加速频率下，就是 81,920 * 15.3 亿 ≈ 125 TFLOPS。
+- CUDA 核心：80 个 SM * 64 个 FP32 核心 = 5,120 个核心。5,120 * 2 * 15.3 亿 ≈ 15.7 TFLOPS。
 
 所以做矩阵运算时，Tensor Core 的峰值是同一块芯片上 CUDA 核心的 125 / 15.7 ≈ 8 倍。从这时起，GPU 不再只是通用计算设备，而是从底层开始就为 AI 工作负载而设计。Tensor Core 和它的数字格式怎样工作，见[第 10 课](../Lesson-10/notes.md)。
 
 ### SM
 
-Volta 重新设计了 SM。它被分成四个处理块，每块都有自己的线程束调度器、16 个 FP32 核心、16 个 INT32（32 位整数）核心和 2 个 Tensor Core。
+Volta 重新设计了 SM。它被分成四个处理块，每块都有自己的线程束调度器、16 个 FP32 核心、16 个 INT32 核心和 2 个 Tensor Core。
 
 一项关键改进是，不同类型的运算可以同时执行。Pascal 不能同时执行 FP32 和 INT32 指令，整数运算和浮点运算只能轮流进行。Volta 有各自独立的通路，所以它们可以并行执行。现代工作负载时时刻刻都在混用这两种运算，因为每个数组下标和地址都是整数运算，所以这一改变能更充分地利用硬件。
 
@@ -81,7 +81,7 @@ Volta 重新设计了 SM。它被分成四个处理块，每块都有自己的�
 
 ### 显存
 
-Volta 使用 HBM2（High Bandwidth Memory 2）显存：V100 有 16 或 32 GB，速度 900 GB/s，显存带宽比前几代更高。现代 GPU 工作负载的瓶颈常常在于数据搬运的速度，而不只是处理的速度。[第 06 课](../Lesson-06/notes.md)会详细讲显存带宽。
+Volta 使用 HBM2 显存：V100 有 16 或 32 GB，速度 900 GB/s，显存带宽比前几代更高。现代 GPU 工作负载的瓶颈常常在于数据搬运的速度，而不只是处理的速度。[第 06 课](../Lesson-06/notes.md)会详细讲显存带宽。
 
 ### NVLink
 
@@ -99,7 +99,7 @@ Volta 引入了第二代 NVLink，也就是让 GPU 之间高速互联的链路�
 站在 2026 年回头看，Volta 不只是当年一块很强的 GPU。它是 GPU 开始以 AI 为重心的转折点。Ampere、Hopper 和 Blackwell 都建立在这个思路之上，并把它推得更远。读 V100 白皮书，能帮你理解 GPU 为什么会变成今天的样子。
 
 > [!WARNING]
-> Volta 的 CC（compute capability，计算能力）是 7.0，它是一段历史，而不是你的编译目标。CUDA 13 只支持 Turing（CC 7.5）及更新的架构，所以 V100 需要较旧的 CUDA 12 工具包。计算能力见[第 05 课](../Lesson-05/notes.md)。
+> Volta 的计算能力是 7.0，它是一段历史，而不是你的编译目标。CUDA 13 只支持 Turing（CC 7.5）及更新的架构，所以 V100 需要较旧的 CUDA 12 工具包。计算能力见[第 05 课](../Lesson-05/notes.md)。
 
 ## 这对 CUDA 意味着什么
 
@@ -123,8 +123,10 @@ Volta 引入了第二代 NVLink，也就是让 GPU 之间高速互联的链路�
 - 芯片名称（chip name）：GPU 里那块硅片的名字，也就是你要搜索的名字，比如 GA100。
 - H100：NVIDIA 2022 年基于 Hopper 的数据中心 GPU。
 - 技术简报（technical brief）：NVIDIA 为 Blackwell 等最新 GPU 的架构文档使用的名称。
-- 关键特性（Key Features）：白皮书里很短的一部分，告诉你这个架构想做什么。
+- PDF（Portable Document Format，便携式文档格式）：NVIDIA 发布白皮书所用的文件格式。
+- Key Features（关键特性）：白皮书里很短的一部分，告诉你这个架构想做什么。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 的核心组成单元，把 CUDA 核心、Tensor Core、调度和显存访问集中在一起。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 用来编写在 GPU 上运行的程序的平台；CUDA 核心也因它得名。
 - CUDA 核心（CUDA cores）：每个 SM 里的通用算术单元。在有 Tensor Core 之前，矩阵运算就在它们上面执行。
 - Tensor Core：做矩阵运算的专用硬件；Volta 是第一个拥有它的架构。
 - 调度（scheduling）：决定下一步由哪组线程使用 SM 的执行单元；每个 SM 有好几个调度器，每个周期都在做这件事。
@@ -132,12 +134,13 @@ Volta 引入了第二代 NVLink，也就是让 GPU 之间高速互联的链路�
 - 处理块（processing block）：从 Volta 起 SM 被分成的四个部分之一，每块都有自己的线程束调度器和核心。
 - Pascal：NVIDIA 2016 年的架构（P100），以通用计算为主，没有 Tensor Core；是 Volta 的上一代。
 - Volta：NVIDIA 2017 年的架构（V100，CC 7.0），第一个拥有 Tensor Core 的架构。
+- 计算能力（compute capability，CC）：GPU 功能集的版本号；Volta 是 7.0，Turing 是 7.5，L40S 是 8.9。
 - V100：这一课通读的白皮书所对应的 Volta GPU：80 个 SM、640 个 Tensor Core、211 亿个晶体管。
 - Ampere / Hopper / Blackwell：Volta 之后的 NVIDIA 架构（2020、2022、2024），都在它的 Tensor Core 基础上继续发展。
 - Blackwell Ultra：B300 和 GB300，每块 GPU 配 288 GB HBM3e 的升级版 Blackwell。
 - Rubin：Blackwell 之后的架构，采用 HBM4 显存，2026 年开始进入数据中心。
 - Ada Lovelace：L40S 和 RTX 40 系列所用的 2022 年架构，详见 NVIDIA Ada GPU Architecture 白皮书。
-- 人工智能（AI，artificial intelligence）：从数据中学习的软件；训练它主要是海量的矩阵运算。
+- AI（artificial intelligence，人工智能）：从数据中学习的软件；训练它主要是海量的矩阵运算。
 - 工作负载（workload）：程序交给 GPU 的那类工作，比如训练神经网络。
 - Transformer：现代语言模型背后的神经网络结构，主要由大型矩阵乘法组成。
 - 矩阵运算（matrix operations）：对整个数字阵列做的运算，主要是矩阵乘法，占了 AI 计算的大部分。

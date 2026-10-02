@@ -13,13 +13,13 @@ printIDs<<<1, 4>>>();
 //  blocks -+  +- threads per block (was 1, now 4)
 ```
 
-GPU (Graphics Processing Unit, grafik işlem birimi), `printIDs`'in 4 kopyasını aynı anda çalıştırır. Her kopya kendi `threadIdx.x` değerini alır: 0, 1, 2 ya da 3. `blockIdx.x` hepsi için 0'dır, çünkü hâlâ tek bir block var.
+GPU, `printIDs`'in 4 kopyasını aynı anda çalıştırır. Her kopya kendi `threadIdx.x` değerini alır: 0, 1, 2 ya da 3. `blockIdx.x` hepsi için 0'dır, çünkü hâlâ tek bir block var.
 
 <cuda-launch blocks="1" threads="4" fn="printIDs"></cuda-launch>
 
-## SIMT (Single Instruction, Multiple Threads)
+## SIMT
 
-4 thread'in hepsi aynı komutları çalıştırır, ama her birinin kendi ID'si ve kendi değişkenleri vardır. Thread 2, `threadIdx.x`'i okuyunca 2, thread 3 ise 3 alır. Bu yüzden aynı `printf` satırı her thread'de farklı bir sayı yazdırır. Bu kernel'da thread'ler birbirini beklemez ve veri paylaşmaz. Bu modele SIMT (Single Instruction, Multiple Threads, tek komut çoklu thread) denir.
+4 thread'in hepsi aynı komutları çalıştırır, ama her birinin kendi ID'si ve kendi değişkenleri vardır. Thread 2, `threadIdx.x`'i okuyunca 2, thread 3 ise 3 alır. Bu yüzden aynı `printf` satırı her thread'de farklı bir sayı yazdırır. Bu kernel'da thread'ler birbirini beklemez ve veri paylaşmaz. Bu modele SIMT denir.
 
 ## Warp'lar
 
@@ -31,11 +31,11 @@ Bir block'taki warp sayısı, thread sayısını 32'ye bölüp yukarı yuvarlaya
 > 128 ya da 256 gibi 32'nin katı olan bir block boyutu seç; o zaman hiçbir warp'ta boşta lane kalmaz.
 
 > [!NOTE]
-> Bir warp'taki thread'ler bir if/else'in farklı dallarına giderse GPU bu yolları art arda çalıştırır. Buna warp divergence (warp ayrışması) denir. Bu derste olmaz, çünkü 4 thread'in hepsi aynı satırı çalıştırır.
+> Bir warp'taki thread'ler bir if/else'in farklı dallarına giderse GPU bu yolları art arda çalıştırır. Buna warp divergence denir. Bu derste olmaz, çünkü 4 thread'in hepsi aynı satırı çalıştırır.
 
 ## Çıktı Sırası Neden Değişiyor
 
-Kernel içindeki `printf` hemen yazdırmaz. Her thread kendi satırını GPU belleğindeki bir buffer'a (tampon) yazar ve buffer, CPU GPU'yu beklediğinde (burada `cudaDeviceSynchronize()`'da) ekrana yazdırılır. Thread'lerin yazma sırası, tek bir warp'un içinde bile sabit değildir. Bu yüzden çıktı sırası çalıştırmadan çalıştırmaya değişebilir.
+Kernel içindeki `printf` hemen yazdırmaz. Her thread kendi satırını GPU belleğindeki bir buffer'a yazar ve buffer, CPU GPU'yu beklediğinde, burada `cudaDeviceSynchronize()`'da, ekrana yazdırılır. Thread'lerin yazma sırası, tek bir warp'un içinde bile sabit değildir. Bu yüzden çıktı sırası çalıştırmadan çalıştırmaya değişebilir.
 
 <printf-order threads="4"></printf-order>
 
@@ -84,7 +84,7 @@ nvcc -o first_kernel first_kernel.cu
 ./first_kernel
 ```
 
-- `nvcc`, CUDA (Compute Unified Device Architecture) derleyicisidir. Dosyanın hem CPU (Central Processing Unit, merkezi işlem birimi) hem GPU kısmını derler.
+- `nvcc`, CUDA derleyicisidir. Dosyanın hem CPU hem GPU kısmını derler.
 - `-o first_kernel`, programa `first_kernel` adını verir. Bu olmazsa adı `a.out` olur.
 - `first_kernel.cu`, yukarıdaki kodu içeren kaynak dosyadır.
 - `./first_kernel`, programı bulunduğun klasörden çalıştırır.
@@ -167,7 +167,7 @@ int main()
 - lane: bir warp'taki 32 yuvadan biri. Her aktif lane bir thread çalıştırır.
 - SIMT (Single Instruction, Multiple Threads, tek komut çoklu thread): bir warp'taki her aktif thread aynı komutu çalıştırır; her thread'in kendi verisi ve kendi ID'si vardır.
 - warp divergence (warp ayrışması): bir warp'taki thread'ler farklı yollara gider. Örneğin thread 0 bir if dalına girer, thread 1 girmez. GPU o zaman iki yolu art arda çalıştırır, bu da daha yavaştır.
-- printf buffer'ı: GPU'daki `printf` doğrudan ekrana yazmaz, GPU belleğindeki bir buffer'a yazar. Buffer, CPU GPU'yu beklediğinde, örneğin `cudaDeviceSynchronize()`'da, ekrana gelir.
+- printf buffer'ı (tampon): GPU'daki `printf` doğrudan ekrana yazmaz, GPU belleğindeki bir buffer'a yazar. Buffer, CPU GPU'yu beklediğinde, örneğin `cudaDeviceSynchronize()`'da, ekrana gelir.
 - kernel: `__global__` ile işaretlenmiş, GPU'da çalışan fonksiyon. Bir başlatma, her thread için onun bir kopyasını çalıştırır.
 - thread: kernel'ın çalışan bir kopyası. Kendi `threadIdx.x` değeri ve kendi değişkenleri vardır.
 - block: birlikte başlatılan bir grup thread. `<<<1, 4>>>`, 4 thread'lik 1 block oluşturur.

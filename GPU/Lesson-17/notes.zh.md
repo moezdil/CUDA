@@ -1,6 +1,6 @@
 # 17 > 在 Linux 上安装 CUDA Toolkit
 
-这一课教你在 WSL（Windows Subsystem for Linux，适用于 Linux 的 Windows 子系统）的 Linux 环境里安装 CUDA Toolkit。装好之后，你的系统就能在 GPU（Graphics Processing Unit，图形处理器）上编译和运行代码了。这些步骤以 2026 年 10 月 NVIDIA 的安装指南为准。
+这一课教你在 WSL 的 Linux 环境里安装 CUDA Toolkit。装好之后，你的系统就能在 GPU 上编译和运行代码了。这些步骤以 2026 年 10 月 NVIDIA 的安装指南为准。
 
 ## 匹配你的平台
 
@@ -35,7 +35,7 @@ sudo apt-get update
 sudo apt-get -y install cuda-toolkit-13-3
 ```
 
-- `wget` 从 URL 下载文件。地址中的 `wsl-ubuntu/x86_64` 部分，选择的是适用于 WSL、64 位 Intel 或 AMD CPU（Central Processing Unit，中央处理器）的软件源。
+- `wget` 从 URL 下载文件。地址中的 `wsl-ubuntu/x86_64` 部分，选择的是适用于 WSL、64 位 Intel 或 AMD CPU 的软件源。
 - `cuda-keyring_1.1-1_all.deb` 是一个很小的软件包。它包含 NVIDIA 的签名密钥和软件源地址，让你的系统信任 NVIDIA 的软件包。
 - `sudo` 以管理员权限运行命令。安装软件包会改动系统，所以需要管理员权限。
 - `dpkg -i` 安装一个本地的 `.deb` 文件，这里安装的是 keyring。
@@ -45,7 +45,7 @@ sudo apt-get -y install cuda-toolkit-13-3
 
 这会安装 CUDA Toolkit 13.3，包括：
 
-* CUDA 编译器（nvcc）
+* CUDA 编译器 nvcc
 * CUDA 运行时
 * 核心库
 
@@ -84,8 +84,8 @@ export PATH=/usr/local/cuda/bin:$PATH
 
 CUDA 和 GPU 架构紧密相关。每一代新架构都需要一个认识它的 CUDA 版本：
 
-* Hopper 上的 FP8（8 位浮点），从 CUDA 11.8 起
-* Blackwell 上的 FP4（4 位浮点），从 CUDA 12.8 起
+* Hopper 上的 FP8，从 CUDA 11.8 起
+* Blackwell 上的 FP4，从 CUDA 12.8 起
 * 库对 Rubin（计算能力 10.7）的支持，从 CUDA 13.4 起
 
 如果你的 CUDA 版本不支持这些，代码照样能运行，但无法充分利用硬件，甚至根本无法面向最新的 GPU。
@@ -105,7 +105,7 @@ CUDA 很少单独使用，它通常运行在这些系统的底层：
 
 你的系统现在已经就绪，你拥有了：
 
-* 一个 Linux 环境（WSL）
+* 一个 Linux 环境，这里是 WSL
 * GPU 访问
 * CUDA Toolkit 13.3
 * 一个可用的 CUDA 编译器

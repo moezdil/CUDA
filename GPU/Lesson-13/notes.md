@@ -1,6 +1,6 @@
 # 13 > Reading White Papers
 
-This lesson explains what GPU (Graphics Processing Unit) white papers are, how to find them and how to read them. A white paper is the best place to learn what really changed in a new GPU generation. The second half walks through a real one, the V100 white paper, which documents the moment GPUs turned toward AI (artificial intelligence).
+This lesson explains what GPU white papers are, how to find them and how to read them. A white paper is the best place to learn what really changed in a new GPU generation. The second half walks through a real one, the V100 white paper, which documents the moment GPUs turned toward AI.
 
 ## What a White Paper Is
 
@@ -11,7 +11,7 @@ A white paper is an official technical document about a GPU architecture. It can
 Take the chip name and add "white paper", for example `GA100 white paper` or `H100 white paper`. For the newest architectures NVIDIA often calls the document a technical brief, such as the "NVIDIA Blackwell Architecture Technical Brief", so search for that name too. [Lesson 03](../Lesson-03/notes.md) shows how to find the chip name behind a product.
 
 > [!TIP]
-> Not every result is useful. Blog posts, summaries and comparisons can help, but they are not enough. Always look for the official PDF (Portable Document Format) file from NVIDIA.
+> Not every result is useful. Blog posts, summaries and comparisons can help, but they are not enough. Always look for the official PDF file from NVIDIA.
 
 ## A Consistent Structure
 
@@ -28,18 +28,18 @@ This consistency is on purpose. Once you understand one white paper well, the ot
 
 <whitepaper-map></whitepaper-map>
 
-## The Streaming Multiprocessor (SM)
+## The Streaming Multiprocessor
 
-The most important section in a white paper is the Streaming Multiprocessor (SM). The SM is the core building block of the GPU. It brings together the CUDA (Compute Unified Device Architecture) cores, the Tensor Cores, scheduling and memory access.
+The most important section in a white paper is the Streaming Multiprocessor. The SM is the core building block of the GPU. It brings together the CUDA cores, the Tensor Cores, scheduling and memory access.
 
 To see what really changed in an architecture, look at the SM. Across generations the Tensor Cores tell the story:
 
 - Pascal has no Tensor Cores. It is still mostly a general-purpose compute architecture.
 - Volta introduces them. GPUs become explicitly optimized for AI workloads.
 - Ampere improves and scales them, with more throughput, better efficiency and sparsity support.
-- Hopper optimizes them for transformer workloads and adds FP8 (8-bit floating point).
-- Blackwell extends them with new instructions and formats like NVFP4 (NVIDIA 4-bit floating point), which bring ultra-low precision directly into hardware.
-- Blackwell Ultra (the B300, 2025) adds more memory, 288 GB of HBM3e (High Bandwidth Memory 3e) per GPU, and more NVFP4 throughput.
+- Hopper optimizes them for transformer workloads and adds FP8.
+- Blackwell extends them with new instructions and formats like NVFP4, which bring ultra-low precision directly into hardware.
+- Blackwell Ultra (the B300, 2025) adds more memory, 288 GB of HBM3e per GPU, and more NVFP4 throughput.
 - Rubin is next, with HBM4 memory; [Lesson 04](../Lesson-04/notes.md) covers where it stands in 2026.
 
 Each step changes what the GPU is designed to do. GPUs are no longer just compute devices. They are infrastructure for AI systems.
@@ -58,16 +58,16 @@ Do not jump straight into diagrams or numbers. Start with the "Key Features" sec
 
 The most important change in Volta is Tensor Cores. Before Volta, GPUs ran matrix operations on the general CUDA cores. That worked, but it was not efficient. Volta gives matrix operations their own dedicated hardware: the V100 has 80 SMs with 8 Tensor Cores each, so 80 * 8 = 640 Tensor Cores.
 
-The white paper gives enough numbers to check its own headline. Each Tensor Core does 64 FMA (fused multiply-add) operations per clock, and one FMA counts as 2 floating point operations:
+The white paper gives enough numbers to check its own headline. Each Tensor Core does 64 FMA operations per clock, and one FMA counts as 2 floating point operations:
 
-- Tensor Cores: 640 * 64 * 2 = 81,920 operations per clock. At the 1.53 GHz boost clock that is 81,920 * 1.53 billion ≈ 125 TFLOPS (tera floating point operations per second).
-- CUDA cores: 80 SMs * 64 FP32 (32-bit floating point) cores = 5,120 cores. 5,120 * 2 * 1.53 billion ≈ 15.7 TFLOPS.
+- Tensor Cores: 640 * 64 * 2 = 81,920 operations per clock. At the 1.53 GHz boost clock that is 81,920 * 1.53 billion ≈ 125 TFLOPS.
+- CUDA cores: 80 SMs * 64 FP32 cores = 5,120 cores. 5,120 * 2 * 1.53 billion ≈ 15.7 TFLOPS.
 
 So for matrix math the Tensor Cores offer 125 / 15.7 ≈ 8 times the peak of the same chip's CUDA cores. From here the GPU is no longer just a general compute device. It is designed for AI workloads from the ground up. [Lesson 10](../Lesson-10/notes.md) explains how Tensor Cores and their number formats work.
 
 ### The SM
 
-Volta has a redesigned SM. It is split into four processing blocks, each with its own warp scheduler, 16 FP32 cores, 16 INT32 (32-bit integer) cores and 2 Tensor Cores.
+Volta has a redesigned SM. It is split into four processing blocks, each with its own warp scheduler, 16 FP32 cores, 16 INT32 cores and 2 Tensor Cores.
 
 A key improvement is that different types of operations can run at the same time. Pascal could not run FP32 and INT32 instructions at the same time: integer and floating point work had to take turns. Volta has separate paths, so they run in parallel. Modern workloads mix both all the time, since every array index and address is integer math, so this change makes better use of the hardware.
 
@@ -81,7 +81,7 @@ A new architecture does not only add cores. It also makes existing operations fa
 
 ### Memory
 
-Volta uses HBM2 (High Bandwidth Memory 2): 16 or 32 GB at 900 GB/s on the V100, higher memory bandwidth than earlier generations. Modern GPU workloads are often limited by how fast data moves, not only by how fast it is processed. [Lesson 06](../Lesson-06/notes.md) explains memory bandwidth in detail.
+Volta uses HBM2: 16 or 32 GB at 900 GB/s on the V100, higher memory bandwidth than earlier generations. Modern GPU workloads are often limited by how fast data moves, not only by how fast it is processed. [Lesson 06](../Lesson-06/notes.md) explains memory bandwidth in detail.
 
 ### NVLink
 
@@ -99,7 +99,7 @@ The transistor count shows how much hardware is inside a GPU. The V100 has 21.1 
 Looking back from 2026, Volta is more than a strong GPU of its time. It is the point where GPUs became AI-focused. Ampere, Hopper and Blackwell all build on this idea and push it further. Reading the V100 white paper helps you understand why GPUs look the way they do today.
 
 > [!WARNING]
-> Volta, with CC (compute capability) 7.0, is a history lesson, not a target. CUDA 13 supports only Turing (CC 7.5) and newer, so a V100 needs an older CUDA 12 toolkit. [Lesson 05](../Lesson-05/notes.md) explains compute capability.
+> Volta, with compute capability 7.0, is a history lesson, not a target. CUDA 13 supports only Turing (CC 7.5) and newer, so a V100 needs an older CUDA 12 toolkit. [Lesson 05](../Lesson-05/notes.md) explains compute capability.
 
 ## Why This Matters for CUDA
 
@@ -123,8 +123,10 @@ Reading white papers is not about memorizing numbers. It is about understanding 
 - chip name: the name of the silicon inside a GPU, which is what you search for, such as GA100.
 - H100: NVIDIA's Hopper data center GPU from 2022.
 - technical brief: the name NVIDIA uses for the architecture document of its newest GPUs, such as Blackwell.
+- PDF (Portable Document Format): the file format NVIDIA publishes its white papers in.
 - Key Features: a short white paper section that shows what the architecture is trying to do.
 - Streaming Multiprocessor (SM): the core building block of the GPU. It brings together CUDA cores, Tensor Cores, scheduling and memory access.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for programs that run on the GPU; it also gives the CUDA cores their name.
 - CUDA cores: the general-purpose arithmetic units inside each SM, which ran matrix math before Tensor Cores existed.
 - Tensor Cores: dedicated hardware for matrix operations; Volta was the first architecture to have them.
 - scheduling: deciding which group of threads runs next on the SM's units; each SM has several schedulers doing this every cycle.
@@ -132,6 +134,7 @@ Reading white papers is not about memorizing numbers. It is about understanding 
 - processing block: one of the four parts an SM is split into since Volta, each with its own warp scheduler and cores.
 - Pascal: NVIDIA's 2016 architecture (P100), mostly general-purpose, with no Tensor Cores; the generation before Volta.
 - Volta: NVIDIA's 2017 architecture (V100, CC 7.0), the first one with Tensor Cores.
+- compute capability (CC): the version number of a GPU's feature set; Volta is 7.0, Turing 7.5, the L40S 8.9.
 - V100: the Volta GPU whose white paper this lesson walks through: 80 SMs, 640 Tensor Cores, 21.1 billion transistors.
 - Ampere / Hopper / Blackwell: the NVIDIA architectures after Volta (2020, 2022, 2024), each building on its Tensor Cores.
 - Blackwell Ultra: the B300 and GB300, an upgraded Blackwell with 288 GB of HBM3e per GPU.

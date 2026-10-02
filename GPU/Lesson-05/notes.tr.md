@@ -1,10 +1,10 @@
 # 05 > Compute Capability
 
-Bu derste compute capability'nin ne olduğunu, numaralarının nasıl işlediğini ve hangi özellikleri, hangi CUDA (Compute Unified Device Architecture) araç seti sürümlerini kullanabileceğini nasıl belirlediğini göreceksin. Dersin sonunda herhangi bir GPU'ya (Graphics Processing Unit, grafik işlem birimi) bakıp neyi desteklediğini söyleyebileceksin.
+Bu derste compute capability'nin ne olduğunu, numaralarının nasıl işlediğini ve hangi özellikleri, hangi CUDA araç seti sürümlerini kullanabileceğini nasıl belirlediğini göreceksin. Dersin sonunda herhangi bir GPU'ya bakıp neyi desteklediğini söyleyebileceksin.
 
 ## Compute Capability Nedir
 
-Compute capability (CC), NVIDIA'nın bir GPU'nun özelliklerini tanımlamak için kullandığı sistemdir. Yazılımın değil, donanımın sürüm numarasıdır.
+Compute capability, kısaca CC, NVIDIA'nın bir GPU'nun özelliklerini tanımlamak için kullandığı sistemdir. Yazılımın değil, donanımın sürüm numarasıdır.
 
 Bir pazarlama puanı ya da benchmark değildir. Bir GPU mimarisinin tam olarak neyi yapıp neyi yapamadığını söyler. Onu tek bir sayıya sığmış bir özellik tablosu gibi düşün.
 
@@ -24,11 +24,11 @@ Yani 7.x'ten 8.x'e geçmek sadece bir hız artışı değildir. Yeni donanım bi
 
 ### Volta → CC 7.0
 
-Volta, Tensor Core'ları getirdi. Bunlar yapay zekâda (AI, artificial intelligence) ve derin öğrenmede kullanılan matris işlemlerini hızlandıran özel birimlerdir. Volta'dan önce bu işlemler genel amaçlı CUDA çekirdeklerinde çalışıyordu. Volta'dan sonra kendilerine ayrılmış bir donanımları oldu.
+Volta, Tensor Core'ları getirdi. Bunlar yapay zekâda ve derin öğrenmede kullanılan matris işlemlerini hızlandıran özel birimlerdir. Volta'dan önce bu işlemler genel amaçlı CUDA çekirdeklerinde çalışıyordu. Volta'dan sonra kendilerine ayrılmış bir donanımları oldu.
 
 ### Turing ve Ampere → CC 7.5 ve 8.x
 
-Turing (CC 7.5, RTX 20 serisi), Tensor Core'ları tüketici kartlarına taşıdı. Ampere (A100 için CC 8.0, RTX 30 serisi için 8.6) daha güçlü ve verimli Tensor Core'lar, daha yüksek bellek bant genişliği ve daha iyi enerji verimliliği getirdi. Ada Lovelace (CC 8.9, RTX 40 serisi ve L40S) ise FP8 (8 bit kayan noktalı sayı) desteği ekledi.
+Turing (CC 7.5, RTX 20 serisi), Tensor Core'ları tüketici kartlarına taşıdı. Ampere (A100 için CC 8.0, RTX 30 serisi için 8.6) daha güçlü ve verimli Tensor Core'lar, daha yüksek bellek bant genişliği ve daha iyi enerji verimliliği getirdi. Ada Lovelace (CC 8.9, RTX 40 serisi ve L40S) ise FP8 desteği ekledi.
 
 ### Hopper → CC 9.0
 
@@ -36,7 +36,7 @@ Hopper (H100 ve H200) bir başka büyük adımdı. Çok büyük yapay zekâ mode
 
 ### Blackwell → CC 10.x, 11.0 ve 12.x
 
-Blackwell, 2026'da sevkiyatı yapılan ana nesildir. 5. nesil Tensor Core'lara ve NVFP4 (NVIDIA 4 bit kayan noktalı sayı) adlı yeni bir duyarlık biçimine sahiptir. NVFP4, büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkarır. FP4 hızlandırması önceki mimarilerde yoktur.
+Blackwell, 2026'da sevkiyatı yapılan ana nesildir. 5. nesil Tensor Core'lara ve NVFP4 adlı yeni bir duyarlık biçimine sahiptir. NVFP4, büyük model çıkarımında FP8'e göre işlem hacmini iki katına çıkarır. FP4 hızlandırması önceki mimarilerde yoktur.
 
 Blackwell, her çip ailesi için bir tane olmak üzere birkaç farklı compute capability ile gelir:
 
@@ -55,12 +55,12 @@ Blackwell, her çip ailesi için bir tane olmak üzere birkaç farklı compute c
 
 Resmî CUDA dokümantasyonunda özellikleri compute capability sürümleriyle eşleştiren tablolar vardır. Bu tablolarda net örüntüler görülür:
 
-- CC 5.0'daki GPU'lar yarım duyarlıklı (FP16) işlemleri desteklemez
+- CC 5.0'daki GPU'lar FP16 işlemlerini desteklemez
 - Tensor Core'lar sadece CC 7.0'dan itibaren vardır
 - FP8 Tensor Core'lar CC 8.9 (Ada Lovelace) ve 9.0 (Hopper) ile gelir
 - NVFP4, CC 10.0 ya da üstünü gerektirir
 
-Eksik bir donanım özelliği sonradan eklenemez. GPU'nda Tensor Core yoksa onları kullanamazsın. Yazılım bazen eksik bir birimi taklit edebilir (emülasyon), ama bu çok daha yavaştır ve çoğu Tensor Core özelliği için böyle bir yol yoktur. Donanımda ya o birim vardır ya da yoktur.
+Eksik bir donanım özelliği sonradan eklenemez. GPU'nda Tensor Core yoksa onları kullanamazsın. Yazılım bazen eksik bir birimi emülasyonla taklit edebilir, ama bu çok daha yavaştır ve çoğu Tensor Core özelliği için böyle bir yol yoktur. Donanımda ya o birim vardır ya da yoktur.
 
 Bu yüzden performansa duyarlı CUDA kodu yazmadan önce "GPU'm ihtiyacım olanı destekliyor mu?" diye sor. Bu soru, "GPU'm yeterince hızlı mı?" sorusundan önce gelir.
 
@@ -89,9 +89,9 @@ Mimarin için gereken en düşük sürümün altındaki ya da mimarini artık de
 
 <cc-explorer></cc-explorer>
 
-## Alt Seviye Katman (PTX)
+## Alt Seviye Katman
 
-CUDA kodu doğrudan GPU'da çalışmaz. Önce PTX'e (Parallel Thread Execution) derlenir. PTX, NVIDIA GPU'ları için bir assembly dili gibi düşük seviyeli bir ara dildir.
+CUDA kodu doğrudan GPU'da çalışmaz. Önce PTX'e derlenir. PTX, NVIDIA GPU'ları için bir assembly dili gibi düşük seviyeli bir ara dildir.
 
 Bazı PTX komutları, sadece belirli bir compute capability'den itibaren var olan donanım birimlerine ihtiyaç duyar. Warp shuffle fonksiyonları buna bir örnektir.
 
@@ -112,6 +112,7 @@ CC numaranı bil. Onu CUDA dokümantasyonuyla karşılaştır. Doğru araç seti
 
 - compute capability (CC): NVIDIA'nın, bir GPU mimarisinin neyi yapıp neyi yapamadığını söyleyen sürüm numarası.
 - GPU (Graphics Processing Unit): çok sayıda basit işi paralel çalıştırmak için tasarlanmış işlemci.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform.
 - benchmark: hızı ölçen bir test programı; compute capability bir hız puanı değildir.
 - mimari: bir GPU ailesinin donanım tasarımı; her mimari kendi ana CC numarasını alır.
 - noktadan önceki sayı (ana numara): büyük bir mimari değişikliği gösterir; Ampere için 8, Hopper için 9 gibi.

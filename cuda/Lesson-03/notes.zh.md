@@ -1,10 +1,10 @@
 # 03 > 计算能力
 
-计算能力（compute capability，CC）是一代 GPU（Graphics Processing Unit，图形处理器）的版本号。第 00 课到第 02 课里见过的功能和硬件上限都由它规定，比如线程束大小是 32，每个线程块最多 1024 个线程。每个 CUDA（Compute Unified Device Architecture，统一计算设备架构）功能都要求一个最低的计算能力，所以看这个数字就知道你的代码能用哪些功能。
+计算能力是一代 GPU 的版本号。第 00 课到第 02 课里见过的功能和硬件上限都由它规定，比如线程束大小是 32，每个线程块最多 1024 个线程。每个 CUDA 功能都要求一个最低的计算能力，所以看这个数字就知道你的代码能用哪些功能。
 
 ## 这个数字的含义
 
-它的格式是 major.minor（主版本号.次版本号），比如 Hopper 是 9.0，这些课使用的 L40S 是 8.9。主版本号变了，表示新一代架构和新的硬件；次版本号变了，表示同一代架构里的一次修订。
+它的格式是 major.minor，比如 Hopper 是 9.0，这些课使用的 L40S 是 8.9。主版本号变了，表示新一代架构和新的硬件；次版本号变了，表示同一代架构里的一次修订。
 
 为 CC 7.0 编译的代码，可以在任何 CC 7.0 及以上的 GPU 上运行；用到 CC 9.0 功能的代码，则不能在更旧的 GPU 上运行。比如要求 CC 8.0 的程序可以在 L40S 上运行（8.9 高于 8.0），要求 CC 9.0 的程序就不行。
 
@@ -33,14 +33,14 @@
 | 每个 SM 的 FP32 核心数 | 64                | 64                | 64                | 128               | 128               | 128               |
 | 每个 SM 的共享内存     | 64 KB             | 最多 96 KB        | 最多 164 KB       | 最多 100 KB       | 最多 228 KB       | 最多 228 KB       |
 
-SM 指 Streaming Multiprocessor（流式多处理器），也就是 GPU 内部运行线程块的处理器。FP32 指 32 位浮点数，KB 指千字节。
+SM 指 Streaming Multiprocessor，也就是 GPU 内部运行线程块的处理器。FP32 指 32 位浮点数，KB 指千字节。
 
 H100 和 B100 每个 SM 的线程上限和内存上限完全相同。每个 SM 的寄存器数在这几代之间一直没变。
 
 <cc-progress></cc-progress>
 
 > [!NOTE]
-> Blackwell 仍然比 Hopper 快，原因在于更多的 SM（B200 有 148 个，H100 SXM5 有 132 个）、第五代 Tensor Core、更快的 HBM3e（High Bandwidth Memory，高带宽内存），以及 NVLink 5.0（NVIDIA 用来连接多块 GPU 的互联技术）。
+> Blackwell 仍然比 Hopper 快，原因在于更多的 SM（B200 有 148 个，H100 SXM5 有 132 个）、第五代 Tensor Core、更快的 HBM3e，以及 NVIDIA 用来连接多块 GPU 的 NVLink 5.0。
 
 ## 每个线程束的线程数
 
@@ -65,7 +65,7 @@ SM 是运行线程块的物理处理器（[第 02 课](../Lesson-02/notes.md)）
 
 ## 每个 SM 的 FP32 核心
 
-FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Ampere 数据中心 GPU 每个 SM 有 64 个 FP32 核心，Ada Lovelace（L40S）、Hopper 和 Blackwell 有 128 个。FP32 核心越多，每个 SM 在一个时钟周期里能完成的浮点运算就越多。
+FP32 就是常用的 `float` 类型。Pascal、Volta 和 Ampere 数据中心 GPU 每个 SM 有 64 个 FP32 核心，Ada Lovelace（L40S）、Hopper 和 Blackwell 有 128 个。FP32 核心越多，每个 SM 在一个时钟周期里能完成的浮点运算就越多。
 
 ## 每个 SM 的共享内存
 
@@ -89,7 +89,7 @@ FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Amp
 - 共享内存（shared memory）：每个 SM 内部的高速片上内存，由同一个线程块里的所有线程共享，比全局内存（设备端内存）快得多。
 - 寄存器（register）：SM 寄存器堆里的一个高速存储位置，存放线程的一个局部变量。一个 SM 有 65536 个 32 位寄存器，一个线程最多能用 255 个。
 - KB（kilobyte，千字节）：1024 字节。
-- HBM（High Bandwidth Memory，高带宽内存）：数据中心 GPU 使用的高速堆叠式显存。
+- HBM3e（High Bandwidth Memory 3e，高带宽内存）：新一代的 HBM，也就是 B200 这类数据中心 GPU 使用的高速堆叠式显存。
 - 主版本号（major version）：CC 的第一个数，比如 8.9 里的 8。主版本号变了，表示新一代架构。
 - 次版本号（minor version）：CC 的第二个数，比如 8.9 里的 9，表示同一代架构里的一次修订。
 - 架构（architecture）：一代 GPU 的设计。NVIDIA 用科学家的名字给它们命名：Pascal、Volta、Ampere、Ada Lovelace、Hopper、Blackwell。
@@ -99,3 +99,5 @@ FP32（32 位浮点数）就是常用的 `float` 类型。Pascal、Volta 和 Amp
 - 线程块大小（thread block size）：一个线程块里的线程数，也就是 `<<<blocks, threads>>>` 里的第二个数。表中每款 GPU 上最多都是 1024。
 - 时钟周期（clock cycle）：处理器时钟的一次跳动。2 GHz 的时钟每秒有 20 亿个周期。
 - 全局内存（global memory）：GPU 上容量很大的主显存，L40S 上是 GDDR6，H100 上是 HBM。每个线程都能访问它，但它比共享内存慢得多。
+- GPU（Graphics Processing Unit，图形处理器）：拥有成千上万个小核心、用来运行核函数的处理器。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台，让你在 GPU 上运行自己的代码。

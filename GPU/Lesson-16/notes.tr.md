@@ -1,14 +1,14 @@
-# 16 > Windows'ta Linux Çalıştırmak (WSL ile Pratik Bir Kurulum)
+# 16 > WSL ile Windows'ta Linux Çalıştırmak
 
-Bu derste WSL (Windows Subsystem for Linux) ile Windows'un içinde Linux'u nasıl çalıştıracağını göreceksin. GPU'nun (Graphics Processing Unit, grafik işlemci) ve CUDA'nın WSL içinde nasıl çalıştığını ve sınırların nerede olduğunu da öğreneceksin.
+Bu derste WSL ile Windows'un içinde Linux'u nasıl çalıştıracağını göreceksin. GPU'nun ve CUDA'nın WSL içinde nasıl çalıştığını ve sınırların nerede olduğunu da öğreneceksin.
 
 ## Neden Linux
 
-Ciddi CUDA çalışmaları genelde Linux'ta yapılır. Windows hâlâ işe yarar, ama GPU ekosistemi yıllardır Linux etrafında gelişiyor; araçların, belgelerin ve gerçek kurulumların çoğu Linux bekler. Yapay zekâ (AI, Artificial Intelligence) ve HPC (High-Performance Computing, yüksek performanslı hesaplama) için kullanılan GPU sistemleri neredeyse her zaman Linux çalıştırır.
+Ciddi CUDA çalışmaları genelde Linux'ta yapılır. Windows hâlâ işe yarar, ama GPU ekosistemi yıllardır Linux etrafında gelişiyor; araçların, belgelerin ve gerçek kurulumların çoğu Linux bekler. Yapay zekâ ve HPC için kullanılan GPU sistemleri neredeyse her zaman Linux çalıştırır.
 
 ## WSL nedir
 
-WSL, Windows'un içinde gerçek bir Linux ortamı çalıştırır. Eski çözümler gibi bir emülasyon katmanı değildir: WSL2, küçük ve hafif bir sanal makinede gerçek bir Linux çekirdeği (kernel) çalıştırır. Bu, davranışta, uyumlulukta ve performansta büyük fark yaratır.
+WSL, Windows'un içinde gerçek bir Linux ortamı çalıştırır. Eski çözümler gibi bir emülasyon katmanı değildir: WSL2, küçük ve hafif bir sanal makinede gerçek bir Linux çekirdeği çalıştırır. Bu, davranışta, uyumlulukta ve performansta büyük fark yaratır.
 
 ## WSL'i kur
 
@@ -30,7 +30,7 @@ Linux dağıtımını ilk kez başlattığında bir kullanıcı adı ve parola o
 
 ## GPU erişimi
 
-WSL2 ile Linux, GPU'yu Windows driver'ı (sürücüsü) üzerinden kullanabilir. CUDA uygulamaları WSL içinde neredeyse doğrudan Linux kurulu bir sistemdeki gibi çalışır. Yani Linux'ta geliştirme yapıp Windows'u ana sistemin olarak kullanmaya devam edebilirsin.
+WSL2 ile Linux, GPU'yu Windows driver'ı üzerinden kullanabilir. CUDA uygulamaları WSL içinde neredeyse doğrudan Linux kurulu bir sistemdeki gibi çalışır. Yani Linux'ta geliştirme yapıp Windows'u ana sistemin olarak kullanmaya devam edebilirsin.
 
 GPU driver'ı WSL'in içine değil, Windows tarafına kurulur. Windows için normal NVIDIA driver'ını kurarsın, WSL de ana sistemdeki bu driver'ı kullanır. WSL içinde CUDA driver'ı, Windows'tan eşlenen `libcuda.so` adlı bir kütüphane olarak görünür.
 
@@ -47,8 +47,8 @@ WSL içinde CUDA Toolkit'in Windows sürümünü değil, Linux sürümünü kura
 
 WSL ciddi bir geliştirme ortamı. Yine de birkaç şey doğrudan Linux'tan farklı çalışır:
 
-- GPU desteği, WDDM (Windows Display Driver Model) modunda bir GeForce ya da RTX kart ister; bu, masaüstü kartların normal modudur. Veri merkezi GPU'ları desteklenmez.
-- Unified memory (birleşik bellek) sınırlıdır. CPU (Central Processing Unit, merkezi işlemci) ve GPU aynı yönetilen belleğe aynı anda erişemez.
+- GPU desteği, WDDM modunda bir GeForce ya da RTX kart ister; bu, masaüstü kartların normal modudur. Veri merkezi GPU'ları desteklenmez.
+- Unified memory sınırlıdır. CPU ve GPU aynı yönetilen belleğe aynı anda erişemez.
 - `nvidia-smi` her değeri gösteremez, örneğin GPU kullanım oranını.
 
 GPU'nun CUDA 13'e uyduğunu da kontrol et. WSL'in kendisi Pascal ve sonrasıyla çalışır, ama CUDA 13 compute capability 7,5 veya üstünü ister. GeForce GTX 1080'in compute capability değeri 6,1'dir ve 6,1, 7,5'ten küçüktür; bu yüzden CUDA 13 onun için kod derleyemez. GeForce RTX 2060'ınki 7,5'tir, yani çalışır.

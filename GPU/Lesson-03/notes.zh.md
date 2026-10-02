@@ -1,6 +1,6 @@
 # 03 > 读懂 GPU 参数
 
-一份规格（specification）页面会列出几十个数字，其中大部分你一开始根本用不上。这一课告诉你去哪里查任何一块 GPU（Graphics Processing Unit，图形处理器）的参数、先回答哪三个问题，以及为什么页面上最大的那个数字，也就是核心数量，常常会误导人。最后我们一起读懂本站所有例子都在用的 L40S。
+一份规格页面会列出几十个数字，其中大部分你一开始根本用不上。这一课告诉你去哪里查任何一块 GPU 的参数、先回答哪三个问题，以及为什么页面上最大的那个数字，也就是核心数量，常常会误导人。最后我们一起读懂本站所有例子都在用的 L40S。
 
 ## 查找参数
 
@@ -9,7 +9,7 @@
 页面上会有很多数字。现在不要试图全部看懂，先看芯片名称、架构和产品类别。
 
 > [!TIP]
-> 想查 CC（compute capability，计算能力），也就是 CUDA（Compute Unified Device Architecture）关心的那个数字、[第 05 课](../Lesson-05/notes.md)的主题，可以看 NVIDIA 的列表 developer.nvidia.com/cuda-gpus。在装有 NVIDIA GPU 的机器上，`nvidia-smi --query-gpu=name,compute_cap --format=csv` 会打印出每块 GPU 的名字和 CC；在本站的机器上，这一行是 `NVIDIA L40S, 8.9`。
+> 想查 CC，也就是 CUDA 关心的那个数字、[第 05 课](../Lesson-05/notes.md)的主题，可以看 NVIDIA 的列表 developer.nvidia.com/cuda-gpus。在装有 NVIDIA GPU 的机器上，`nvidia-smi --query-gpu=name,compute_cap --format=csv` 会打印出每块 GPU 的名字和 CC；在本站的机器上，这一行是 `NVIDIA L40S, 8.9`。
 
 ## 架构与类别
 
@@ -18,7 +18,7 @@
 - 架构 → GPU 是怎么造出来的（Ampere、Ada Lovelace、Hopper、Blackwell）。
 - 类别 → 它用在哪里，这几课也把它叫作“代”（GeForce、Data Center GPU）。
 
-RTX 3090 和 A100 是 2020 年的一对经典组合。两者都用 Ampere，所以技术设计相同。RTX 3090 是 GeForce 显卡，用在台式机、笔记本电脑和工作站上：游戏、内容创作和一般的 GPU 任务。A100 是 Data Center GPU（数据中心 GPU），用在服务器、数据中心和超级计算机里。
+RTX 3090 和 A100 是 2020 年的一对经典组合。两者都用 Ampere，所以技术设计相同。RTX 3090 是 GeForce 显卡，用在台式机、笔记本电脑和工作站上：游戏、内容创作和一般的 GPU 任务。A100 是 Data Center GPU，用在服务器、数据中心和超级计算机里。
 
 架构相同不等于用途相同，参数会说明这一点。
 
@@ -34,16 +34,16 @@ RTX 3090 和 A100 是 2020 年的一对经典组合。两者都用 Ampere，所�
 - RTX 3090 → 10,496 个核心
 - A100 → 6,912 个核心
 
-这个数字就是 SM（Streaming Multiprocessor，流式多处理器）的个数乘以每个 SM 的核心数。算一下：
+这个数字就是 SM 的个数乘以每个 SM 的核心数。算一下：
 
 - RTX 3090：82 个 SM * 128 个核心 = 10,496
 - A100：108 个 SM * 64 个核心 = 6,912
 
 所以 RTX 3090 的 SM 更少，但每个 SM 统计的核心数是 A100 的两倍。这并不说明它是更强的 GPU。这些“核心”只是单精度核心，NVIDIA 把它们叫作 CUDA 核心。它们负责标准的浮点运算，并不是 GPU 里的全部核心。
 
-现代 GPU 还有做整数运算的核心、做双精度运算的核心，以及为 AI（artificial intelligence，人工智能）背后的矩阵运算打造的 Tensor Core。A100 有 432 个 Tensor Core，RTX 3090 有 328 个；双精度性能上 A100 是 9.7 TFLOPS（每秒万亿次浮点运算），RTX 3090 约为 0.56 TFLOPS：9.7 / 0.56 = 约 17 倍。
+现代 GPU 还有做整数运算的核心、做双精度运算的核心，以及为 AI 背后的矩阵运算打造的 Tensor Core。A100 有 432 个 Tensor Core，RTX 3090 有 328 个；双精度性能上 A100 是 9.7 TFLOPS，RTX 3090 约为 0.56 TFLOPS：9.7 / 0.56 = 约 17 倍。
 
-显存也不一样：A100 是 40 GB HBM2（High Bandwidth Memory，高带宽内存），带宽 1,555 GB/s；RTX 3090 是 24 GB GDDR6X，带宽 936 GB/s。[第 06 课](../Lesson-06/notes.md)会解释为什么显存带宽常常决定速度。
+显存也不一样：A100 是 40 GB HBM2，带宽 1,555 GB/s；RTX 3090 是 24 GB GDDR6X，带宽 936 GB/s。[第 06 课](../Lesson-06/notes.md)会解释为什么显存带宽常常决定速度。
 
 <gpu-compare></gpu-compare>
 
@@ -64,7 +64,7 @@ RTX 3090 和 A100 是 2020 年的一对经典组合。两者都用 Ampere，所�
 
 ## 不要只比较核心数量
 
-6,912 或 21,760 这样的核心数量看起来很有说服力，但它通常只统计一种单元：FP32（32 位浮点）CUDA 核心。Tensor Core、双精度单元和其他专用单元都不在里面。
+6,912 或 21,760 这样的核心数量看起来很有说服力，但它通常只统计一种单元：FP32 CUDA 核心。Tensor Core、双精度单元和其他专用单元都不在里面。
 
 现代 GPU，尤其是 Hopper 和 Blackwell，把很大一部分算力放在这些其他单元上。B200 的 CUDA 核心比 RTX 5090 少，但训练大型 AI 模型要快得多，因为它的 Tensor Core 和显存系统正是为这项工作设计的。所以永远不要只凭核心数量评判一块 GPU。
 
@@ -75,7 +75,7 @@ RTX 3090 和 A100 是 2020 年的一对经典组合。两者都用 Ampere，所�
 P100、V100、A100、H100 或 B200 这类数据中心 GPU 通常没有自己的风扇。它们结构紧凑、无风扇，运行在散热能力很强的数据中心里：服务器把气流吹过散热片，或者让液体流过冷板。
 
 > [!NOTE]
-> 很多数据中心 GPU 根本不是插卡。A100、H100 和 B200 大多是 SXM（Server PCI Express Module）模块，平装在服务器主板上，较新的机柜还常常用液冷。
+> 很多数据中心 GPU 根本不是插卡。A100、H100 和 B200 大多是 SXM 模块，平装在服务器主板上，较新的机柜还常常用液冷。
 
 GeForce 显卡带有大风扇和散热片。它们用在台式电脑和个人工作站里，这些系统必须自己处理发热，所以显卡要自己散热。
 
@@ -85,7 +85,7 @@ GeForce 显卡带有大风扇和散热片。它们用在台式电脑和个人工
 - 紧凑的模块或没有风扇的卡 → 多半是数据中心 GPU。
 
 > [!WARNING]
-> 这是经验法则，不是定律。有些数据中心 GPU 是普通的 PCIe（Peripheral Component Interconnect Express）卡。L40S 就是一例：一张被动散热（passive）的双槽 PCIe 卡，没有风扇，由服务器散热。最终一定要用产品名称来确认。
+> 这是经验法则，不是定律。有些数据中心 GPU 是普通的 PCIe 卡。L40S 就是一例：一张被动散热的双槽 PCIe 卡，没有风扇，由服务器散热。最终一定要用产品名称来确认。
 
 <spec-reader></spec-reader>
 
@@ -111,6 +111,7 @@ GeForce 显卡带有大风扇和散热片。它们用在台式电脑和个人工
 
 ## 术语表
 
+- GPU（Graphics Processing Unit，图形处理器）：能同时进行成千上万次小计算的芯片，最早为图形而造，如今也用于 AI 和科学计算。
 - 规格（spec，specification）：GPU 公布的某一项技术数值，比如核心数量、显存大小或时钟频率。
 - TechPowerUp：一个拥有大型 GPU 数据库的网站；把 GPU 名字和“TechPowerUp”一起搜索就能找到它的页面。
 - 数据手册（datasheet）：厂商为产品发布的官方参数文档，两个网站说法不一致时以它为准。
@@ -140,7 +141,7 @@ GeForce 显卡带有大风扇和散热片。它们用在台式电脑和个人工
 - Tensor Core：做 AI 背后矩阵运算的单元；核心数量不包括它们。
 - AI（artificial intelligence，人工智能）：从数据中学习的软件；训练它主要是海量的矩阵运算。
 - TFLOPS（teraFLOPS）：每秒万亿次浮点运算。
-- HBM（High Bandwidth Memory，高带宽内存）：数据中心 GPU 上堆叠在芯片旁边的显存，比 GeForce 显卡上的 GDDR 显存更快；HBM2、HBM3 和 HBM3e 是它的不同版本。
+- HBM2 / HBM3 / HBM3e（High Bandwidth Memory，高带宽内存）：数据中心 GPU 上堆叠在芯片旁边的显存，比 GeForce 显卡上的 GDDR 显存更快；HBM2、HBM3 和 HBM3e 是它的不同版本。
 - 显存带宽（memory bandwidth）：显存每秒能提供多少数据，例如 L40S 为 864 GB/s，B200 为 8 TB/s。
 - RTX 5090：2025 年推出的 GeForce GPU，基于 Blackwell，有 21,760 个 CUDA 核心和 32 GB GDDR7 显存。
 - B200：一块 Blackwell 数据中心 GPU，由两个裸片组成，有 2080 亿个晶体管和 180 GB HBM3e 显存。

@@ -1,6 +1,6 @@
 # 04 > Built-in Variables
 
-Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The GPU (Graphics Processing Unit) fills them in for each thread at launch, based on the launch configuration. This lesson prints all five from every thread, so you can see which ones change and which stay the same.
+Every kernel has five read-only built-in variables: `gridDim`, `blockDim`, `blockIdx`, `threadIdx`, and `warpSize`. You do not pass or declare them. The GPU fills them in for each thread at launch, based on the launch configuration. This lesson prints all five from every thread, so you can see which ones change and which stay the same.
 
 > [!NOTE]
 > All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
@@ -25,7 +25,7 @@ The global ID formula from [Lesson 02](../Lesson-02/notes.md) uses it: `blockIdx
 
 `threadIdx` is the index of the thread inside its block. It restarts at 0 in every block. In a block of 4 threads, `threadIdx.x` is 0, 1, 2, 3. It is always less than `blockDim.x`.
 
-`gridDim`, `blockDim`, `blockIdx`, and `threadIdx` all have `.x`, `.y`, `.z` fields. `gridDim` and `blockDim` are of type `dim3`. If you write `<<<2, 4>>>` with plain numbers, CUDA (Compute Unified Device Architecture) sets `.y = 1` and `.z = 1` for you. So `<<<2, 4>>>` is the same as `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>`.
+`gridDim`, `blockDim`, `blockIdx`, and `threadIdx` all have `.x`, `.y`, `.z` fields. `gridDim` and `blockDim` are of type `dim3`. If you write `<<<2, 4>>>` with plain numbers, CUDA sets `.y = 1` and `.z = 1` for you. So `<<<2, 4>>>` is the same as `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>`.
 
 ## warpSize
 
@@ -36,7 +36,7 @@ The global ID formula from [Lesson 02](../Lesson-02/notes.md) uses it: `blockIdx
 
 ## Hardware Limits
 
-Before running a kernel, the CUDA runtime checks the launch configuration against hardware limits. If any value is too large, the kernel does not launch. These are the limits for CC (compute capability) 3.0 and later, from Kepler to Blackwell:
+Before running a kernel, the CUDA runtime checks the launch configuration against hardware limits. If any value is too large, the kernel does not launch. These are the limits for compute capability 3.0 and later, from Kepler to Blackwell:
 
 | Variable      | Dimension    | Max value |
 |---------------|--------------|-----------|
@@ -88,7 +88,7 @@ int main()
 ```
 
 - The two CUDA headers declare the runtime functions (such as `cudaDeviceSynchronize`) and the built-in variables. `stdio.h` provides `printf`.
-- `__global__` marks `printBuiltins` as a kernel. It runs on the GPU and is launched from the CPU (Central Processing Unit).
+- `__global__` marks `printBuiltins` as a kernel. It runs on the GPU and is launched from the CPU.
 - The `printf` inside the kernel runs once per thread. Each `%d` is filled with one field, in the order listed below the format string.
 - `printBuiltins<<<2, 4>>>()` launches 2 blocks of 4 threads, so 8 threads run the kernel and print 8 lines.
 - `cudaDeviceSynchronize()` makes the CPU wait until the kernel is done. A kernel launch returns right away, so without this wait `main` could end before the GPU output appears.
@@ -206,7 +206,8 @@ int main()
 
 - GPU (Graphics Processing Unit): the processor that runs kernels.
 - CPU (Central Processing Unit): the main processor that runs `main()` and launches kernels.
-- CC (compute capability): the version number of a GPU generation. It sets the limits in the table above ([Lesson 03](../Lesson-03/notes.md)).
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform and language extensions for writing programs that run on the GPU.
+- compute capability (CC): the version number of a GPU generation. It sets the limits in the table above ([Lesson 03](../Lesson-03/notes.md)).
 - `gridDim`: number of blocks in each direction (x, y, z). Same for every thread in the launch.
 - `blockDim`: number of threads per block in each direction. Same for every thread in the launch.
 - `blockIdx`: index of the thread's block. Always less than `gridDim` in each direction.

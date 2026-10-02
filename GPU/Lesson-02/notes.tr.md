@@ -1,6 +1,6 @@
 # 02 > Mimari, Nesil ve Çipler
 
-"GPU" (Graphics Processing Unit, grafik işlem birimi) derken insanlar birkaç farklı şeyi kastediyor: bir tasarımı, bir ürün ailesini, bir silikon parçasını ve makineye taktığın kartı. Bu derste bunları mimari, nesil, çip ve GPU olarak birbirinden ayırıyorsun. Farkı bir kez gördüğünde herhangi bir NVIDIA ürün adını, özellik tablosunu ya da veri merkezi parçasını okuyup içinde gerçekte ne olduğunu anlarsın. Bunların hepsi CUDA (Compute Unified Device Architecture) için önemli; CUDA, NVIDIA'nın GPU'ları sadece grafik için değil genel hesaplama için de programlama yoludur.
+"GPU" derken insanlar birkaç farklı şeyi kastediyor: bir tasarımı, bir ürün ailesini, bir silikon parçasını ve makineye taktığın kartı. Bu derste bunları mimari, nesil, çip ve GPU olarak birbirinden ayırıyorsun. Farkı bir kez gördüğünde herhangi bir NVIDIA ürün adını, özellik tablosunu ya da veri merkezi parçasını okuyup içinde gerçekte ne olduğunu anlarsın. Bunların hepsi CUDA için önemli; CUDA, NVIDIA'nın GPU'ları sadece grafik için değil genel hesaplama için de programlama yoludur.
 
 ## Mimari
 
@@ -11,7 +11,7 @@ Mimari, GPU çipinin iç tasarımıdır. Sadece çekirdekleri değil, şunları 
 - belleğe nasıl erişildiğini  
 - paralel işin nasıl çalıştırıldığını  
 
-Bunu bir motorun tasarımı gibi düşün. İki GPU dışarıdan birbirine benzeyebilir ama mimarileri yüzünden çok farklı davranabilir. Mimari; performans, verimlilik ve desteklenen özellikler üzerinde doğrudan etkilidir. Ray tracing ve yapay zekâ (AI, artificial intelligence) hızlandırma gibi özellikler mimari düzeyinde gelir.
+Bunu bir motorun tasarımı gibi düşün. İki GPU dışarıdan birbirine benzeyebilir ama mimarileri yüzünden çok farklı davranabilir. Mimari; performans, verimlilik ve desteklenen özellikler üzerinde doğrudan etkilidir. Ray tracing ve yapay zekâ hızlandırma gibi özellikler mimari düzeyinde gelir.
 
 NVIDIA eskiden aşağı yukarı iki yılda bir yeni mimari çıkarırdı. Veri merkezi GPU'larında artık yaklaşık yılda bir: Blackwell (2024), Blackwell Ultra (2025) ve Rubin (2026'nın ikinci yarısından beri teslim ediliyor); Rubin Ultra (2027) ve Feynman (2028) ise duyuruldu. [Ders 04](../Lesson-04/notes.md) hepsini tek tek anlatıyor.
 
@@ -22,7 +22,7 @@ Bu derslerde nesil, GPU'nun nasıl yapıldığıyla ilgili değildir. GPU'nun ne
 > [!NOTE]
 > Bu derslerin dışında insanlar "nesil" kelimesini çoğu zaman mimari için de kullanır, örneğin "Blackwell nesli". Burada ise bir GPU'nun ait olduğu ürün ailesi kastediliyor, örneğin GeForce ya da Data Center.
 
-NVIDIA GPU'ları iki ana dünyaya hizmet eder. Birincisi günlük kullanıcılar: oyun, içerik üretimi ve genel grafik. İkincisi bulut sistemleri, veri merkezleri, yapay zekâ eğitimi ve bilimsel hesaplama. Bu ikinci dünyaya HPC (High Performance Computing, yüksek performanslı hesaplama) denir.
+NVIDIA GPU'ları iki ana dünyaya hizmet eder. Birincisi günlük kullanıcılar: oyun, içerik üretimi ve genel grafik. İkincisi bulut sistemleri, veri merkezleri, yapay zekâ eğitimi ve bilimsel hesaplama. Bu ikinci dünyaya HPC denir.
 
 ## Ürün Adları
 
@@ -37,16 +37,16 @@ Eski adları hâlâ görebilirsin. Quadro, profesyonel GPU'ların eski markasıy
 
 ## Mimari ve Nesil Birbirinden Bağımsızdır
 
-Mimari, GPU'nun nasıl yapıldığını anlatır. Nesil, nerede kullanıldığını anlatır. Bu yüzden aynı mimari çok farklı ürünlerde karşına çıkabilir. RTX 3090 (kişisel kullanım) ve A100 (büyük ölçekli hesaplama) ikisi de Ampere'dir. Bugün de RTX 5090, RTX PRO 6000, B200 ve Jetson AGX Thor'un hepsi Blackwell.
+Mimari, GPU'nun nasıl yapıldığını anlatır. Nesil, nerede kullanıldığını anlatır. Bu yüzden aynı mimari çok farklı ürünlerde karşına çıkabilir. Kişisel kullanım için RTX 3090 ve büyük ölçekli hesaplama için A100, ikisi de Ampere'dir. Bugün de RTX 5090, RTX PRO 6000, B200 ve Jetson AGX Thor'un hepsi Blackwell.
 
 <arch-matrix></arch-matrix>
 
-Aynı mimari, aynı CC (Compute Capability, hesaplama yeteneği) anlamına bile gelmez; CC, CUDA'nın bir çipin özelliklerine verdiği sürüm numarasıdır. A100 CC 8.0, RTX 3090 CC 8.6; ikisi de Ampere. B200 CC 10.0, RTX 5090 CC 12.0; ikisi de Blackwell, çünkü farklı çipler kullanırlar. [Ders 05](../Lesson-05/notes.md) CC'yi derinlemesine anlatıyor.
+Aynı mimari, aynı CC anlamına bile gelmez; CC, CUDA'nın bir çipin özelliklerine verdiği sürüm numarasıdır. A100 CC 8.0, RTX 3090 CC 8.6; ikisi de Ampere. B200 CC 10.0, RTX 5090 CC 12.0; ikisi de Blackwell, çünkü farklı çipler kullanırlar. [Ders 05](../Lesson-05/notes.md) CC'yi derinlemesine anlatıyor.
 
 > [!TIP]
 > Bir GPU'nun hangi CUDA özelliklerini desteklediğine ürün adı değil, CC karar verir. CUDA kodu derlerken de hedef olarak bir CC seçersin.
 
-Her mimari iki dünyayı birden kapsamaz. Ada Lovelace çoğunlukla tüketici GPU'ları içindir; L40S gibi birkaç sunucu kartı da vardır. Hopper yalnızca veri merkezleri ve yapay zekâ eğitimi içindir; normal PC'lerde (Personal Computer, kişisel bilgisayar) Hopper GPU görmemenin nedeni budur. Fark yalnızca performansta değil, amaçtadır.
+Her mimari iki dünyayı birden kapsamaz. Ada Lovelace çoğunlukla tüketici GPU'ları içindir; L40S gibi birkaç sunucu kartı da vardır. Hopper yalnızca veri merkezleri ve yapay zekâ eğitimi içindir; normal PC'lerde Hopper GPU görmemenin nedeni budur. Fark yalnızca performansta değil, amaçtadır.
 
 ## GPU Çipi
 
@@ -56,26 +56,26 @@ Asıl "motor" çiptir. Örneğin A100'ün içindeki GA100 çipi, yaklaşık 54 m
 
 ## Çip Adları
 
-NVIDIA'nın çip adları, çipi mimarisine bağlar. İlk harf G'dir (GPU için), sonraki bir iki harf mimariyi, sayı ise çipin o ailedeki yerini gösterir:
+NVIDIA'nın çip adları, çipi mimarisine bağlar. İlk harf GPU'yu gösteren G'dir, sonraki bir iki harf mimariyi, sayı ise çipin o ailedeki yerini gösterir:
 
 - GF100 → Fermi  
 - GA100 → Ampere  
 - AD102 → Ada Lovelace (RTX 4090, L40S)  
 - GB202 → Blackwell (RTX 5090)  
 
-GB202'yi şöyle oku: G (GPU) + B (Blackwell) + 202 (Blackwell ailesinden bir çip). Yani herhangi bir özelliğe bakmadan önce ön ek sana mimariyi söyler.
+GB202'yi şöyle oku: G GPU'yu, B Blackwell'i, 202 ise Blackwell ailesinden bir çipi gösterir. Yani herhangi bir özelliğe bakmadan önce ön ek sana mimariyi söyler.
 
 > [!WARNING]
-> Bu harfleri taşıyan her ad tek bir GPU çipi değildir. GB200 bir "süper çip"tir: tek kart üzerinde bir Grace CPU (Central Processing Unit, merkezi işlem birimi) ve iki Blackwell GPU. GH200 aynı fikrin Hopper'lı hâlidir. Bir ad tuhaf görünüyorsa, gerçekte ne olduğuna bak.
+> Bu harfleri taşıyan her ad tek bir GPU çipi değildir. GB200 bir "süper çip"tir: tek kart üzerinde bir Grace CPU ve iki Blackwell GPU. GH200 aynı fikrin Hopper'lı hâlidir. Bir ad tuhaf görünüyorsa, gerçekte ne olduğuna bak.
 
 ## GPU
 
 GPU, kullandığın ürünün tamamıdır; çipin etrafına kurulmuş eksiksiz bir sistemdir. Şunları içerir:
 
 - çipin kendisi  
-- VRAM (GPU belleği), yani GPU'nun çipin hemen yanındaki kendi belleği  
+- VRAM, yani GPU'nun çipin hemen yanındaki kendi belleği  
 - güç dağıtım bileşenleri  
-- çıkış arayüzleri (HDMI (High-Definition Multimedia Interface) ya da DisplayPort gibi)  
+- HDMI ya da DisplayPort gibi çıkış arayüzleri  
 - bir soğutma sistemi  
 
 GeForce kartları özel soğutması olmayan normal bir PC kasasında durur; bu yüzden kendi ısılarıyla kendileri başa çıkmak zorundadır ve bu ısı küçük değildir: RTX 5090 en fazla 575 W için derecelendirilmiştir. Büyük soğutucular ve birkaç fan taşımalarının nedeni budur.
@@ -90,7 +90,7 @@ TechPowerUp gibi özellik siteleri bu ayrımı görünür kılar: A100'ün sayfa
 
 Bir mimari tek bir çip değildir. Aynı temel tasarımı paylaşan bir çip ailesidir. Ada Lovelace (2022) AD102, AD103 ve AD104'ü içerir; "AD" ön eki, daha hiçbir özelliğe bakmadan onları birbirine bağlar. Blackwell tüketici çipleri "GB" ile başlar: RTX 5090'da GB202, RTX 5080'de GB203, RTX 5070'te GB205.
 
-Bir çipin büyüklüğü, çekirdekleri barındıran yapı taşları olan SM'lerle (Streaming Multiprocessor) sayılır (bkz. [Ders 00](../Lesson-00/notes.md)). Tam bir AD102'de 144 SM, tam bir AD103'te 80, tam bir AD104'te 60 SM vardır. Bu yüzden AD102 en üst seviye GPU'lara, AD104 ise RTX 4070 Ti gibi daha küçük ve daha verimli kartlara girer.
+Bir çipin büyüklüğü, çekirdekleri barındıran yapı taşları olan SM'lerle sayılır (bkz. [Ders 00](../Lesson-00/notes.md)). Tam bir AD102'de 144 SM, tam bir AD103'te 80, tam bir AD104'te 60 SM vardır. Bu yüzden AD102 en üst seviye GPU'lara, AD104 ise RTX 4070 Ti gibi daha küçük ve daha verimli kartlara girer.
 
 ## Aynı Çip, Farklı GPU'lar
 
@@ -99,7 +99,7 @@ Aynı çip birbirinden çok farklı GPU'lara girebilir. Bir üretici bazı çeki
 - RTX 4090: fanlı ve HDMI'lı bir GeForce kartı, 144 SM'den 128'i açık, 450 W güç sınırı, 24 GB GDDR6X bellek.  
 - L40S: fansız bir veri merkezi kartı, 144 SM'den 142'si açık, 350 W güç sınırı, 48 GB GDDR6 bellek.  
 
-RTX 4090'da 144 − 128 = 16 SM kapalıdır, bu da çipin 16 / 144 ≈ %11'i eder. L40S'te yalnızca 144 − 142 = 2 SM kapalıdır. Her Ada SM'sinde 128 FP32 (32 bit kayan noktalı) çekirdek vardır; yani L40S'te 142 × 128 = 18,176, RTX 4090'da 128 × 128 = 16,384 tane bulunur. Birkaç SM'si arızalı çipler, o SM'ler kapatılarak bu şekilde yine satılabilir.
+RTX 4090'da 144 − 128 = 16 SM kapalıdır, bu da çipin 16 / 144 ≈ %11'i eder. L40S'te yalnızca 144 − 142 = 2 SM kapalıdır. Her Ada SM'sinde 128 FP32 çekirdek vardır; yani L40S'te 142 × 128 = 18,176, RTX 4090'da 128 × 128 = 16,384 tane bulunur. Birkaç SM'si arızalı çipler, o SM'ler kapatılarak bu şekilde yine satılabilir.
 
 NVIDIA her son GPU'yu kendisi de üretmez. ASUS, MSI ya da Gigabyte gibi kart üreticisi ortaklar aynı çipi alıp soğutma tasarımını, güç yapılandırmasını ve boost davranışını değiştirir. Temel çip aynı, sonuç biraz farklı.
 
@@ -151,9 +151,11 @@ Mimari ürünün tamamını değil, çipi tanımlar. Performans çipte başlar a
 - AD104: Ada Lovelace'in 60 SM'li daha küçük çiplerinden biri; RTX 4070 Ti gibi kartlarda kullanılır.
 - GB202: en büyük tüketici Blackwell çipi; RTX 5090'da kullanılır.
 - süper çip (superchip): bir CPU ile GPU'ları tek kartta birleştiren ürün, örneğin GB200 (bir Grace CPU ve iki Blackwell GPU).
+- CPU (Central Processing Unit): bilgisayarın ana işlemcisi; Grace, NVIDIA'nın kendi veri merkezi CPU'sudur.
 - VRAM (GPU belleği): GPU'nun çipin hemen yanındaki kendi belleği; L40S'te 48 GB VRAM var.
 - güç dağıtım bileşenleri (power delivery): karttaki, güç kaynağından gelen elektriği çipin ihtiyaç duyduğu sabit gerilimlere çeviren parçalar.
 - çıkış arayüzleri (output interfaces): GPU üzerindeki HDMI ya da DisplayPort gibi portlar.
+- HDMI (High-Definition Multimedia Interface): görüntüyü ve sesi monitöre ya da televizyona gönderen yaygın port.
 - soğutma (cooling): çipin ürettiği ısıyı uzaklaştırmak; karttaki fanlarla, sunucudan gelen hava akışıyla ya da sıvıyla.
 - soğutucu (heatsink): tüketici GPU'larının kendi ısılarından kurtulmak için kullandığı metal kanatçıklı blok.
 - PC (Personal Computer) kasası: masaüstü bilgisayarın parçalarını tutan kutu; tüketici GPU'su içinde kendini soğutmak zorundadır.
@@ -162,6 +164,7 @@ Mimari ürünün tamamını değil, çipi tanımlar. Performans çipte başlar a
 - sıvı soğutma (liquid cooling): çiplerin üstündeki plakalardan sıvı geçirerek soğutma; GB200 NVL72 gibi yoğun kabinlerde kullanılır.
 - TechPowerUp: GPU özelliklerini listeleyen ve her GPU'yu kullandığı çipe bağlayan bir web sitesi.
 - SM (Streaming Multiprocessor): NVIDIA GPU'sunun çekirdekleri barındıran yapı taşı; çip büyüklüğü SM sayısıyla ölçülür.
+- FP32 (32-bit floating point): 32 bitte saklanan ondalıklı sayı; özellik tabloları FP32 çekirdeklerini CUDA çekirdeği diye sayar.
 - çekirdek (core): çip üzerindeki bir hesaplama birimi; üretici bazılarını kapatabilir, örneğin birkaç çekirdeği arızalı çipleri de satabilmek için.
 - güç sınırı (power limit): bir GPU'nun en fazla kaç watt çekebileceği; sınır düştükçe ısı azalır ama hız da düşer.
 - saat hızı (clock speed): çipin saniyede kaç döngü çalıştığı; üreticinin ayarlayabildiği bir değer.

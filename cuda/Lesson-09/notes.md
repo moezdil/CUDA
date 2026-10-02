@@ -1,13 +1,13 @@
 # 09 > Many Blocks, Grid Size and Timing
 
-[Lesson 08](../Lesson-08/notes.md) added two vectors of 1024 elements with one block. This lesson doubles the size to 2048 elements, which no single block can cover. You learn the index formula that almost every CUDA kernel uses, how to pick the grid size for any vector length, how many SMs (Streaming Multiprocessors) your launch really keeps busy, and how to time a kernel without fooling yourself.
+[Lesson 08](../Lesson-08/notes.md) added two vectors of 1024 elements with one block. This lesson doubles the size to 2048 elements, which no single block can cover. You learn the index formula that almost every CUDA kernel uses, how to pick the grid size for any vector length, how many SMs your launch really keeps busy, and how to time a kernel without fooling yourself.
 
 > [!NOTE]
 > The code targets CUDA 13 on Ubuntu 24 and the NVIDIA L40S (CC 8.9, 142 SMs) used in these lessons. Timings depend on the GPU, so run the program on yours and compare the configurations yourself.
 
 ## From 1024 to 2048 Elements
 
-The vectors now hold 2048 elements each. One thread per element means 2048 threads. A single block can hold at most 1024 threads. This limit is part of the compute capability (CC), as [Lesson 03](../Lesson-03/notes.md) showed, so `<<<1, 2048>>>` is rejected at launch ([Lesson 02](../Lesson-02/notes.md)).
+The vectors now hold 2048 elements each. One thread per element means 2048 threads. A single block can hold at most 1024 threads. This limit is part of the compute capability, as [Lesson 03](../Lesson-03/notes.md) showed, so `<<<1, 2048>>>` is rejected at launch ([Lesson 02](../Lesson-02/notes.md)).
 
 The way out is more blocks. The simplest split is 2 blocks of 1024 threads, `<<<2, 1024>>>`:
 
@@ -117,7 +117,7 @@ float ms;
 cudaEventElapsedTime(&ms, start, stop);
 ```
 
-`cudaEventElapsedTime` gives the time between the two markers in milliseconds. 1 millisecond is 1000 microseconds (µs).
+`cudaEventElapsedTime` gives the time between the two markers in milliseconds. 1 millisecond is 1000 microseconds.
 
 Step through the timing pattern, then switch on one of the two classic mistakes:
 

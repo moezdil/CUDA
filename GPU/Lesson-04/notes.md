@@ -1,6 +1,6 @@
 # 04 > NVIDIA GPU Architectures
 
-Fermi, Ampere, Hopper, Blackwell and Rubin are names of NVIDIA GPU (Graphics Processing Unit) architectures. This lesson walks through them in order, from 2010 to the roadmap for 2028, and shows how GPUs moved from graphics to general compute to large-scale AI (artificial intelligence). It also shows which of them the current CUDA (Compute Unified Device Architecture) release still supports.
+Fermi, Ampere, Hopper, Blackwell and Rubin are names of NVIDIA GPU architectures. This lesson walks through them in order, from 2010 to the roadmap for 2028, and shows how GPUs moved from graphics to general compute to large-scale AI. It also shows which of them the current CUDA release still supports.
 
 ## Why Architectures Matter
 
@@ -34,14 +34,14 @@ The goal in this period was to make GPUs faster and more efficient for general w
 
 ## AI Becomes Central
 
-Volta (2017, V100) marks a clear shift. With Volta, NVIDIA started to push AI-specific hardware: the first Tensor Cores, units inside each SM (Streaming Multiprocessor) that multiply small matrices in one step.
+Volta (2017, V100) marks a clear shift. With Volta, NVIDIA started to push AI-specific hardware: the first Tensor Cores, units inside each SM that multiply small matrices in one step.
 
 After that:
 
 - Turing (2018, RTX 20 series) brought Tensor Cores and ray tracing units to consumer cards  
 - Ampere (2020, A100 and RTX 30 series) scaled this idea further  
 - Ada Lovelace (2022, RTX 40 series and L40S) brought these units to consumer and workstation cards in the same year as Hopper  
-- Hopper (2022, H100) optimized heavily for AI workloads, especially transformers, with FP8 (8-bit floating point) math  
+- Hopper (2022, H100) optimized heavily for AI workloads, especially transformers, with FP8 math  
 
 From here, GPUs were no longer just graphics hardware. They became full compute platforms.
 
@@ -49,7 +49,7 @@ From here, GPUs were no longer just graphics hardware. They became full compute 
 
 ### Blackwell (2024 to 2025)
 
-Blackwell was announced in 2024 and is designed around large-scale AI workloads. The B200 data center GPU joins two chips in one package and uses HBM3e (High Bandwidth Memory) with up to 8 TB/s. It also added NVFP4, a 4-bit number format for AI. Blackwell Ultra (B300, 2025) raised the memory to 288 GB per GPU. On the consumer side, the RTX 50 series (2025) uses Blackwell too.
+Blackwell was announced in 2024 and is designed around large-scale AI workloads. The B200 data center GPU joins two chips in one package and uses HBM3e with up to 8 TB/s. It also added NVFP4, a 4-bit number format for AI. Blackwell Ultra (B300, 2025) raised the memory to 288 GB per GPU. On the consumer side, the RTX 50 series (2025) uses Blackwell too.
 
 The real performance gains are not the same for every case. They depend on:
 
@@ -61,7 +61,7 @@ So "faster GPU" is not always a simple statement.
 
 ### Rubin (2026, Now Shipping)
 
-Rubin is the architecture after Blackwell. It is in full production, and the first Vera Rubin systems, which pair Rubin GPUs with NVIDIA's Vera CPU (Central Processing Unit), started shipping in September 2026, with its compute capability of 10.7 already supported in CUDA 13.4.
+Rubin is the architecture after Blackwell. It is in full production, and the first Vera Rubin systems, which pair Rubin GPUs with NVIDIA's Vera CPU, started shipping in September 2026, with its compute capability of 10.7 already supported in CUDA 13.4.
 
 Each Rubin GPU brings:
 
@@ -82,7 +82,7 @@ The direction stays the same. Everything moves toward larger, more specialized A
 
 ## Compute Capability
 
-CUDA does not use architecture names. Each GPU reports a CC (Compute Capability), a version number like 8.9. The major number usually follows the architecture, but not always one to one:
+CUDA does not use architecture names. Each GPU reports a CC, a version number like 8.9. The major number usually follows the architecture, but not always one to one:
 
 - Ampere: 8.0 (A100) and 8.6 (RTX 30 series)  
 - Ada Lovelace: 8.9 (RTX 40 series, L40S)  
@@ -99,7 +99,7 @@ So Ada (8.9) shares the major number 8 with Ampere, and Blackwell uses two diffe
 
 Simple numbers make a poor comparison. Examples are:
 
-- TFLOPS (trillions of floating-point operations per second)  
+- TFLOPS  
 - clock speed  
 
 These numbers do not tell the full story. Performance depends on:
@@ -149,8 +149,9 @@ GPU architectures show how computing itself is changing. The path goes from grap
 - bandwidth: how many bytes per second can move between memory and the chip.
 - precision: how many bits each number uses, such as FP32, FP16 or FP8; fewer bits means faster math but less accuracy.
 - Rubin: the architecture after Blackwell, in full production and shipping to cloud providers in the second half of 2026.
+- CPU (Central Processing Unit): the main processor of a computer; Vera is NVIDIA's own CPU, paired with Rubin GPUs.
 - Tensor Core: a unit inside each SM that does small matrix multiplications in one step, the core of AI speed.
-- HBM (High Bandwidth Memory) / HBM3e / HBM4: stacked memory next to the chip; Blackwell uses HBM3e, Rubin uses HBM4.
+- HBM3e / HBM4 (High Bandwidth Memory): stacked memory next to the chip; Blackwell uses HBM3e, Rubin uses HBM4.
 - SM (Streaming Multiprocessor): the building block of an NVIDIA GPU that holds its cores, Tensor Cores and shared memory.
 - cloud: computers rented over the internet from a provider's data centers.
 - Rubin Ultra / Feynman: announced architectures after Rubin, planned for 2027 and 2028.

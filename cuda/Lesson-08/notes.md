@@ -1,6 +1,6 @@
 # 08 > Vector Addition
 
-Lessons 00 to 07 launched kernels that only printed their IDs. This lesson builds the first CUDA (Compute Unified Device Architecture) program that does real work on data: it adds two vectors of 1024 numbers on the GPU (Graphics Processing Unit). Along the way you meet the six steps that almost every CUDA program follows, from allocating memory to freeing it.
+Lessons 00 to 07 launched kernels that only printed their IDs. This lesson builds the first CUDA program that does real work on data: it adds two vectors of 1024 numbers on the GPU. Along the way you meet the six steps that almost every CUDA program follows, from allocating memory to freeing it.
 
 > [!NOTE]
 > The code targets CUDA 13 on Ubuntu 24 and the NVIDIA L40S (`sm_89`) from the earlier lessons. The program checks its own result, so you can run it on any NVIDIA GPU and see if it worked.
@@ -20,7 +20,7 @@ This is called an element-wise operation. Each sum only needs its own two inputs
 
 ## On the CPU: One Element at a Time
 
-On the CPU (Central Processing Unit), in plain C, you write a loop:
+On the CPU, in plain C, you write a loop:
 
 ```c
 for (int i = 0; i < 1024; i++) {
@@ -38,14 +38,14 @@ Start with the simplest launch: 1 block of 1024 threads, `<<<1, 1024>>>`. The bl
 
 <cuda-launch blocks="1" threads="1024" fn="vectorAdd"></cuda-launch>
 
-Every thread runs the same single line, `c[i] = a[i] + b[i]`. Only `i` is different. The GPU spreads the 1024 threads over its cores, 32 at a time in warps (see [Lesson 07](../Lesson-07/notes.md)), and runs them in parallel. This idea, one instruction for many threads with different data, is the heart of CUDA. It is called SIMT (Single Instruction, Multiple Threads), as in [Lesson 01](../Lesson-01/notes.md).
+Every thread runs the same single line, `c[i] = a[i] + b[i]`. Only `i` is different. The GPU spreads the 1024 threads over its cores, 32 at a time in warps (see [Lesson 07](../Lesson-07/notes.md)), and runs them in parallel. This idea, one instruction for many threads with different data, is the heart of CUDA. It is called SIMT, as in [Lesson 01](../Lesson-01/notes.md).
 
 Compare the two ways with 16 elements. The CPU loop needs 16 steps, one per element. The GPU threads fill all 16 elements in one step:
 
 <vector-add n="16"></vector-add>
 
 > [!NOTE]
-> "One step" is the idea, not an exact timing. One block runs on one SM (Streaming Multiprocessor). The SM holds all 32 warps of this block at once and runs them in quick turns, so no thread waits for a loop to reach its index. The copies to and from the GPU also take time, as the six steps below show.
+> "One step" is the idea, not an exact timing. One block runs on one SM. The SM holds all 32 warps of this block at once and runs them in quick turns, so no thread waits for a loop to reach its index. The copies to and from the GPU also take time, as the six steps below show.
 
 ## The Kernel
 
@@ -255,7 +255,7 @@ nvcc -arch=sm_89 -o vector_add vector_add.cu
 ```
 
 - `nvcc` is the CUDA compiler.
-- `-arch=sm_89` builds for the L40S. On another GPU, use its own compute capability, for example `-arch=sm_80` for CC (compute capability) 8.0 (see [Lesson 03](../Lesson-03/notes.md) and [Lesson 06](../Lesson-06/notes.md)).
+- `-arch=sm_89` builds for the L40S. On another GPU, use its own compute capability, for example `-arch=sm_80` for compute capability 8.0 (see [Lesson 03](../Lesson-03/notes.md) and [Lesson 06](../Lesson-06/notes.md)).
 - `-o vector_add` names the program.
 - `./vector_add` runs it from the current folder.
 
@@ -439,6 +439,8 @@ int main()
 - unified memory: memory from `cudaMallocManaged` that both sides can use with one pointer.
 - GPU (Graphics Processing Unit): the processor that runs kernels, with thousands of small cores.
 - CPU (Central Processing Unit): the main processor that runs `main()` and launches kernels.
+- SM (Streaming Multiprocessor): a processor inside the GPU that runs blocks. One block always runs on one SM.
+- compute capability (CC): the version number of a GPU generation, 8.9 on the L40S. It picks the `-arch=sm_XX` value.
 - index: the position of an element in an array, counted from 0. `c[3]` is the fourth element of `c`.
 - parallel: at the same time, on many cores, instead of one after another.
 - `__global__`: marks a function as a kernel, launched from the CPU and run on the GPU.

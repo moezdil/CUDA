@@ -1,13 +1,13 @@
 # 01 > GPU'ların Kısa Tarihi
 
-Bu ders, GPU'ların (Graphics Processing Unit, grafik işlem birimi) basit grafik çiplerinden bugünkü yapay zekânın arkasındaki hesaplama platformlarına nasıl dönüştüğünü anlatıyor. 1993'ten bugünkü nesle ve NVIDIA'nın sırada diye duyurduğu ürünlere kadar önemli adımları görürsün. Bu arka plan, CUDA kodu yazmadan önce işine yarar.
+Bu ders, GPU'ların basit grafik çiplerinden bugünkü yapay zekânın arkasındaki hesaplama platformlarına nasıl dönüştüğünü anlatıyor. 1993'ten bugünkü nesle ve NVIDIA'nın sırada diye duyurduğu ürünlere kadar önemli adımları görürsün. Bu arka plan, CUDA kodu yazmadan önce işine yarar.
 
 ## İlk Yıllar
 
 NVIDIA Nisan 1993'te kuruldu. İlk ürünü NV1, 1995'te çıktı.
 
 > [!NOTE]
-> NVIDIA'yı Jensen Huang, Chris Malachowsky ve Curtis Priem kurdu. Jensen Huang hâlâ şirketin CEO'su (chief executive officer, üst yönetici).
+> NVIDIA'yı Jensen Huang, Chris Malachowsky ve Curtis Priem kurdu. Jensen Huang hâlâ şirketin CEO'su.
 
 O ilk donanım bugünle kıyaslanınca çok basitti:
 
@@ -31,7 +31,7 @@ Rolleri de değişti.
 
 GPU'lar ilk başta görüntü oluşturmak için yapıldı. Bugün bu, yaptıkları işin küçük bir parçası. GPU'lar artık yaygın olarak şunlar için kullanılıyor:
 
-- yapay zekâ (AI, artificial intelligence)  
+- yapay zekâ  
 - büyük ölçekli veri işleme  
 - simülasyonlar  
 - bilimsel hesaplama  
@@ -44,7 +44,7 @@ Yani modern bir GPU sadece bir grafik cihazı değil, bir hesaplama platformudur
 
 ## GeForce
 
-İki yıl sonra, 1999'da NVIDIA GeForce 256'yı çıkardı ve onu ilk GPU olarak tanıttı. 3D şekilleri yerleştiren ve aydınlatan hesap olan T&L'yi (transform and lighting, dönüştürme ve aydınlatma) CPU (Central Processing Unit, merkezi işlem birimi) yerine donanımda yapıyordu. GeForce serisi böyle başladı ve GPU'lar geniş kitlelere ulaştı. Başlangıç noktası hâlâ çok düşük olduğu için çekirdek sayısındaki ya da bellekteki küçük artışlar bile büyük fark yarattı.
+İki yıl sonra, 1999'da NVIDIA GeForce 256'yı çıkardı ve onu ilk GPU olarak tanıttı. 3D şekilleri yerleştiren ve aydınlatan hesap olan T&L'yi CPU yerine donanımda yapıyordu. GeForce serisi böyle başladı ve GPU'lar geniş kitlelere ulaştı. Başlangıç noktası hâlâ çok düşük olduğu için çekirdek sayısındaki ya da bellekteki küçük artışlar bile büyük fark yarattı.
 
 ## İstikrarlı Büyüme
 
@@ -57,7 +57,7 @@ Ekim 2026 itibarıyla NVIDIA şu alanlarda merkezi bir rol oynuyor:
 - oyun  
 - yapay zekâ altyapısı  
 - bulut bilişim  
-- HPC (high-performance computing, yüksek performanslı hesaplama)  
+- HPC  
 
 Güncel ürünler PC'ler için GeForce RTX 50 serisi (Blackwell, 2025) ve veri merkezlerinde Blackwell Ultra (B300, 2025). Sıradaki mimari Rubin, Eylül 2026'da ilk Vera Rubin NVL72 kabinleriyle teslim edilmeye başladı. Güncel CUDA sürümü CUDA 13.4.
 
@@ -83,6 +83,7 @@ Bu da CUDA'ya geçişi kolaylaştırır.
 - GPU (Graphics Processing Unit): binlerce basit çekirdeğiyle çok sayıda işi paralel çalıştırmak için tasarlanmış işlemci.
 - NVIDIA: 1993'te kurulan, GeForce ve veri merkezi GPU'larını üreten ve CUDA'yı yaratan şirket.
 - NV1: NVIDIA'nın 1995'te çıkan ilk ürünü.
+- CEO (chief executive officer): bir şirketi günlük olarak yöneten kişi, üst yönetici.
 - veri bant genişliği (data bandwidth): bir GPU'nun saniyede ne kadar veri taşıyabildiği; ilk donanımlarda çok sınırlıydı.
 - paralellik (parallelism): birçok işi aynı anda yapmak; ilk GPU'larda neredeyse yoktu.
 - çekirdek (core): işi yapan birim; modern GPU'larda binlercesi var.
@@ -95,6 +96,7 @@ Bu da CUDA'ya geçişi kolaylaştırır.
 - RIVA 128: NVIDIA'nın 3D ile 2D'yi birleştiren ve şirketi tanınır yapan 1997 tarihli çipi.
 - GeForce 256: NVIDIA'nın 1999'da ilk GPU olarak tanıttığı, 32 MB bellekli ve 120 MHz saatli kart.
 - T&L (transform and lighting): 3D şekilleri yerleştiren ve aydınlatan hesap; GeForce 256 bunu CPU'dan GPU'ya taşıdı.
+- CPU (Central Processing Unit): bilgisayarın ana işlemcisi; GeForce 256'dan önce T&L hesabını o yapıyordu.
 - GeForce: GPU'ları ilk kez geniş kitlelere ulaştıran NVIDIA tüketici GPU serisi.
 - verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
 - Tensor Core: yapay zekânın matris hesapları için yapılmış birimler; ilk kez Volta'da (2017) geldi.

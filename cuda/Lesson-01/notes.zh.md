@@ -13,17 +13,17 @@ printIDs<<<1, 4>>>();
 //  blocks -+  +- threads per block (was 1, now 4)
 ```
 
-GPU（Graphics Processing Unit，图形处理器）会同时运行 4 份 `printIDs`。每一份都有自己的 `threadIdx.x`，分别是 0、1、2、3。它们的 `blockIdx.x` 都是 0，因为仍然只有一个线程块。
+GPU 会同时运行 4 份 `printIDs`。每一份都有自己的 `threadIdx.x`，分别是 0、1、2、3。它们的 `blockIdx.x` 都是 0，因为仍然只有一个线程块。
 
 <cuda-launch blocks="1" threads="4" fn="printIDs"></cuda-launch>
 
-## SIMT（Single Instruction, Multiple Threads，单指令多线程）
+## SIMT
 
-4 个线程执行的是同样的指令，但每个线程都有自己的编号和自己的变量。线程 2 读取 `threadIdx.x` 得到 2，线程 3 得到 3，所以同一行 `printf` 在不同线程里会打印出不同的数字。在这个核函数里，线程之间既不互相等待，也不共享任何数据。这种模型叫作 SIMT（Single Instruction, Multiple Threads，单指令多线程）。
+4 个线程执行的是同样的指令，但每个线程都有自己的编号和自己的变量。线程 2 读取 `threadIdx.x` 得到 2，线程 3 得到 3，所以同一行 `printf` 在不同线程里会打印出不同的数字。在这个核函数里，线程之间既不互相等待，也不共享任何数据。这种模型叫作 SIMT。
 
 ## 线程束
 
-GPU 以 32 个线程为一组来运行线程，这样的一组叫作线程束（warp）。硬件调度的单位是线程束，而不是单个线程。启动 4 个线程时，GPU 会建立一个有 32 个通道的线程束，但只用到其中 4 个，其余 28 个通道都闲着。
+GPU 以 32 个线程为一组来运行线程，这样的一组叫作线程束。硬件调度的单位是线程束，而不是单个线程。启动 4 个线程时，GPU 会建立一个有 32 个通道的线程束，但只用到其中 4 个，其余 28 个通道都闲着。
 
 一个线程块有多少个线程束，等于线程数除以 32 再向上取整。比如一个 100 个线程的线程块需要 4 个线程束：三个各有 32 个线程的满线程束（共 96 个），再加一个只有 4 个活跃线程的线程束。
 
@@ -31,11 +31,11 @@ GPU 以 32 个线程为一组来运行线程，这样的一组叫作线程束（
 > 线程块大小最好选 32 的倍数，比如 128 或 256。这样就不会有线程束留着空闲的通道。
 
 > [!NOTE]
-> 如果一个线程束里的线程在 if/else 中走了不同的分支，GPU 会把这几条路径一条接一条地执行。这叫作线程束分化（warp divergence）。这一课不会出现这种情况，因为 4 个线程运行的都是同一行代码。
+> 如果一个线程束里的线程在 if/else 中走了不同的分支，GPU 会把这几条路径一条接一条地执行。这叫作线程束分化。这一课不会出现这种情况，因为 4 个线程运行的都是同一行代码。
 
 ## 为什么输出顺序会变
 
-核函数里的 `printf` 并不会立刻打印。每个线程先把自己的那一行写进显存里的一个缓冲区，等到 CPU 等待 GPU 时（这里就是 `cudaDeviceSynchronize()`），缓冲区的内容才会打印出来。线程写入的先后顺序是不固定的，即使在同一个线程束里也是如此，所以每次运行的输出顺序都可能不同。
+核函数里的 `printf` 并不会立刻打印。每个线程先把自己的那一行写进显存里的一个缓冲区，等到 CPU 等待 GPU 时，也就是这里的 `cudaDeviceSynchronize()`，缓冲区的内容才会打印出来。线程写入的先后顺序是不固定的，即使在同一个线程束里也是如此，所以每次运行的输出顺序都可能不同。
 
 <printf-order threads="4"></printf-order>
 
@@ -84,7 +84,7 @@ nvcc -o first_kernel first_kernel.cu
 ./first_kernel
 ```
 
-- `nvcc` 是 CUDA（Compute Unified Device Architecture，统一计算设备架构）编译器，它会把文件里的 CPU（Central Processing Unit，中央处理器）部分和 GPU 部分一起编译。
+- `nvcc` 是 CUDA 编译器，它会把文件里的 CPU 部分和 GPU 部分一起编译。
 - `-o first_kernel` 把程序命名为 `first_kernel`。不加这个选项，程序名默认是 `a.out`。
 - `first_kernel.cu` 是包含上面代码的源文件。
 - `./first_kernel` 运行当前目录下的程序。

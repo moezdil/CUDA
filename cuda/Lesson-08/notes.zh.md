@@ -1,6 +1,6 @@
 # 08 > 向量加法
 
-第 00 课到第 07 课里的核函数只会打印自己的编号。本课要写出第一个真正处理数据的 CUDA（Compute Unified Device Architecture，统一计算设备架构）程序：在 GPU（Graphics Processing Unit，图形处理器）上把两个各含 1024 个数的向量相加。你还会顺带认识几乎所有 CUDA 程序都要走的六个步骤，从分配内存一直到释放内存。
+第 00 课到第 07 课里的核函数只会打印自己的编号。本课要写出第一个真正处理数据的 CUDA 程序：在 GPU 上把两个各含 1024 个数的向量相加。你还会顺带认识几乎所有 CUDA 程序都要走的六个步骤，从分配内存一直到释放内存。
 
 > [!NOTE]
 > 代码的目标环境和前几课一样：CUDA 13、Ubuntu 24 和 NVIDIA L40S（`sm_89`）。程序会自己检查结果，所以你可以在任何一块 NVIDIA GPU 上运行它，看看结果对不对。
@@ -16,11 +16,11 @@ c[1]    = a[1]    + b[1]
 c[1023] = a[1023] + b[1023]
 ```
 
-这叫作逐元素（element-wise）运算。每个和只需要自己的两个输入，不必等待其他任何一个和。所以向量加法非常适合用作 GPU 的第一个任务。
+这叫作逐元素运算。每个和只需要自己的两个输入，不必等待其他任何一个和。所以向量加法非常适合用作 GPU 的第一个任务。
 
 ## 在 CPU 上：一次一个元素
 
-在 CPU（Central Processing Unit，中央处理器）上用普通的 C 语言，你会写一个循环：
+在 CPU 上用普通的 C 语言，你会写一个循环：
 
 ```c
 for (int i = 0; i < 1024; i++) {
@@ -38,14 +38,14 @@ for (int i = 0; i < 1024; i++) {
 
 <cuda-launch blocks="1" threads="1024" fn="vectorAdd"></cuda-launch>
 
-每个线程都运行同一行代码 `c[i] = a[i] + b[i]`，只有 `i` 不同。GPU 把这 1024 个线程分配到各个核心上，以线程束为单位、每次 32 个（见[第 07 课](../Lesson-07/notes.md)），并行地运行它们。让许多线程执行同一条指令、各自处理不同的数据，这正是 CUDA 的核心思想，叫作 SIMT（Single Instruction, Multiple Threads，单指令多线程），[第 01 课](../Lesson-01/notes.md)里也讲过。
+每个线程都运行同一行代码 `c[i] = a[i] + b[i]`，只有 `i` 不同。GPU 把这 1024 个线程分配到各个核心上，以线程束为单位、每次 32 个（见[第 07 课](../Lesson-07/notes.md)），并行地运行它们。让许多线程执行同一条指令、各自处理不同的数据，这正是 CUDA 的核心思想，叫作 SIMT，[第 01 课](../Lesson-01/notes.md)里也讲过。
 
 用 16 个元素对比一下这两种做法。CPU 循环要走 16 步，每个元素一步；GPU 线程只用一步就填满了全部 16 个元素：
 
 <vector-add n="16"></vector-add>
 
 > [!NOTE]
-> “一步”只是示意，并不代表准确的耗时。一个线程块在一个 SM（Streaming Multiprocessor，流式多处理器）上运行。这个 SM 同时容纳该线程块的全部 32 个线程束，并快速轮流运行它们，所以没有哪个线程需要等循环走到自己的下标。数据复制到 GPU、再从 GPU 复制回来也要花时间，下面的六个步骤会讲到这一点。
+> “一步”只是示意，并不代表准确的耗时。一个线程块在一个 SM 上运行。这个 SM 同时容纳该线程块的全部 32 个线程束，并快速轮流运行它们，所以没有哪个线程需要等循环走到自己的下标。数据复制到 GPU、再从 GPU 复制回来也要花时间，下面的六个步骤会讲到这一点。
 
 ## 核函数
 
@@ -71,7 +71,7 @@ __global__ void vectorAdd(const int *a, const int *b, int *c, int n)
 
 ## 主机端内存和设备端内存
 
-CPU 和 GPU 各有自己的内存。在 CUDA 里，CPU 这一侧叫作主机端（host），GPU 这一侧叫作设备端（device）。核函数只能读取设备端内存，CPU 只能读取主机端内存，所以数据必须由你主动在两侧之间复制。
+CPU 和 GPU 各有自己的内存。在 CUDA 里，CPU 这一侧叫作主机端，GPU 这一侧叫作设备端。核函数只能读取设备端内存，CPU 只能读取主机端内存，所以数据必须由你主动在两侧之间复制。
 
 代码用名字区分两侧：`h_a` 位于主机端，`d_a` 位于设备端。`h_` 和 `d_` 前缀是一种常见约定，可以防止你不小心把 CPU 指针传给核函数。
 
@@ -255,7 +255,7 @@ nvcc -arch=sm_89 -o vector_add vector_add.cu
 ```
 
 - `nvcc` 是 CUDA 编译器。
-- `-arch=sm_89` 表示为 L40S 编译。换成别的 GPU 时，要用它自己的计算能力，例如 CC（compute capability，计算能力）8.0 就用 `-arch=sm_80`（见[第 03 课](../Lesson-03/notes.md)和[第 06 课](../Lesson-06/notes.md)）。
+- `-arch=sm_89` 表示为 L40S 编译。换成别的 GPU 时，要用它自己的计算能力，例如计算能力 8.0 就用 `-arch=sm_80`（见[第 03 课](../Lesson-03/notes.md)和[第 06 课](../Lesson-06/notes.md)）。
 - `-o vector_add` 指定程序名。
 - `./vector_add` 在当前目录下运行它。
 
@@ -439,6 +439,8 @@ int main()
 - 统一内存（unified memory）：用 `cudaMallocManaged` 分配的内存，两侧都能用同一个指针访问。
 - GPU（Graphics Processing Unit，图形处理器）：运行核函数的处理器，拥有成千上万个小核心。
 - CPU（Central Processing Unit，中央处理器）：运行 `main()` 并启动核函数的主处理器。
+- SM（Streaming Multiprocessor，流式多处理器）：GPU 内部运行线程块的处理器。一个线程块总是在一个 SM 上运行。
+- 计算能力（compute capability，CC）：一代 GPU 的版本号，L40S 是 8.9。`-arch=sm_XX` 的值由它决定。
 - 下标（index）：元素在数组里的位置，从 0 开始数。`c[3]` 是 `c` 的第四个元素。
 - 并行（parallel）：在许多核心上同时进行，而不是一个接一个依次进行。
 - `__global__`：把一个函数标记为核函数，由 CPU 启动，在 GPU 上运行。

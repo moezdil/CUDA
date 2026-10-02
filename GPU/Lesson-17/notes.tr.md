@@ -1,10 +1,10 @@
 # 17 > Linux'ta CUDA Toolkit Kurmak
 
-Bu derste WSL'deki (Windows Subsystem for Linux) Linux'a CUDA Toolkit'i nasıl kuracağını göreceksin. Bundan sonra sistemin GPU (Graphics Processing Unit, grafik işlemci) üzerinde kod derleyip çalıştırabilir. Adımlar, NVIDIA'nın Ekim 2026 itibarıyla geçerli kurulum kılavuzunu izliyor.
+Bu derste WSL'deki Linux'a CUDA Toolkit'i nasıl kuracağını göreceksin. Bundan sonra sistemin GPU üzerinde kod derleyip çalıştırabilir. Adımlar, NVIDIA'nın Ekim 2026 itibarıyla geçerli kurulum kılavuzunu izliyor.
 
 ## Platformuna uygun olanı seç
 
-Bir CUDA kurulumu platformuna tam olarak uymalı. WSL'de NVIDIA'nın WSL-Ubuntu deposunu (repository) kullan. Bu depodaki paketlerde toolkit var ama Linux driver'ı yok, bu yüzden Windows'tan gelen driver'ın üzerine yazamazlar. Doğrudan kurulu Ubuntu'da (native Ubuntu) ise Ubuntu sürümüne ait depoyu kullanırsın, örneğin Ubuntu 24.04 için `ubuntu2404`.
+Bir CUDA kurulumu platformuna tam olarak uymalı. WSL'de NVIDIA'nın WSL-Ubuntu deposunu kullan. Bu depodaki paketlerde toolkit var ama Linux driver'ı yok, bu yüzden Windows'tan gelen driver'ın üzerine yazamazlar. Doğrudan kurulu Ubuntu'da ise Ubuntu sürümüne ait depoyu kullanırsın, örneğin Ubuntu 24.04 için `ubuntu2404`.
 
 ## Önce GPU'yu kontrol et
 
@@ -14,7 +14,7 @@ CUDA'yı kurmadan önce sisteminin GPU'yu görebildiğinden emin ol:
 nvidia-smi
 ```
 
-- `nvidia-smi`, driver'a (sürücüye) GPU hakkında soru soran NVIDIA komut satırı aracıdır. GPU'nun adını, driver sürümünü ve bellek kullanımını yazdırır.
+- `nvidia-smi`, driver'a GPU hakkında soru soran NVIDIA komut satırı aracıdır. GPU'nun adını, driver sürümünü ve bellek kullanımını yazdırır.
 - WSL'de de çalışır, çünkü driver Windows tarafında durur. WSL bu aracı Windows'tan `/usr/lib/wsl/lib` altına eşler.
 
 Bu komut hata verirse dur ve önce GPU kurulumunu düzelt. O olmadan CUDA çalışmaz, çünkü toolkit GPU ile driver üzerinden konuşur.
@@ -35,7 +35,7 @@ sudo apt-get update
 sudo apt-get -y install cuda-toolkit-13-3
 ```
 
-- `wget` bir URL'den dosya indirir. Adresteki `wsl-ubuntu/x86_64` kısmı, 64 bitlik Intel ya da AMD CPU (Central Processing Unit, merkezi işlemci) üzerindeki WSL için olan depoyu seçer.
+- `wget` bir URL'den dosya indirir. Adresteki `wsl-ubuntu/x86_64` kısmı, 64 bitlik Intel ya da AMD CPU üzerindeki WSL için olan depoyu seçer.
 - `cuda-keyring_1.1-1_all.deb` küçük bir pakettir. NVIDIA'nın imza anahtarını ve deponun adresini içerir; böylece sistemin NVIDIA'nın paketlerine güvenir.
 - `sudo` bir komutu yönetici yetkileriyle çalıştırır. Paket kurmak sistemi değiştirir, bu yüzden bu yetkiler gerekir.
 - `dpkg -i` yerel bir `.deb` dosyasını kurar; burada keyring'i kurar.
@@ -45,7 +45,7 @@ sudo apt-get -y install cuda-toolkit-13-3
 
 Bu komutlar CUDA Toolkit 13.3'ü kurar. İçinde şunlar var:
 
-* CUDA compiler (nvcc)
+* CUDA compiler nvcc
 * CUDA runtime
 * temel kütüphaneler
 
@@ -54,7 +54,7 @@ Bu komutlar CUDA Toolkit 13.3'ü kurar. İçinde şunlar var:
 
 ## Kurulumu doğrula
 
-Derleyicinin (compiler) kurulu olduğunu ve shell'in onu bulabildiğini kontrol et:
+Derleyicinin kurulu olduğunu ve shell'in onu bulabildiğini kontrol et:
 
 ```bash
 nvcc --version
@@ -84,8 +84,8 @@ export PATH=/usr/local/cuda/bin:$PATH
 
 CUDA, GPU mimarisine sıkı sıkıya bağlıdır. Her yeni mimari, onu tanıyan bir CUDA sürümü ister:
 
-* Hopper'da FP8 (8 bit kayan nokta), CUDA 11.8'den beri
-* Blackwell'de FP4 (4 bit kayan nokta), CUDA 12.8'den beri
+* Hopper'da FP8, CUDA 11.8'den beri
+* Blackwell'de FP4, CUDA 12.8'den beri
 * Rubin (compute capability 10,7) için kütüphane desteği, CUDA 13.4'ten beri
 
 Kullandığın CUDA sürümü bunları desteklemiyorsa kodun yine çalışır, ama donanımdan tam olarak yararlanamaz ya da en yeni GPU'yu hiç hedefleyemez.
@@ -105,7 +105,7 @@ CUDA nadiren tek başına kullanılır; şu gibi sistemlerin altında çalışı
 
 Sistemin artık hazır. Elinde şunlar var:
 
-* bir Linux ortamı (WSL)
+* bir Linux ortamı, burada WSL
 * GPU erişimi
 * CUDA Toolkit 13.3
 * çalışan bir CUDA derleyicisi

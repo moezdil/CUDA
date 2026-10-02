@@ -1,13 +1,13 @@
 # 01 > GPU 简史
 
-这一课讲 GPU（Graphics Processing Unit，图形处理器）是怎样从简单的图形芯片，一步步成长为今天 AI 背后的计算平台的。内容从 1993 年一直讲到当前这一代产品，以及 NVIDIA 已经公布的下一代。在写 CUDA 代码之前，先了解这些背景会很有帮助。
+这一课讲 GPU 是怎样从简单的图形芯片，一步步成长为今天 AI 背后的计算平台的。内容从 1993 年一直讲到当前这一代产品，以及 NVIDIA 已经公布的下一代。在写 CUDA 代码之前，先了解这些背景会很有帮助。
 
 ## 早期
 
 NVIDIA 成立于 1993 年 4 月。它的第一款产品 NV1 在 1995 年推出。
 
 > [!NOTE]
-> NVIDIA 由黄仁勋（Jensen Huang）、Chris Malachowsky 和 Curtis Priem 创立。黄仁勋至今仍是公司的 CEO（chief executive officer，首席执行官）。
+> NVIDIA 由黄仁勋、Chris Malachowsky 和 Curtis Priem 创立。黄仁勋至今仍是公司的 CEO。
 
 和今天相比，当时的硬件非常简陋：
 
@@ -31,7 +31,7 @@ NVIDIA 成立于 1993 年 4 月。它的第一款产品 NV1 在 1995 年推出�
 
 GPU 最初是为渲染图像而造的。如今这只是它工作中很小的一部分。现在 GPU 被广泛用于：
 
-- AI（artificial intelligence，人工智能）  
+- AI  
 - 大规模数据处理  
 - 仿真  
 - 科学计算  
@@ -44,7 +44,7 @@ GPU 最初是为渲染图像而造的。如今这只是它工作中很小的一�
 
 ## GeForce
 
-两年后的 1999 年，NVIDIA 推出了 GeForce 256，并把它宣传为第一款 GPU。它用硬件完成 T&L（transform and lighting，变换与光照），也就是摆放 3D 形状并给它们打光的那部分计算，而不再交给 CPU（Central Processing Unit，中央处理器）。GeForce 系列由此开始，GPU 也第一次变得随处都能买到。由于起点还很低，核心数或显存哪怕只多一点点，带来的差别都很大。
+两年后的 1999 年，NVIDIA 推出了 GeForce 256，并把它宣传为第一款 GPU。它用硬件完成 T&L，也就是摆放 3D 形状并给它们打光的那部分计算，而不再交给 CPU。GeForce 系列由此开始，GPU 也第一次变得随处都能买到。由于起点还很低，核心数或显存哪怕只多一点点，带来的差别都很大。
 
 ## 稳步增长
 
@@ -57,7 +57,7 @@ GPU 最初是为渲染图像而造的。如今这只是它工作中很小的一�
 - 游戏  
 - AI 基础设施  
 - 云计算  
-- HPC（high-performance computing，高性能计算）  
+- HPC  
 
 当前的产品是面向 PC 的 GeForce RTX 50 系列（Blackwell，2025），以及数据中心里的 Blackwell Ultra（B300，2025）。下一代架构 Rubin 已在 2026 年 9 月随首批 Vera Rubin NVL72 机柜开始出货。当前的 CUDA 版本是 CUDA 13.4。
 
@@ -83,6 +83,7 @@ GPU 最初是为渲染图像而造的。如今这只是它工作中很小的一�
 - GPU（Graphics Processing Unit，图形处理器）：拥有成千上万个简单核心的处理器，专门用来并行处理大量任务。
 - NVIDIA：成立于 1993 年的公司，生产 GeForce 和数据中心 GPU，并推出了 CUDA。
 - NV1：NVIDIA 的第一款产品，1995 年推出。
+- CEO（chief executive officer，首席执行官）：负责公司日常经营的最高管理者。
 - 数据带宽（data bandwidth）：GPU 每秒能搬运的数据量，早期硬件在这方面非常有限。
 - 并行（parallelism）：同时做很多事情，早期 GPU 几乎做不到这一点。
 - 核心（core）：真正干活的单元，现代 GPU 有几千个。
@@ -95,6 +96,7 @@ GPU 最初是为渲染图像而造的。如今这只是它工作中很小的一�
 - RIVA 128：NVIDIA 1997 年的芯片，集 3D 和 2D 于一身，让 NVIDIA 广为人知。
 - GeForce 256：NVIDIA 在 1999 年宣传为第一款 GPU 的显卡，有 32 MB 显存，频率 120 MHz。
 - T&L（transform and lighting，变换与光照）：摆放 3D 形状并给它们打光的计算，GeForce 256 把它从 CPU 移到了 GPU 上。
+- CPU（Central Processing Unit，中央处理器）：计算机的主处理器，在 GeForce 256 之前由它负责 T&L 计算。
 - GeForce：NVIDIA 的消费级 GPU 系列，它让 GPU 变得随处都能买到。
 - 能效（efficiency）：GPU 每消耗一瓦电能完成多少工作。
 - Tensor Core：为 AI 的矩阵运算而造的单元，最早出现在 Volta（2017）上。

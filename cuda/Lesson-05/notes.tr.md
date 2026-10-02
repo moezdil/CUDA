@@ -1,10 +1,10 @@
 # 05 > CUDA Platform Katmanları
 
-Ders 00 ile 04 arası, CUDA'nın (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) yalnızca küçük bir parçasını kullandı: C/C++ ile yazılıp `nvcc` ile derlenen bir kernel. Bu derste bir adım geri çekilip CUDA Toolkit 13 ile gelen platformun tamamına bakıyoruz. Katmanları bilirsen, ileride karşına çıkan her yeni araç ya da kütüphanenin nereye oturduğunu kolayca görürsün.
+Ders 00 ile 04 arası, CUDA'nın yalnızca küçük bir parçasını kullandı: C/C++ ile yazılıp `nvcc` ile derlenen bir kernel. Bu derste bir adım geri çekilip CUDA Toolkit 13 ile gelen platformun tamamına bakıyoruz. Katmanları bilirsen, ileride karşına çıkan her yeni araç ya da kütüphanenin nereye oturduğunu kolayca görürsün.
 
 ## Beş Katman
 
-CUDA platformunun beş katmanı var. Kod yazdığın diller en üstte, GPU (Graphics Processing Unit, grafik işlem birimi) donanımı en altta durur; AI (Artificial Intelligence, yapay zekâ) kütüphaneleri de hepsinin üzerine kurulur. Bir katmana ya da öğeye tıklayıp açıklamasını okuyabilirsin.
+CUDA platformunun beş katmanı var. Kod yazdığın diller en üstte, GPU donanımı en altta durur; AI kütüphaneleri de hepsinin üzerine kurulur. Bir katmana ya da öğeye tıklayıp açıklamasını okuyabilirsin.
 
 <cuda-stack></cuda-stack>
 
@@ -18,14 +18,14 @@ CUDA platformunun beş katmanı var. Kod yazdığın diller en üstte, GPU (Grap
 
 - CUDA C/C++, kernel yazmak için kullanılan ana dildir; Ders 00 ile 04 arasındaki bütün dersler onu kullandı.
 - CUDA Fortran, Fortran programcılarının kernel'ları C++ yerine Fortran ile yazmasını sağlar.
-- OpenACC (Open Accelerators, açık hızlandırıcılar) tersten çalışır: normal C, C++ ya da Fortran döngülerine kısa işaretler (annotation) eklersin, derleyici de bu döngüleri GPU koduna çevirir. Hiçbir kernel'ı elle yazmazsın.
-- Python, GPU'ya kütüphaneler üzerinden ulaşır. CuPy sana GPU'da duran, NumPy tarzı diziler verir; Numba, Python fonksiyonlarını GPU kernel'larına derler. NVIDIA'nın kendi CUDA Python paketleri (`cuda-python`) ise Python'a CUDA driver ve runtime API'lerine (Application Programming Interfaces, uygulama programlama arayüzleri) doğrudan erişim sağlar.
+- OpenACC tersten çalışır: normal C, C++ ya da Fortran döngülerine kısa işaretler eklersin, derleyici de bu döngüleri GPU koduna çevirir. Hiçbir kernel'ı elle yazmazsın.
+- Python, GPU'ya kütüphaneler üzerinden ulaşır. CuPy sana GPU'da duran, NumPy tarzı diziler verir; Numba, Python fonksiyonlarını GPU kernel'larına derler. NVIDIA'nın kendi CUDA Python paketleri (`cuda-python`) ise Python'a CUDA driver ve runtime API'lerine doğrudan erişim sağlar.
 
 Hepsi sonunda aynı GPU donanımında çalışır; Ders 00 ile 04 arasında tanıdığın block'lar, thread'ler ve warp'lar burada da aynıdır.
 
 ## Geliştirme Araçları
 
-- Nsight Systems, bütün program için CPU (Central Processing Unit, merkezi işlem birimi) ve GPU işlerinin bir zaman çizelgesini kaydeder ve zamanın nereye gittiğini gösterir. Örneğin CPU veri kopyalarken GPU'nun boşta bekleyip beklemediğini görürsün.
+- Nsight Systems, bütün program için CPU ve GPU işlerinin bir zaman çizelgesini kaydeder ve zamanın nereye gittiğini gösterir. Örneğin CPU veri kopyalarken GPU'nun boşta bekleyip beklemediğini görürsün.
 - Nsight Compute tek bir kernel'a ayrıntılı bakar ve onun donanımı ne kadar iyi kullandığını gösterir.
 - Compute Sanitizer programı çalıştırır ve kernel'ların içindeki bellek hatalarını raporlar; örneğin bir dizinin sonunu aşıp yazan bir thread'i yakalar.
 
@@ -34,16 +34,16 @@ Hepsi sonunda aynı GPU donanımında çalışır; Ders 00 ile 04 arasında tan�
 
 ## Derleyici Araç Zinciri
 
-`nvcc` (NVIDIA CUDA Compiler, NVIDIA CUDA derleyicisi) `.cu` dosyalarını derler; şimdiye kadarki her derste derleme adımında onu kullandık. Dosyayı ikiye ayırır:
+`nvcc` `.cu` dosyalarını derler; şimdiye kadarki her derste derleme adımında onu kullandık. Dosyayı ikiye ayırır:
 
-- Host kodu, yani CPU'da çalışan kısım, normal bir C++ derleyicisine gider: Linux'ta `gcc` ya da `clang`, Windows'ta MSVC (Microsoft Visual C++).
-- Device kodu, yani kernel'lar, NVIDIA'nın kendi araçlarıyla iki aşamada derlenir. Önce PTX'e (Parallel Thread Execution, paralel thread yürütme) dönüşür; PTX, tek bir GPU'ya bağlı olmayan sanal bir komut setidir. Sonra PTX, SASS'a (Streaming ASSembler) dönüşür; SASS, tek bir GPU neslinin gerçek makine komutlarıdır.
+- Host kodu, yani CPU'da çalışan kısım, normal bir C++ derleyicisine gider: Linux'ta `gcc` ya da `clang`, Windows'ta MSVC.
+- Device kodu, yani kernel'lar, NVIDIA'nın kendi araçlarıyla iki aşamada derlenir. Önce PTX'e dönüşür; PTX, tek bir GPU'ya bağlı olmayan sanal bir komut setidir. Sonra PTX, SASS'a dönüşür; SASS, tek bir GPU neslinin gerçek makine komutlarıdır.
 
 <nvcc-pipeline></nvcc-pipeline>
 
-Program dosyası hem SASS'ı hem de PTX'i tutabilir. Program başladığında driver, GPU'ya uyan SASS'ı seçer; uyan yoksa PTX'i o anda SASS'a derler. Buna JIT (just-in-time, tam zamanında) derleme denir.
+Program dosyası hem SASS'ı hem de PTX'i tutabilir. Program başladığında driver, GPU'ya uyan SASS'ı seçer; uyan yoksa PTX'i o anda SASS'a derler. Buna JIT derleme denir.
 
-Bir örnekle bakalım: Ders 06'da `-arch=sm_89` ile derliyoruz. Bu, programın içine compute capability (CC, hesaplama yeteneği) 8.9 için hem SASS hem de PTX koyar.
+Bir örnekle bakalım: Ders 06'da `-arch=sm_89` ile derliyoruz. Bu, programın içine compute capability 8.9 için hem SASS hem de PTX koyar.
 
 - L40S'te (CC 8.9) driver, saklanan SASS'ı doğrudan çalıştırır.
 - Daha yeni bir GPU'da, örneğin CC 12.0 olan birinde, 12.0 için SASS yoktur. Driver, saklanan PTX'i açılışta CC 12.0 için SASS'a derler ve program yine çalışır.
@@ -54,23 +54,23 @@ Bir örnekle bakalım: Ders 06'da `-arch=sm_89` ile derliyoruz. Bu, programın i
 
 ## Donanım Yetenekleri
 
-- Tensor Core'lar, her SM'nin (Streaming Multiprocessor, akış çoklu işlemcisi) içinde matris hesabı için tasarlanmış birimlerdir. Ders 03'te saydığın FP32 (32-bit floating point, 32 bitlik kayan noktalı sayı) çekirdeklerinden ayrıdırlar ve FP16 (16-bit floating point, 16 bitlik kayan noktalı sayı) ya da FP8 (8-bit floating point, 8 bitlik kayan noktalı sayı) gibi küçük sayı biçimlerindeki matris işlerinde çok daha hızlıdırlar. Derin öğrenme onları yoğun şekilde kullanır.
-- MIG (Multi-Instance GPU, çok örnekli GPU), tek bir veri merkezi GPU'sunu en fazla yedi yalıtılmış parçaya böler. Her parçanın kendi SM'leri ve belleği vardır ve kendi başına bir GPU gibi davranır. Örneğin 80 GB'lık (gigabayt) bir A100, her biri yaklaşık 10 GB olan yedi parçaya bölünebilir; böylece yedi kullanıcı tek bir kartı birbirini yavaşlatmadan paylaşır.
+- Tensor Core'lar, her SM'nin içinde matris hesabı için tasarlanmış birimlerdir. Ders 03'te saydığın FP32 çekirdeklerinden ayrıdırlar ve FP16 ya da FP8 gibi küçük sayı biçimlerindeki matris işlerinde çok daha hızlıdırlar. Derin öğrenme onları yoğun şekilde kullanır.
+- MIG, tek bir veri merkezi GPU'sunu en fazla yedi yalıtılmış parçaya böler. Her parçanın kendi SM'leri ve belleği vardır ve kendi başına bir GPU gibi davranır. Örneğin 80 GB'lık bir A100, her biri yaklaşık 10 GB olan yedi parçaya bölünebilir; böylece yedi kullanıcı tek bir kartı birbirini yavaşlatmadan paylaşır.
 - Dynamic Parallelism, çalışan bir kernel'ın GPU üzerinden başka bir kernel başlatmasını sağlar. Ders 00 ile 04 arasında kernel'ları yalnızca CPU başlattı; Dynamic Parallelism bu adımı GPU'ya taşır. Böylece bir kernel, CPU'ya gidip gelmeden yeni iş başlatabilir.
 - GPUDirect, GPU'ların CPU belleğine uğramadan birbirine, bir ağ kartına ya da depolamaya doğrudan veri taşımasını sağlar.
-- NVLink, NVIDIA'nın GPU'lar arasındaki hızlı ve doğrudan bağlantısıdır. GPU'nun takıldığı standart yuva olan PCIe'den (Peripheral Component Interconnect Express) çok daha hızlıdır.
+- NVLink, NVIDIA'nın GPU'lar arasındaki hızlı ve doğrudan bağlantısıdır. GPU'nun takıldığı standart yuva olan PCIe'den çok daha hızlıdır.
 
 Küçük sayı biçimleri önemlidir, çünkü bellekten ve zamandan tasarruf sağlar. Bir FP32 sayısı 4 bayt, bir FP16 sayısı 2 bayt, bir FP8 sayısı ise 1 bayt yer kaplar. 1 milyar sayılık bir model FP32'de 4 GB, FP16'da 2 GB, FP8'de 1 GB ister. Ayrıca bir Tensor Core saniyede FP16'ya göre daha fazla FP8 hesabı yapar.
 
 > [!NOTE]
-> Her GPU'da her özellik yoktur. Bu derslerde kullanılan L40S'te FP8 Tensor Core'lar var, ama MIG ve NVLink yok; ayrıca H100 ve B200 gibi GPU'lardaki HBM (High Bandwidth Memory, yüksek bant genişlikli bellek) yerine GDDR6 bellek kullanıyor. Kendi GPU'nun veri sayfasına bak.
+> Her GPU'da her özellik yoktur. Bu derslerde kullanılan L40S'te FP8 Tensor Core'lar var, ama MIG ve NVLink yok; ayrıca H100 ve B200 gibi GPU'lardaki HBM yerine GDDR6 bellek kullanıyor. Kendi GPU'nun veri sayfasına bak.
 
 ## Yapay Zekâ Framework Katmanı
 
-- cuBLAS (CUDA Basic Linear Algebra Subprograms, CUDA temel doğrusal cebir alt programları), NVIDIA'nın GPU'da matris ve vektör hesabı için sunduğu kütüphanedir; CUDA Toolkit ile birlikte gelir.
-- cuDNN (CUDA Deep Neural Network library, CUDA derin sinir ağı kütüphanesi), derin öğrenme için konvolüsyon ve attention gibi GPU işlemlerinden oluşan bir kütüphanedir; PyTorch ve TensorFlow onu arka planda çağırır.
+- cuBLAS, NVIDIA'nın GPU'da matris ve vektör hesabı için sunduğu kütüphanedir; CUDA Toolkit ile birlikte gelir.
+- cuDNN, derin öğrenme için konvolüsyon ve attention gibi GPU işlemlerinden oluşan bir kütüphanedir; PyTorch ve TensorFlow onu arka planda çağırır.
 - TensorRT, eğitilmiş bir modeli alır ve belirli bir GPU'da olabildiğince hızlı çalışacak şekilde yeniden kurar.
-- NCCL (NVIDIA Collective Communications Library, NVIDIA toplu iletişim kütüphanesi, "nikel" diye okunur), GPU'lar arasında veri taşır; örneğin tek bir modeli birlikte eğiten sekiz GPU'nun sonuçlarını toplar. Varsa NVLink ve GPUDirect'i kullanır.
+- "Nikel" diye okunan NCCL, GPU'lar arasında veri taşır; örneğin tek bir modeli birlikte eğiten sekiz GPU'nun sonuçlarını toplar. Varsa NVLink ve GPUDirect'i kullanır.
 
 PyTorch kullanırken bu kütüphaneleri nadiren kendin çağırırsın, ama tek satırlık bir PyTorch kodunun GPU'da hızlı çalışmasının sebebi onlardır.
 
@@ -91,6 +91,10 @@ PyTorch kullanırken bu kütüphaneleri nadiren kendin çağırırsın, ama tek 
 - Nsight Systems: tüm program için CPU ve GPU işlerinin zaman çizelgesini gösteren profiler.
 - Nsight Compute: tek bir kernel'ın GPU donanımını ne kadar iyi kullandığını ölçen profiler.
 - Compute Sanitizer: program çalışırken kernel'ların içindeki bellek hatalarını bulan araç.
+- işaret (annotation): normal koda eklenen ve derleyiciye onunla ne yapacağını söyleyen kısa not; örneğin bir döngüyü GPU'da çalıştırmasını.
+- compute capability (CC, hesaplama yeteneği): bir GPU neslinin sürüm numarası, örneğin L40S için 8.9; GPU'nun hangi özellikleri ve makine kodunu desteklediğini belirler.
+- SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'yu oluşturan işlemci bloklarından biri; her SM'nin kendi çekirdekleri, Tensor Core'ları ve hızlı çip üstü belleği vardır.
+- GB (gigabyte, gigabayt): yaklaşık bir milyar bayt.
 - Tensor Core: her SM'nin içindeki matris hesap birimi; matris işlerinde FP32 çekirdeklerinden çok daha hızlıdır.
 - FP32 / FP16 / FP8: 32, 16 ve 8 bitlik kayan noktalı sayılar; sırasıyla 4, 2 ve 1 bayt yer kaplarlar.
 - MIG (Multi-Instance GPU): tek bir fiziksel GPU'yu en fazla yedi yalıtılmış parçaya böler; her parça kendi başına bir GPU gibi davranır.

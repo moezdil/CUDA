@@ -1,13 +1,13 @@
 # 01 > A Short History of GPUs
 
-This lesson shows how GPUs (Graphics Processing Units) grew from simple graphics chips into the compute platforms behind today's AI. It covers the key products from 1993 to the current generation and the ones NVIDIA has announced next. This context helps before you write CUDA code.
+This lesson shows how GPUs grew from simple graphics chips into the compute platforms behind today's AI. It covers the key products from 1993 to the current generation and the ones NVIDIA has announced next. This context helps before you write CUDA code.
 
 ## The Early Days
 
 NVIDIA was founded in April 1993. Its first product, the NV1, came out in 1995.
 
 > [!NOTE]
-> NVIDIA was founded by Jensen Huang, Chris Malachowsky and Curtis Priem. Jensen Huang is still its CEO (chief executive officer).
+> NVIDIA was founded by Jensen Huang, Chris Malachowsky and Curtis Priem. Jensen Huang is still its CEO.
 
 That early hardware was very basic compared to today:
 
@@ -31,7 +31,7 @@ Their role has also changed.
 
 GPUs were first built to render images. Today that is only a small part of their work. GPUs are now widely used for:
 
-- AI (artificial intelligence)  
+- AI  
 - large-scale data processing  
 - simulations  
 - scientific computing  
@@ -44,7 +44,7 @@ A key moment came when GPUs started to support real 3D acceleration. NVIDIA's RI
 
 ## GeForce
 
-Two years later, in 1999, NVIDIA introduced the GeForce 256 and marketed it as the first GPU. It did T&L (transform and lighting), the math that places and lights 3D shapes, in hardware instead of on the CPU (Central Processing Unit). It started the GeForce series, which made GPUs widely available. Small gains in core count or memory made a big difference, because the starting point was still very low.
+Two years later, in 1999, NVIDIA introduced the GeForce 256 and marketed it as the first GPU. It did T&L, the math that places and lights 3D shapes, in hardware instead of on the CPU. It started the GeForce series, which made GPUs widely available. Small gains in core count or memory made a big difference, because the starting point was still very low.
 
 ## Steady Growth
 
@@ -57,7 +57,7 @@ As of October 2026, NVIDIA plays a central role in:
 - gaming  
 - AI infrastructure  
 - cloud computing  
-- HPC (high-performance computing)  
+- HPC  
 
 The current products are the GeForce RTX 50 series (Blackwell, 2025) for PCs and Blackwell Ultra (B300, 2025) in data centers. The next architecture, Rubin, started shipping in its first Vera Rubin NVL72 racks in September 2026. The current CUDA release is CUDA 13.4.
 
@@ -83,6 +83,7 @@ This makes it easier to move on to CUDA.
 - GPU (Graphics Processing Unit): a processor with thousands of simple cores, built to run many tasks in parallel.
 - NVIDIA: the company founded in 1993 that makes GeForce and data center GPUs and created CUDA.
 - NV1: NVIDIA's first product, released in 1995.
+- CEO (chief executive officer): the person who runs a company day to day.
 - data bandwidth: how much data a GPU can move per second, which was very limited in early hardware.
 - parallelism: doing many things at the same time, which early GPUs almost lacked.
 - core: a unit that does the work, and modern GPUs have thousands of them.
@@ -95,6 +96,7 @@ This makes it easier to move on to CUDA.
 - RIVA 128: NVIDIA's 1997 chip that combined 3D and 2D and made NVIDIA well known.
 - GeForce 256: the 1999 card NVIDIA marketed as the first GPU, with 32 MB of memory and a 120 MHz clock.
 - T&L (transform and lighting): the math that positions and lights 3D shapes, moved from the CPU to the GPU by the GeForce 256.
+- CPU (Central Processing Unit): the main processor of a computer, which did the T&L math before the GeForce 256.
 - GeForce: NVIDIA's consumer GPU series, which made GPUs widely available.
 - efficiency: how much work a GPU gets done for each watt of power it uses.
 - Tensor Cores: units built for the matrix math of AI, first added in Volta (2017).

@@ -1,18 +1,18 @@
-# 15 > CUDA Geliştirme Ortamını Kurmak (JetBrains ile Modern Bir İş Akışı)
+# 15 > JetBrains ile CUDA Geliştirme Ortamı Kurmak
 
 Bu derste bir CUDA çalışma ortamının nasıl kurulacağını göreceksin: CUDA Toolkit'in üzerine JetBrains araçları, özellikle CLion. CLion, Mayıs 2025'ten beri öğrenme ve açık kaynak gibi ticari olmayan kullanımlar için ücretsiz.
 
 ## Neden JetBrains ve CLion
 
-Araçlarla boğuşmadan her gün kullanabileceğin bir kuruluma ihtiyacın var. Bu repo o kurulumu bir IDE (Integrated Development Environment, tümleşik geliştirme ortamı) olan CLion etrafında kuruyor.
+Araçlarla boğuşmadan her gün kullanabileceğin bir kuruluma ihtiyacın var. Bu repo o kurulumu bir IDE olan CLion etrafında kuruyor.
 
-Nedeni, modern geliştirmenin işleyiş biçimi. GPU (Graphics Processing Unit, grafik işlemci) mimarileri ve toolkit'ler hızlı değişiyor ve projeler tek bir platforma bağlı değil. Linux'ta geliştirip uzaktaki bir GPU'da test edebilir, başka bir yerde de devreye alabilirsin. Visual Studio gibi tek bir sisteme bağlı bir IDE bu tür çalışmayı kısıtlar.
+Nedeni, modern geliştirmenin işleyiş biçimi. GPU mimarileri ve toolkit'ler hızlı değişiyor ve projeler tek bir platforma bağlı değil. Linux'ta geliştirip uzaktaki bir GPU'da test edebilir, başka bir yerde de devreye alabilirsin. Visual Studio gibi tek bir sisteme bağlı bir IDE bu tür çalışmayı kısıtlar.
 
-JetBrains araçları CMake (Cross-platform Make) üzerine kurulu. CMake, bir projenin nasıl derleneceğini tarif eden bir araçtır ve bir CMake projesi tek bir ortama bağlı değildir. Onu farklı sistemlerde, farklı derleyicilerle derleyip aynı yapıyı koruyabilirsin. Gerçek GPU sistemleri de böyle kurulur.
+JetBrains araçları CMake üzerine kurulu. CMake, bir projenin nasıl derleneceğini tarif eden bir araçtır ve bir CMake projesi tek bir ortama bağlı değildir. Onu farklı sistemlerde, farklı derleyicilerle derleyip aynı yapıyı koruyabilirsin. Gerçek GPU sistemleri de böyle kurulur.
 
 ## Önce CUDA Toolkit gelir
 
-CUDA Toolkit her şeyin temelidir; o olmadan hiçbir şey derlenmez. Sana derleyiciyi (compiler), runtime'ı ve GPU ile konuşan kütüphaneleri verir. Bir editör değil, GPU'da çalıştırmayı mümkün kılan katmandır.
+CUDA Toolkit her şeyin temelidir; o olmadan hiçbir şey derlenmez. Sana derleyiciyi, runtime'ı ve GPU ile konuşan kütüphaneleri verir. Bir editör değil, GPU'da çalıştırmayı mümkün kılan katmandır.
 
 Bu katman donanıma bağlı. Hopper ve Blackwell yeni komutlar, yeni duyarlılık formatları ve yeni yürütme davranışları getiriyor; bunları kullanmak için güncel bir CUDA sürümüne ihtiyacın var. Ekim 2026 itibarıyla en yenisi CUDA 13.4. Eski sürümler yine çalışabilir ama donanımın yapabildiklerinden yararlanamaz. Yani seçtiğin CUDA sürümü, kodunun neler yapabileceğini belirler.
 
@@ -36,13 +36,13 @@ add_executable(hello hello.cu)
 ## Windows'ta Visual Studio
 
 > [!NOTE]
-> Windows'ta, Visual Studio'yu hiç açmasan bile `nvcc` MSVC (Microsoft Visual C++) derleyicisine ihtiyaç duyar. CUDA 13.4, Visual Studio 2019, 2022 ve 2026 ile çalışır. Yani Visual Studio senin çalışma alanın değil, bir bağımlılık: bir kez kurarsın, sonra unutursun.
+> Windows'ta, Visual Studio'yu hiç açmasan bile `nvcc` MSVC derleyicisine ihtiyaç duyar. CUDA 13.4, Visual Studio 2019, 2022 ve 2026 ile çalışır. Yani Visual Studio senin çalışma alanın değil, bir bağımlılık: bir kez kurarsın, sonra unutursun.
 
 Asıl işinin hepsini CLion'da yaparsın.
 
 ## GPU driver'ı
 
-CUDA, GPU driver'ına (sürücüsüne) bağlıdır. Windows'ta CUDA 13.1'den, Linux'ta CUDA 13.4'ten beri toolkit kurulumu driver içermiyor. Driver'ı kendin kurar ve güncel tutarsın.
+CUDA, GPU driver'ına bağlıdır. Windows'ta CUDA 13.1'den, Linux'ta CUDA 13.4'ten beri toolkit kurulumu driver içermiyor. Driver'ı kendin kurar ve güncel tutarsın.
 
 Her CUDA sürümünün bir driver dalı vardır. 580 veya daha yeni daldan bir driver, herhangi bir CUDA 13.x ile derlenmiş programları çalıştırır. CUDA 13.4'ün yeni özelliklerini kullanmak için 615 veya daha yeni dal gerekir. Yani 575 driver'ı bir CUDA 13 programını çalıştıramaz, 580 driver'ı çalıştırır, 615 driver'ı ise sana 13.4'teki bütün yenilikleri de verir.
 
@@ -62,7 +62,7 @@ Kurulum doğruysa bu adımlar sorunsuz bir şekilde birlikte çalışır.
 
 ## Özet
 
-CUDA geliştirmek bir editör seçmekle değil, toolchain'i anlamakla ilgili. JetBrains araçları bu yüzden iyi uyuyor: sistemin her parçasının kendi işini yapmasına izin veriyor. Bu da kurulumu daha temiz, daha kararlı ve canlı ortama (production) daha yakın kılıyor. Bu repo da bu kurulumu kullanıyor.
+CUDA geliştirmek bir editör seçmekle değil, toolchain'i anlamakla ilgili. JetBrains araçları bu yüzden iyi uyuyor: sistemin her parçasının kendi işini yapmasına izin veriyor. Bu da kurulumu daha temiz, daha kararlı ve canlı ortama daha yakın kılıyor. Bu repo da bu kurulumu kullanıyor.
 
 ## Sözlük
 
@@ -78,7 +78,7 @@ CUDA geliştirmek bir editör seçmekle değil, toolchain'i anlamakla ilgili. Je
 - `CMAKE_CUDA_ARCHITECTURES`: hangi compute capability için derleneceğini belirten CMake ayarı, örneğin `sm_89` için 89.
 - compute capability (hesaplama yeteneği): bir GPU mimarisinin sürüm numarası, örneğin L40S için 8,9, H100 için 9,0.
 - derleme (build): kaynak dosyaları derleyip bağlayarak çalıştırabileceğin bir programa dönüştürmek.
-- compiler (derleyici): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program; CUDA'da bu `nvcc`'dir.
+- derleyici (compiler): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program; CUDA'da bu `nvcc`'dir.
 - toolkit (CUDA Toolkit): compiler'ı, runtime'ı ve GPU ile konuşan kütüphaneleri içeren temel katman.
 - runtime: programının çalışırken çağırdığı, GPU belleğini yöneten ve GPU'da iş başlatan CUDA kütüphanesi.
 - kütüphane (libraries): toolkit ile gelen hazır ve test edilmiş kod, örneğin matris hesapları için cuBLAS.

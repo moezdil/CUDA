@@ -1,6 +1,6 @@
 # 06 > 在 Linux 上编译 CUDA
 
-第 00 课到第 04 课都只用一条简短的命令编译程序。这一课把在 Linux 上构建、运行 CUDA（Compute Unified Device Architecture，统一计算设备架构）程序的每一步都走一遍，并引入 `-arch` 选项，用它指定你要为哪款 GPU（Graphics Processing Unit，图形处理器）编译。另外还会说明，为什么少了 `cudaDeviceSynchronize()`，核函数可能什么都打印不出来。
+第 00 课到第 04 课都只用一条简短的命令编译程序。这一课把在 Linux 上构建、运行 CUDA 程序的每一步都走一遍，并引入 `-arch` 选项，用它指定你要为哪款 GPU 编译。另外还会说明，为什么少了 `cudaDeviceSynchronize()`，核函数可能什么都打印不出来。
 
 > [!NOTE]
 > 本页所有输出都来自一块 NVIDIA L40S，使用 CUDA 13.0，系统是 Ubuntu 24。
@@ -36,7 +36,7 @@ int main()
 这次启动用了 2 个线程块，每个线程块 64 个线程，所以一共是 2 × 64 = 128 个线程。每个线程块有 64 / 32 = 2 个线程束。
 
 - 三行 `#include` 引入了 CUDA 运行时函数、`blockIdx` 和 `threadIdx` 这样的内置变量，以及 `printf`。
-- `__global__` 把 `test01` 标记为核函数。它由 CPU（Central Processing Unit，中央处理器）启动，在 GPU 上运行。
+- `__global__` 把 `test01` 标记为核函数。它由 CPU 启动，在 GPU 上运行。
 - 一个线程束有 32 个线程，所以 `threadIdx.x / 32` 得到的就是线程束编号。两个操作数都是整数，余数会被直接舍去。比如线程 45 得到 45 / 32 = 1。线程 0-31 得到 0，线程 32-63 得到 1。
 - `test01 <<<2, 64>>> ();` 启动核函数，共 2 个线程块，每块 64 个线程。
 - `cudaDeviceSynchronize();` 让 CPU 等待 GPU。下面讲同步的那一节会解释这一行为什么重要。
@@ -68,7 +68,7 @@ int main()
 nvcc --version
 ```
 
-- `nvcc`（NVIDIA CUDA Compiler，NVIDIA CUDA 编译器）就是 CUDA 编译器。
+- `nvcc` 就是 CUDA 编译器。
 - `--version` 打印编译器版本后就退出，不会编译任何东西。
 
 这台机器上的输出：
@@ -112,17 +112,17 @@ ls -lh project001
 -rwxrwxr-x 1 ubuntu ubuntu 966K Jun  9 21:58 project001
 ```
 
-这一行以 `-` 开头，说明它是一个普通文件。`rwxrwxr-x` 里的 `x` 表示这个文件可以运行。`ubuntu ubuntu` 是所有者和所属组。`966K` 是程序的大小，大约 966 KB（kilobytes，千字节）。后面是它的构建日期、时间和文件名。如果编译失败了，`ls` 会报告这个文件不存在。
+这一行以 `-` 开头，说明它是一个普通文件。`rwxrwxr-x` 里的 `x` 表示这个文件可以运行。`ubuntu ubuntu` 是所有者和所属组。`966K` 是程序的大小，大约 966 KB。后面是它的构建日期、时间和文件名。如果编译失败了，`ls` 会报告这个文件不存在。
 
 ### 第 3 步：指定 GPU 架构
 
-不加 `-arch` 时，`nvcc` 会选一个保险的通用默认目标。最好还是明确指定你要为哪款 GPU 编译。L40S 的计算能力（compute capability，CC）是 8.9（见[第 03 课](../Lesson-03/notes.md)），它的架构名是 `sm_89`：
+不加 `-arch` 时，`nvcc` 会选一个保险的通用默认目标。最好还是明确指定你要为哪款 GPU 编译。L40S 的计算能力是 8.9（见[第 03 课](../Lesson-03/notes.md)），它的架构名是 `sm_89`：
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
 ```
 
-- `-arch=sm_89` 表示针对计算能力 8.9（也就是 L40S）编译。这个数字就是 CC 去掉小数点：8.9 写成 `89`。
+- `-arch=sm_89` 表示针对计算能力 8.9 编译，也就是针对 L40S。这个数字就是 CC 去掉小数点：8.9 写成 `89`。
 - `-o project001` 和 `project001.cu` 跟之前一样。
 
 从这一课起，每一课都用 `-arch=sm_89` 编译。换成其他 GPU 时，就填它自己的 CC，比如 CC 8.0 就用 `-arch=sm_80`。[第 05 课](../Lesson-05/notes.md)讲了编译器会为这个目标生成什么。
@@ -170,10 +170,10 @@ $ ./project001
 $
 ```
 
-`$` 是 shell 的提示符，不是命令的一部分。每次 `./project001` 之后，下一行都是一个空的提示符，所以三次运行都没有打印出任何东西。核函数确实在 GPU 上运行了，只是 GPU 的打印缓冲区还没来得及刷新（也就是写到终端上），程序就已经结束了。
+`$` 是 shell 的提示符，不是命令的一部分。每次 `./project001` 之后，下一行都是一个空的提示符，所以三次运行都没有打印出任何东西。核函数确实在 GPU 上运行了，只是 GPU 的打印缓冲区还没来得及刷新到终端上，程序就已经结束了。
 
 > [!WARNING]
-> 输出会不会丢失，取决于时序。在这台机器上输出一次都没出现过，但换一台机器、换个驱动程序或 OS（operating system，操作系统），某些运行可能会打印出部分甚至全部输出行。千万不要依赖这一点：没有 `cudaDeviceSynchronize()`，CPU 就不会等待 GPU。
+> 输出会不会丢失，取决于时序。在这台机器上输出一次都没出现过，但换一台机器、换个驱动程序或 OS，某些运行可能会打印出部分甚至全部输出行。千万不要依赖这一点：没有 `cudaDeviceSynchronize()`，CPU 就不会等待 GPU。
 
 `cudaDeviceSynchronize()` 让 CPU 停在这一行，直到所有 GPU 线程都执行完毕。它返回时，打印缓冲区已经刷新，所有输出都已显示在终端上。这样每次运行都能打印出完整的输出。
 
@@ -376,7 +376,7 @@ project001.cu(9): error: expected a ";"
 | CUDA 版本 | 13.0 |
 | GPU | NVIDIA L40S（46 GB，Ada Lovelace，CC 8.9，`sm_89`） |
 | OS | 原生 Ubuntu 24 |
-| 访问方式 | 从另一台电脑通过 SSH（Secure Shell，安全外壳协议）登录 |
+| 访问方式 | 从另一台电脑通过 SSH 登录 |
 
 这一课的命令在其他 Linux 机器上用法完全相同。只有 `-arch` 的值要随 GPU 而变。
 
@@ -446,10 +446,14 @@ int main()
 
 ## 术语表
 
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台和语言扩展，用来编写在 GPU 上运行的程序。
+- GPU（Graphics Processing Unit，图形处理器）：拥有成千上万个小核心、负责运行核函数的处理器。
+- CPU（Central Processing Unit，中央处理器）：主处理器。它运行主机端代码并启动核函数。
+- KB（kilobyte，千字节）：大约一千字节。
 - `nvcc`（NVIDIA CUDA Compiler，NVIDIA CUDA 编译器）：CUDA 编译器驱动程序。它能处理同一个 `.cu` 文件里的主机端代码和设备端代码。
 - `-o`：设置输出程序的名字。默认是 `a.out`。
 - `-arch=sm_89`：针对计算能力 8.9 编译，也就是 L40S（Ada Lovelace）。
-- CC（compute capability，计算能力）：一代 GPU 的版本号，比如 8.9。见[第 03 课](../Lesson-03/notes.md)。
+- 计算能力（compute capability，CC）：一代 GPU 的版本号，比如 8.9。见[第 03 课](../Lesson-03/notes.md)。
 - `cudaDeviceSynchronize()`：让 CPU 等待，直到目前已启动的所有 GPU 工作都完成。
 - 线程束编号（warp ID）：线程在自己的线程块里属于哪个线程束。它等于 `threadIdx.x / 32`。
 - SSH（Secure Shell，安全外壳协议）：通过网络登录另一台电脑并在上面运行命令的方式。

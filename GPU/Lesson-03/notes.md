@@ -1,6 +1,6 @@
 # 03 > Reading GPU Specs
 
-A spec (specification) page lists dozens of numbers, and most of them do not matter on day one. This lesson shows where to find the specs of any GPU (Graphics Processing Unit), which three questions to answer first, and why the biggest number on the page, the core count, often misleads, and ends by reading the L40S that runs every example on this site.
+A spec page lists dozens of numbers, and most of them do not matter on day one. This lesson shows where to find the specs of any GPU, which three questions to answer first, and why the biggest number on the page, the core count, often misleads, and ends by reading the L40S that runs every example on this site.
 
 ## Finding the Specs
 
@@ -9,7 +9,7 @@ The quickest way is a web search for the GPU name plus "TechPowerUp", for exampl
 The page shows many numbers. Do not try to understand all of them yet. Start with the chip name, the architecture and the product category.
 
 > [!TIP]
-> For the CC (compute capability), the number CUDA (Compute Unified Device Architecture) cares about and the topic of [Lesson 05](../Lesson-05/notes.md), check NVIDIA's list at developer.nvidia.com/cuda-gpus. On a machine with an NVIDIA GPU, `nvidia-smi --query-gpu=name,compute_cap --format=csv` prints the name and CC of every GPU in it; on this site's machine the line reads `NVIDIA L40S, 8.9`.
+> For the CC, the number CUDA cares about and the topic of [Lesson 05](../Lesson-05/notes.md), check NVIDIA's list at developer.nvidia.com/cuda-gpus. On a machine with an NVIDIA GPU, `nvidia-smi --query-gpu=name,compute_cap --format=csv` prints the name and CC of every GPU in it; on this site's machine the line reads `NVIDIA L40S, 8.9`.
 
 ## Architecture and Category
 
@@ -34,16 +34,16 @@ Next, the core count:
 - RTX 3090 → 10,496 cores
 - A100 → 6,912 cores
 
-That number is simply SMs (Streaming Multiprocessors) times cores per SM. A worked example:
+That number is simply SMs times cores per SM. A worked example:
 
 - RTX 3090: 82 SMs * 128 cores = 10,496
 - A100: 108 SMs * 64 cores = 6,912
 
 So the RTX 3090 has fewer SMs, but each of its SMs counts twice as many cores. This does not make it the stronger GPU. These "cores" are only the single-precision cores, which NVIDIA calls CUDA cores. They do standard floating-point math, and they are not every core in the GPU.
 
-Modern GPUs also have cores for integer math, cores for double-precision math, and Tensor Cores built for the matrix math behind AI (artificial intelligence). The A100 has 432 Tensor Cores against 328 on the RTX 3090, and in double precision it does 9.7 TFLOPS (trillion floating-point operations per second) while the RTX 3090 does about 0.56 TFLOPS: 9.7 / 0.56 = about 17 times faster.
+Modern GPUs also have cores for integer math, cores for double-precision math, and Tensor Cores built for the matrix math behind AI. The A100 has 432 Tensor Cores against 328 on the RTX 3090, and in double precision it does 9.7 TFLOPS while the RTX 3090 does about 0.56 TFLOPS: 9.7 / 0.56 = about 17 times faster.
 
-Memory differs too: 40 GB of HBM2 (High Bandwidth Memory) at 1,555 GB/s on the A100, against 24 GB of GDDR6X at 936 GB/s on the RTX 3090. [Lesson 06](../Lesson-06/notes.md) explains why memory bandwidth often decides speed.
+Memory differs too: 40 GB of HBM2 at 1,555 GB/s on the A100, against 24 GB of GDDR6X at 936 GB/s on the RTX 3090. [Lesson 06](../Lesson-06/notes.md) explains why memory bandwidth often decides speed.
 
 <gpu-compare></gpu-compare>
 
@@ -64,7 +64,7 @@ The consumer card has more CUDA cores. The data center GPU has 180 / 32 = about 
 
 ## Do Not Compare Only Core Counts
 
-A core count like 6,912 or 21,760 looks convincing, but it usually counts one kind of unit only: the FP32 (32-bit floating point) CUDA cores. It leaves out the Tensor Cores, the double-precision units and other special units.
+A core count like 6,912 or 21,760 looks convincing, but it usually counts one kind of unit only: the FP32 CUDA cores. It leaves out the Tensor Cores, the double-precision units and other special units.
 
 Modern GPUs, especially Hopper and Blackwell, put a large part of their power into those other units. The B200 has fewer CUDA cores than the RTX 5090, yet it trains large AI models far faster, because its Tensor Cores and its memory system are built for exactly that job. So never judge a GPU by the core count alone.
 
@@ -75,7 +75,7 @@ You can often tell the category just by looking at the card.
 Data center GPUs such as the P100, V100, A100, H100 or B200 usually have no fan of their own. They are compact and fanless, and they run in data centers with strong external cooling: the server pushes air through a heatsink, or liquid flows through a cold plate.
 
 > [!NOTE]
-> Many data center GPUs are not plug-in cards at all. The A100, H100 and B200 mostly come as SXM (Server PCI Express Module) modules mounted flat on the server board, often with liquid cooling in newer racks.
+> Many data center GPUs are not plug-in cards at all. The A100, H100 and B200 mostly come as SXM modules mounted flat on the server board, often with liquid cooling in newer racks.
 
 GeForce cards have large fans and heatsinks. They run in desktop PCs and personal workstations, which must handle their own heat, so the card cools itself.
 
@@ -85,7 +85,7 @@ This gives a simple shortcut:
 - A compact module or a card without fans → probably a data center GPU.
 
 > [!WARNING]
-> This is a rule of thumb, not a law. Some data center GPUs come as normal PCIe (Peripheral Component Interconnect Express) cards. The L40S is one: a passive, dual-slot PCIe card with no fan, cooled by the server. Always confirm with the product name.
+> This is a rule of thumb, not a law. Some data center GPUs come as normal PCIe cards. The L40S is one: a passive, dual-slot PCIe card with no fan, cooled by the server. Always confirm with the product name.
 
 <spec-reader></spec-reader>
 
@@ -111,6 +111,7 @@ With these answers, the rest of the specs make sense. For CUDA work, the CC tell
 
 ## Glossary
 
+- GPU (Graphics Processing Unit): the chip that runs thousands of small calculations at once, first built for graphics and now used for AI and science.
 - spec (specification): one published technical number of a GPU, such as its core count, memory size or clock speed.
 - TechPowerUp: a website with a large GPU database. Search the GPU name with "TechPowerUp" to find its page.
 - datasheet: the manufacturer's official spec document for a product, the source to trust when two sites disagree.
@@ -140,7 +141,7 @@ With these answers, the rest of the specs make sense. For CUDA work, the CC tell
 - Tensor Cores: units that do the matrix math behind AI; the core count leaves them out.
 - AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math.
 - TFLOPS (teraFLOPS): a trillion floating-point operations per second.
-- HBM (High Bandwidth Memory): stacked memory next to the chip on data center GPUs, faster than the GDDR memory on GeForce cards; HBM2, HBM3 and HBM3e are its versions.
+- HBM2 / HBM3 / HBM3e (High Bandwidth Memory): stacked memory next to the chip on data center GPUs, faster than the GDDR memory on GeForce cards; HBM2, HBM3 and HBM3e are its versions.
 - memory bandwidth: how much data the memory can deliver per second, for example 864 GB/s on the L40S and 8 TB/s on the B200.
 - RTX 5090: a GeForce GPU from 2025 based on Blackwell, with 21,760 CUDA cores and 32 GB of GDDR7 memory.
 - B200: a Blackwell data center GPU with two dies, 208 billion transistors and 180 GB of HBM3e memory.

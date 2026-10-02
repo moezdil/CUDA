@@ -1,6 +1,6 @@
 # 04 > NVIDIA GPU 架构
 
-Fermi、Ampere、Hopper、Blackwell 和 Rubin 都是 NVIDIA GPU（Graphics Processing Unit，图形处理器）架构的名字。这一课按时间顺序把它们走一遍，从 2010 年一直到 2028 年的路线图，看看 GPU 是怎样从图形走向通用计算、再走向大规模 AI（artificial intelligence，人工智能）的。你还会看到，当前的 CUDA（Compute Unified Device Architecture，统一计算设备架构）版本还支持其中哪些架构。
+Fermi、Ampere、Hopper、Blackwell 和 Rubin 都是 NVIDIA GPU 架构的名字。这一课按时间顺序把它们走一遍，从 2010 年一直到 2028 年的路线图，看看 GPU 是怎样从图形走向通用计算、再走向大规模 AI 的。你还会看到，当前的 CUDA 版本还支持其中哪些架构。
 
 ## 为什么架构很重要
 
@@ -34,14 +34,14 @@ GPU 架构就是 GPU 的蓝图，它规定了芯片内部的一切如何构建�
 
 ## AI 成为核心
 
-Volta（2017 年，V100）标志着一次明确的转向。从 Volta 开始，NVIDIA 大力推进 AI 专用硬件：第一代 Tensor Core，也就是每个 SM（Streaming Multiprocessor，流式多处理器）里一步就能完成小矩阵乘法的单元。
+Volta（2017 年，V100）标志着一次明确的转向。从 Volta 开始，NVIDIA 大力推进 AI 专用硬件：第一代 Tensor Core，也就是每个 SM 里一步就能完成小矩阵乘法的单元。
 
 在那之后：
 
 - Turing（2018 年，RTX 20 系列）把 Tensor Core 和光线追踪单元带到了消费级显卡上  
 - Ampere（2020 年，A100 和 RTX 30 系列）把这个思路进一步放大  
 - Ada Lovelace（2022 年，RTX 40 系列和 L40S）与 Hopper 同年，把这些单元带到消费级和工作站显卡上  
-- Hopper（2022 年，H100）针对 AI 工作负载做了深度优化，尤其是 Transformer，并支持 FP8（8-bit floating point，8 位浮点）运算  
+- Hopper（2022 年，H100）针对 AI 工作负载做了深度优化，尤其是 Transformer，并支持 FP8 运算  
 
 从这里开始，GPU 不再只是图形硬件，而成了完整的计算平台。
 
@@ -49,7 +49,7 @@ Volta（2017 年，V100）标志着一次明确的转向。从 Volta 开始，NV
 
 ### Blackwell（2024 至 2025 年）
 
-Blackwell 于 2024 年发布，围绕大规模 AI 工作负载设计。B200 数据中心 GPU 把两颗芯片封装在一起，使用 HBM3e（High Bandwidth Memory，高带宽显存），带宽最高 8 TB/s。它还新增了 NVFP4，一种面向 AI 的 4 位数值格式。Blackwell Ultra（B300，2025 年）把每块 GPU 的显存提高到 288 GB。在消费级市场，RTX 50 系列（2025 年）同样采用 Blackwell。
+Blackwell 于 2024 年发布，围绕大规模 AI 工作负载设计。B200 数据中心 GPU 把两颗芯片封装在一起，使用 HBM3e，带宽最高 8 TB/s。它还新增了 NVFP4，一种面向 AI 的 4 位数值格式。Blackwell Ultra（B300，2025 年）把每块 GPU 的显存提高到 288 GB。在消费级市场，RTX 50 系列（2025 年）同样采用 Blackwell。
 
 实际的性能提升并不是在所有情况下都一样，它取决于：
 
@@ -61,7 +61,7 @@ Blackwell 于 2024 年发布，围绕大规模 AI 工作负载设计。B200 数�
 
 ### Rubin（2026 年，已开始出货）
 
-Rubin 是 Blackwell 之后的架构。它已全面投产，首批 Vera Rubin 系统（把 Rubin GPU 和 NVIDIA 的 Vera CPU（Central Processing Unit，中央处理器）配在一起）已于 2026 年 9 月开始出货，CUDA 13.4 也已支持它的计算能力 10.7。
+Rubin 是 Blackwell 之后的架构。它已全面投产，首批把 Rubin GPU 和 NVIDIA 的 Vera CPU 配在一起的 Vera Rubin 系统已于 2026 年 9 月开始出货，CUDA 13.4 也已支持它的计算能力 10.7。
 
 每块 Rubin GPU 带来：
 
@@ -82,7 +82,7 @@ Rubin 是 Blackwell 之后的架构。它已全面投产，首批 Vera Rubin 系
 
 ## 计算能力
 
-CUDA 不使用架构名称。每块 GPU 都会报告一个 CC（Compute Capability，计算能力），这是一个像 8.9 这样的版本号。主版本号通常跟着架构走，但并不总是一一对应：
+CUDA 不使用架构名称。每块 GPU 都会报告一个 CC，这是一个像 8.9 这样的版本号。主版本号通常跟着架构走，但并不总是一一对应：
 
 - Ampere：8.0（A100）和 8.6（RTX 30 系列）  
 - Ada Lovelace：8.9（RTX 40 系列、L40S）  
@@ -99,7 +99,7 @@ CUDA 不使用架构名称。每块 GPU 都会报告一个 CC（Compute Capabili
 
 简单的数字很难用来比较，比如：
 
-- TFLOPS（trillions of floating-point operations per second，每秒万亿次浮点运算）  
+- TFLOPS  
 - 时钟频率  
 
 这些数字说明不了全部。性能取决于：
@@ -113,7 +113,7 @@ CUDA 不使用架构名称。每块 GPU 都会报告一个 CC（Compute Capabili
 
 ## 命名也变了
 
-V100 及之前的数据中心 GPU 都带有 “Tesla” 品牌，比如 Tesla V100。从 2020 年的 A100 开始，NVIDIA 不再使用这个品牌，改称 Data Center GPU（数据中心 GPU）。
+V100 及之前的数据中心 GPU 都带有 “Tesla” 品牌，比如 Tesla V100。从 2020 年的 A100 开始，NVIDIA 不再使用这个品牌，改称 Data Center GPU。
 
 这反映了重点的转变：从通用计算转向 AI 和云系统。
 
@@ -149,8 +149,9 @@ GPU 架构展示了计算本身正在怎样变化。这条路从图形走到计�
 - 带宽（bandwidth）：每秒能在显存和芯片之间搬运多少字节。
 - 精度（precision）：每个数用多少位来存储，比如 FP32、FP16 或 FP8；位数越少，运算越快，但精确度越低。
 - Rubin：Blackwell 之后的架构，已全面投产，2026 年下半年开始交付给云服务商。
+- CPU（Central Processing Unit，中央处理器）：计算机的主处理器；Vera 是 NVIDIA 自己的 CPU，与 Rubin GPU 搭配使用。
 - Tensor Core：每个 SM 里一步就能完成小矩阵乘法的单元，是 AI 计算速度的关键。
-- HBM（High Bandwidth Memory，高带宽显存）/ HBM3e / HBM4：紧挨着芯片堆叠的显存；Blackwell 使用 HBM3e，Rubin 使用 HBM4。
+- HBM3e / HBM4（High Bandwidth Memory，高带宽显存）：紧挨着芯片堆叠的显存；Blackwell 使用 HBM3e，Rubin 使用 HBM4。
 - SM（Streaming Multiprocessor，流式多处理器）：NVIDIA GPU 的基本构件，里面有核心、Tensor Core 和共享内存。
 - 云（cloud）：通过互联网从服务商的数据中心租用的计算机。
 - Rubin Ultra / Feynman：Rubin 之后已公布的架构，计划分别于 2027 年和 2028 年推出。

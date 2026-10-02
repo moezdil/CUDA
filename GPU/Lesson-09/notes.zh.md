@@ -1,6 +1,6 @@
 # 09 > 计算受限还是访存受限
 
-每个核函数都被两件事之一拖住：GPU（Graphics Processing Unit，图形处理器）算数学有多快，或者它搬数据有多快。这一课教你用一个数字（算术强度）和一张叫屋顶线的简单图表来判断是哪一个。所有例子都用这些课里跑程序的那块 NVIDIA L40S。
+每个核函数都被两件事之一拖住：GPU 算数学有多快，或者它搬数据有多快。这一课教你用算术强度这一个数字和一张叫屋顶线的简单图表来判断是哪一个。所有例子都用这些课里跑程序的那块 NVIDIA L40S。
 
 ## 每个核函数都有两道上限
 
@@ -15,12 +15,12 @@
 
 ## 数 FLOPs
 
-一个 FLOP（floating-point operation，浮点运算）就是对浮点数做一次加、减、乘或除。FLOPS（floating-point operations per second，每秒浮点运算次数）是速度：每秒能做多少次。
+一个 FLOP 就是对浮点数做一次加、减、乘或除。FLOPS 是速度：每秒能做多少次。
 
-[第 06 课](../Lesson-06/notes.md)讲过峰值从哪来：核心数 × 时钟频率 × 2，因为一次 FMA（fused multiply-add，融合乘加）算 2 个 FLOP。L40S 是：18,176 个 FP32（32-bit floating point，32 位浮点）核心 × 2.52 GHz × 2 ≈ 91.6 TFLOPS（每秒万亿次浮点运算），正是 NVIDIA 规格表上的 FP32 数字。
+[第 06 课](../Lesson-06/notes.md)讲过峰值从哪来：核心数 × 时钟频率 × 2，因为一次 FMA 算 2 个 FLOP。L40S 是：18,176 个 FP32 核心 × 2.52 GHz × 2 ≈ 91.6 TFLOPS，正是 NVIDIA 规格表上的 FP32 数字。
 
 > [!NOTE]
-> FLOPs（小写 s）是工作量，FLOPS（大写 S）是速度。一个核函数做 1,000 个 FLOP，在 91.6 TFLOPS 的 GPU 上，光是数学至少也要 1,000 / 91.6 万亿秒。
+> 小写 s 的 FLOPs 是工作量，大写 S 的 FLOPS 是速度。一个核函数做 1,000 个 FLOP，在 91.6 TFLOPS 的 GPU 上，光是数学至少也要 1,000 / 91.6 万亿秒。
 
 要数一个核函数的 FLOPs，先数一个线程做多少数学，再乘以线程数。`c[i] = a[i] + b[i]` 每个元素 1 个 FLOP。`y[i] = a * x[i] + y[i]` 每个元素 2 个 FLOP：一次乘、一次加。
 
@@ -30,7 +30,7 @@
 
 对 `c[i] = a[i] + b[i]`，每个线程读 `a[i]` 和 `b[i]`，写 `c[i]`：3 个 float × 4 字节 = 每个元素 12 字节。
 
-这一侧的速度上限是[第 06 课](../Lesson-06/notes.md)讲的显存带宽。L40S 有 48 GB 的 GDDR6（Graphics Double Data Rate 6）显存，带宽 864 GB/s（gigabytes per second，吉字节每秒）。
+这一侧的速度上限是[第 06 课](../Lesson-06/notes.md)讲的显存带宽。L40S 有 48 GB 的 GDDR6 显存，带宽 864 GB/s。
 
 ## 算术强度
 
@@ -65,7 +65,7 @@ H100 的带宽相对它的 FP32 算力多得多，所以相当轻的核函数也
 
 ## 屋顶线模型
 
-屋顶线模型把这些画成一张图。x 轴是算术强度，y 轴是可达 GFLOPS（每秒十亿次浮点运算）。两条轴都是对数刻度，每走一格就是乘一个倍数。
+屋顶线模型把这些画成一张图。x 轴是算术强度，y 轴是可达 GFLOPS。两条轴都是对数刻度，每走一格就是乘一个倍数。
 
 可达 GFLOPS = min(峰值 GFLOPS, 算术强度 × 带宽)
 
@@ -84,11 +84,11 @@ H100 的带宽相对它的 FP32 算力多得多，所以相当轻的核函数也
 - 计算时间：100,000,000 / 91.6 万亿 ≈ 0.0011 ms（约 1.1 µs）。
 - 数据时间：1.2 GB / 864 GB/s ≈ 1.39 ms。
 
-数据部分大约长 1,270 倍。屋顶线给出同样的答案：0.083 × 864 ≈ 72 GFLOPS 可达，不到 91,600 GFLOPS 峰值的 0.1%。向量加法在任何 GPU 上都严重访存受限。它就是 CUDA（Compute Unified Device Architecture，统一计算设备架构）实践部分里向量加法那一课的程序（[CUDA 第 08 课](../../cuda/Lesson-08/notes.md)）。
+数据部分大约长 1,270 倍。屋顶线给出同样的答案：0.083 × 864 ≈ 72 GFLOPS 可达，不到 91,600 GFLOPS 峰值的 0.1%。向量加法在任何 GPU 上都严重访存受限。它就是 CUDA 实践部分里向量加法那一课的程序（[CUDA 第 08 课](../../cuda/Lesson-08/notes.md)）。
 
 ## 算例：SAXPY 和点积
 
-SAXPY（Single-precision A times X Plus Y，单精度 a 乘 x 加 y）计算 `y[i] = a * x[i] + y[i]`。每个元素做 2 个 FLOP（一次 FMA），搬 12 字节：读 `x[i]` 和 `y[i]`，写 `y[i]`。算术强度：2 / 12 ≈ 0.167 FLOP/字节。在 L40S 上：0.167 × 864 ≈ 144 GFLOPS 可达。
+SAXPY 计算 `y[i] = a * x[i] + y[i]`。每个元素做 2 个 FLOP（一次 FMA），搬 12 字节：读 `x[i]` 和 `y[i]`，写 `y[i]`。算术强度：2 / 12 ≈ 0.167 FLOP/字节。在 L40S 上：0.167 × 864 ≈ 144 GFLOPS 可达。
 
 点积在两个数组上计算 `s += x[i] * y[i]`。每个元素做 2 个 FLOP，读 8 字节，每个元素不写回任何东西。算术强度：2 / 8 = 0.25 FLOP/字节。在 L40S 上：0.25 × 864 = 216 GFLOPS 可达。
 
@@ -117,14 +117,14 @@ SAXPY（Single-precision A times X Plus Y，单精度 a 乘 x 加 y）计算 `y[
 
 答案告诉你力气该花在哪里：
 
-- 访存受限：优化数据搬运。每个字节只读一次，按大块、对齐的方式读（合并访问），把要重复使用的数据放进共享内存或寄存器，用更小的数字格式让搬的字节更少，并把核函数融合起来，免得中间结果写出去又读回来。
+- 访存受限：优化数据搬运。每个字节只读一次，以合并访问的方式按大块、对齐地读，把要重复使用的数据放进共享内存或寄存器，用更小的数字格式让搬的字节更少，并把核函数融合起来，免得中间结果写出去又读回来。
 - 计算受限：优化数学。用 Tensor Core，在精度允许时用更便宜的格式，去掉不必要的计算。
 
 优化错了方向等于白做。让向量加法的数学快一倍，它的耗时仍然约是 1.39 ms，因为数学从来不是瓶颈。
 
 ## 更高的屋顶：Tensor Core
 
-上面的屋顶都是普通核心上的 FP32。Tensor Core 为矩阵运算提供高得多的计算屋顶。L40S 的 Tensor Core 在不用稀疏性时 FP16（16-bit floating point，16 位浮点）可达 362 TFLOPS，约为 FP32 峰值的 4 倍。带宽还是 864 GB/s，脊点就升到约 362,000 / 864 ≈ 419 FLOP/字节。
+上面的屋顶都是普通核心上的 FP32。Tensor Core 为矩阵运算提供高得多的计算屋顶。L40S 的 Tensor Core 在不用稀疏性时 FP16 可达 362 TFLOPS，约为 FP32 峰值的 4 倍。带宽还是 864 GB/s，脊点就升到约 362,000 / 864 ≈ 419 FLOP/字节。
 
 更高的屋顶只帮得上计算受限的核函数。无论屋顶多高，向量加法都停在 72 GFLOPS。[第 10 课](../Lesson-10/notes.md)会讲数字格式和 Tensor Core。
 
@@ -141,13 +141,14 @@ SAXPY（Single-precision A times X Plus Y，单精度 a 乘 x 加 y）计算 `y[
 - 线程束（warp）：一起执行的 32 个线程；一些线程束等数据时，另一些在计算。
 - 访存受限（memory bound）：耗时由搬数据而不是数学决定的核函数；它落在屋顶线的斜线上。
 - 计算受限（compute bound）：耗时由数学而不是搬数据决定的核函数；它落在屋顶线的平线上。
-- FLOP（floating-point operation，浮点运算）：对浮点数做一次加、减、乘或除；FLOPs（小写 s）是它的数量。
+- FLOP（floating-point operation，浮点运算）：对浮点数做一次加、减、乘或除；小写 s 的 FLOPs 是它的数量。
 - FLOPS（floating-point operations per second，每秒浮点运算次数）：速度；GFLOPS 是每秒十亿次，TFLOPS 是每秒万亿次。
 - FMA（fused multiply-add，融合乘加）：一条计算 a × b + c 的指令，算 2 个 FLOP。
 - FP32（32-bit floating point，32 位浮点）：GPU 计算的标准数字格式；一个 `float` 是 4 字节。
 - 峰值 FLOPS（peak FLOPS）：核心数 × 时钟频率 × 2；L40S 的 FP32 是 91.6 TFLOPS。
 - 搬运字节数（bytes moved）：在 GPU 显存和芯片之间来回走的字节，每次读和每次写都算。
 - 显存带宽（memory bandwidth）：显存每秒能送出的字节数；L40S 是 864 GB/s。
+- GB/s（gigabytes per second，吉字节每秒）：每秒搬运的十亿字节数，是显存带宽的单位。
 - GDDR6（Graphics Double Data Rate 6）：L40S 用的显存类型，比 H100 这类数据中心 GPU 用的 HBM（High Bandwidth Memory，高带宽内存）慢。
 - 算术强度（arithmetic intensity）：FLOPs 除以搬运字节数，单位 FLOP/字节；它取决于核函数，与 GPU 无关。
 - 脊点（ridge point）：峰值 FLOPS 除以显存带宽；L40S 约 106 FLOP/字节，H100 SXM 约 20。
@@ -159,6 +160,7 @@ SAXPY（Single-precision A times X Plus Y，单精度 a 乘 x 加 y）计算 `y[
 - 矩阵乘法（matrix multiply）：`C = A × B`；N × N 的 FP32 矩阵要做 2N³ 个 FLOP，至少搬 12N² 字节，所以强度是 N / 6。
 - 共享内存（shared memory）：同一线程块的线程共用的快速片上存储；核函数可以重复使用其中的数据，不用再读一次。
 - 合并访问（coalesced access）：相邻线程读相邻地址，显存用少数几次大传输就能满足它们。
+- 归约（reduction）：把许多值合成一个值，比如求和或求最大值。
 - Tensor Core：专为矩阵运算设计的单元，屋顶高得多；L40S 在不用稀疏性时 FP16 达 362 TFLOPS。
 - FP16（16-bit floating point，16 位浮点）：占 2 字节的数字格式；Tensor Core 跑它比 FP32 核心跑 FP32 快得多。
 - 稀疏性（sparsity）：Tensor Core 按固定模式跳过零值的功能；规格表常给出带稀疏性的数字，是稠密数字的两倍。

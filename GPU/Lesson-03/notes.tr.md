@@ -1,6 +1,6 @@
 # 03 > GPU Özelliklerini Okumak
 
-Bir özellik (specification) sayfası onlarca sayı listeler ve bunların çoğu ilk gün işine yaramaz. Bu derste herhangi bir GPU'nun (Graphics Processing Unit, grafik işlem birimi) özelliklerini nerede bulacağını, önce hangi üç soruyu cevaplaman gerektiğini ve sayfadaki en büyük sayının, yani çekirdek sayısının, neden çoğu zaman yanılttığını göreceksin. Sonunda bu sitedeki her örneği çalıştıran L40S'i birlikte okuyacağız.
+Bir özellik sayfası onlarca sayı listeler ve bunların çoğu ilk gün işine yaramaz. Bu derste herhangi bir GPU'nun özelliklerini nerede bulacağını, önce hangi üç soruyu cevaplaman gerektiğini ve sayfadaki en büyük sayının, yani çekirdek sayısının, neden çoğu zaman yanılttığını göreceksin. Sonunda bu sitedeki her örneği çalıştıran L40S'i birlikte okuyacağız.
 
 ## Özellikleri Bulmak
 
@@ -9,7 +9,7 @@ En hızlı yol, GPU adını "TechPowerUp" ile birlikte aramaktır, örneğin "A1
 Sayfada bir sürü sayı göreceksin. Şimdilik hepsini anlamaya çalışma. Çip adı, mimari ve ürün kategorisiyle başla.
 
 > [!TIP]
-> CUDA'nın (Compute Unified Device Architecture) önemsediği sayı olan ve [Ders 05](../Lesson-05/notes.md)'in konusu olan CC (compute capability, hesaplama yeteneği) için NVIDIA'nın developer.nvidia.com/cuda-gpus listesine bak. NVIDIA GPU'lu bir makinede `nvidia-smi --query-gpu=name,compute_cap --format=csv`, içindeki her GPU'nun adını ve CC'sini yazdırır; bu sitenin makinesinde satır `NVIDIA L40S, 8.9` olarak çıkar.
+> CUDA'nın önemsediği sayı olan ve [Ders 05](../Lesson-05/notes.md)'in konusu olan CC için NVIDIA'nın developer.nvidia.com/cuda-gpus listesine bak. NVIDIA GPU'lu bir makinede `nvidia-smi --query-gpu=name,compute_cap --format=csv`, içindeki her GPU'nun adını ve CC'sini yazdırır; bu sitenin makinesinde satır `NVIDIA L40S, 8.9` olarak çıkar.
 
 ## Mimari ve Kategori
 
@@ -18,7 +18,7 @@ Sayfada bir sürü sayı göreceksin. Şimdilik hepsini anlamaya çalışma. Çi
 - Mimari → GPU'nun nasıl yapıldığı (Ampere, Ada Lovelace, Hopper, Blackwell).
 - Kategori → nerede kullanıldığı; bu dersler buna nesil de der (GeForce, Data Center GPU).
 
-RTX 3090 ile A100, 2020'den klasik bir ikilidir. İkisi de Ampere kullanır, yani teknik tasarımları aynıdır. RTX 3090 masaüstü, dizüstü bilgisayar ve iş istasyonu için bir GeForce kartıdır: oyun, içerik üretimi ve genel GPU işleri. A100 ise sunucular, veri merkezleri ve süper bilgisayarlar için bir Data Center GPU'dur (veri merkezi GPU'su).
+RTX 3090 ile A100, 2020'den klasik bir ikilidir. İkisi de Ampere kullanır, yani teknik tasarımları aynıdır. RTX 3090 masaüstü, dizüstü bilgisayar ve iş istasyonu için bir GeForce kartıdır: oyun, içerik üretimi ve genel GPU işleri. A100 ise sunucular, veri merkezleri ve süper bilgisayarlar için bir Data Center GPU'dur.
 
 Aynı mimari aynı amaç demek değildir; özellikler bunu gösterir.
 
@@ -34,16 +34,16 @@ Sonra çekirdek sayısına bak:
 - RTX 3090 → 10.496 çekirdek
 - A100 → 6.912 çekirdek
 
-Bu sayı basitçe SM (Streaming Multiprocessor, akış çok işlemcisi) sayısı çarpı SM başına çekirdek sayısıdır. Hesaplayalım:
+Bu sayı basitçe SM sayısı çarpı SM başına çekirdek sayısıdır. Hesaplayalım:
 
 - RTX 3090: 82 SM * 128 çekirdek = 10.496
 - A100: 108 SM * 64 çekirdek = 6.912
 
 Yani RTX 3090'ın SM'i daha az, ama her SM'i iki kat çekirdek sayıyor. Bu onu daha güçlü GPU yapmaz. Bu "çekirdekler" yalnızca tek duyarlıklı çekirdeklerdir; NVIDIA bunlara CUDA çekirdeği der. Standart kayan noktalı sayı hesabını yaparlar ve GPU'daki çekirdeklerin hepsi değildirler.
 
-Modern GPU'larda tam sayı hesabı için çekirdekler, çift duyarlıklı hesap için çekirdekler ve yapay zekânın (AI, artificial intelligence) arkasındaki matris hesabı için Tensor Core'lar da vardır. A100'de 432 Tensor Core var, RTX 3090'da 328; çift duyarlıkta A100 9,7 TFLOPS (saniyede trilyon kayan nokta işlemi) yaparken RTX 3090 yaklaşık 0,56 TFLOPS yapar: 9,7 / 0,56 = yaklaşık 17 kat daha hızlı.
+Modern GPU'larda tam sayı hesabı için çekirdekler, çift duyarlıklı hesap için çekirdekler ve yapay zekânın arkasındaki matris hesabı için Tensor Core'lar da vardır. A100'de 432 Tensor Core var, RTX 3090'da 328; çift duyarlıkta A100 9,7 TFLOPS yaparken RTX 3090 yaklaşık 0,56 TFLOPS yapar: 9,7 / 0,56 = yaklaşık 17 kat daha hızlı.
 
-Bellek de farklı: A100'de 1.555 GB/s hızında 40 GB HBM2 (High Bandwidth Memory, yüksek bant genişlikli bellek), RTX 3090'da 936 GB/s hızında 24 GB GDDR6X. Bellek bant genişliğinin neden çoğu zaman hızı belirlediğini [Ders 06](../Lesson-06/notes.md) anlatıyor.
+Bellek de farklı: A100'de 1.555 GB/s hızında 40 GB HBM2, RTX 3090'da 936 GB/s hızında 24 GB GDDR6X. Bellek bant genişliğinin neden çoğu zaman hızı belirlediğini [Ders 06](../Lesson-06/notes.md) anlatıyor.
 
 <gpu-compare></gpu-compare>
 
@@ -64,7 +64,7 @@ Tüketici kartında daha çok CUDA çekirdeği var. Veri merkezi GPU'sunun belle
 
 ## Sadece Çekirdek Sayılarını Karşılaştırma
 
-6.912 ya da 21.760 gibi bir çekirdek sayısı ikna edici görünür, ama genelde tek bir birim türünü sayar: FP32 (32 bit kayan noktalı sayı) CUDA çekirdeklerini. Tensor Core'ları, çift duyarlıklı birimleri ve diğer özel birimleri dışarıda bırakır.
+6.912 ya da 21.760 gibi bir çekirdek sayısı ikna edici görünür, ama genelde tek bir birim türünü sayar: FP32 CUDA çekirdeklerini. Tensor Core'ları, çift duyarlıklı birimleri ve diğer özel birimleri dışarıda bırakır.
 
 Modern GPU'lar, özellikle Hopper ve Blackwell, güçlerinin büyük bir kısmını bu diğer birimlere ayırır. B200'de RTX 5090'dan daha az CUDA çekirdeği var, ama büyük yapay zekâ modellerini çok daha hızlı eğitir, çünkü Tensor Core'ları ve bellek sistemi tam olarak bu iş için yapılmıştır. Yani bir GPU'yu asla yalnızca çekirdek sayısına bakarak değerlendirme.
 
@@ -75,7 +75,7 @@ Modern GPU'lar, özellikle Hopper ve Blackwell, güçlerinin büyük bir kısmı
 P100, V100, A100, H100 ya da B200 gibi veri merkezi GPU'larının genelde kendi fanı yoktur. Kompakt ve fansızdırlar, güçlü dış soğutmaya sahip veri merkezlerinde çalışırlar: sunucu havayı bir soğutucunun içinden iter ya da sıvı bir soğutma plakasından geçer.
 
 > [!NOTE]
-> Birçok veri merkezi GPU'su takılabilir bir kart bile değildir. A100, H100 ve B200 çoğunlukla sunucu kartına düz monte edilen SXM (Server PCI Express Module) modülleri olarak gelir; yeni rack'lerde çoğu zaman sıvıyla soğutulur.
+> Birçok veri merkezi GPU'su takılabilir bir kart bile değildir. A100, H100 ve B200 çoğunlukla sunucu kartına düz monte edilen SXM modülleri olarak gelir; yeni rack'lerde çoğu zaman sıvıyla soğutulur.
 
 GeForce kartlarında büyük fanlar ve soğutucular bulunur. Kendi ısısını kendi yönetmek zorunda olan masaüstü bilgisayarlarda ve kişisel iş istasyonlarında çalışırlar, bu yüzden kart kendini soğutur.
 
@@ -85,7 +85,7 @@ Buradan basit bir kısayol çıkar:
 - Kompakt bir modül ya da fansız bir kart → muhtemelen veri merkezi GPU'su.
 
 > [!WARNING]
-> Bu bir kural değil, pratik bir ipucudur. Bazı veri merkezi GPU'ları normal PCIe (Peripheral Component Interconnect Express) kartı olarak gelir. L40S bunlardan biri: fansız, pasif (passive) soğutmalı, iki yuvalık bir PCIe kartı; onu sunucu soğutur. Her zaman ürün adıyla doğrula.
+> Bu bir kural değil, pratik bir ipucudur. Bazı veri merkezi GPU'ları normal PCIe kartı olarak gelir. L40S bunlardan biri: fansız, pasif soğutmalı, iki yuvalık bir PCIe kartı; onu sunucu soğutur. Her zaman ürün adıyla doğrula.
 
 <spec-reader></spec-reader>
 
@@ -111,6 +111,7 @@ Bu cevaplarla özelliklerin geri kalanı anlam kazanır. CUDA çalışmasında C
 
 ## Sözlük
 
+- GPU (Graphics Processing Unit, grafik işlem birimi): binlerce küçük hesabı aynı anda yapan çip; önce grafik için yapıldı, bugün yapay zekâ ve bilim için de kullanılır.
 - özellik (specification): bir GPU'nun yayımlanan teknik sayılarından biri, örneğin çekirdek sayısı, bellek boyutu ya da saat hızı.
 - TechPowerUp: büyük bir GPU veritabanı olan site. Sayfasını bulmak için GPU adını "TechPowerUp" ile ara.
 - veri sayfası (datasheet): üreticinin bir ürün için yayımladığı resmi özellik belgesi; iki site birbirini tutmadığında güvenilecek kaynak.
@@ -138,9 +139,9 @@ Bu cevaplarla özelliklerin geri kalanı anlam kazanır. CUDA çalışmasında C
 - FP32 (32 bit kayan noktalı sayı): tek duyarlıklı hesap; çekirdek sayısının genelde saydığı birim türü.
 - çift duyarlıklı (double-precision): bilimsel işlerde kullanılan 64 bit kayan noktalı sayı hesabı; A100 bunda RTX 3090'dan yaklaşık 17 kat hızlıdır.
 - Tensor Core: yapay zekânın arkasındaki matris hesabını yapan birimler; çekirdek sayısı bunları dışarıda bırakır.
-- AI (artificial intelligence, yapay zekâ): verilerden öğrenen yazılım; onu eğitmek çoğunlukla devasa matris hesabıdır.
+- yapay zekâ (AI, artificial intelligence): verilerden öğrenen yazılım; onu eğitmek çoğunlukla devasa matris hesabıdır.
 - TFLOPS (teraFLOPS): saniyede bir trilyon kayan nokta işlemi.
-- HBM (High Bandwidth Memory, yüksek bant genişlikli bellek): veri merkezi GPU'larında çipin yanına istiflenen, GeForce kartlarındaki GDDR bellekten daha hızlı bellek; HBM2, HBM3 ve HBM3e sürümleridir.
+- HBM2 / HBM3 / HBM3e (High Bandwidth Memory, yüksek bant genişlikli bellek): veri merkezi GPU'larında çipin yanına istiflenen, GeForce kartlarındaki GDDR bellekten daha hızlı bellek; HBM2, HBM3 ve HBM3e sürümleridir.
 - bant genişliği (memory bandwidth): belleğin saniyede ne kadar veri verebildiği, örneğin L40S'te 864 GB/s, B200'de 8 TB/s.
 - RTX 5090: 2025'ten, Blackwell tabanlı, 21.760 CUDA çekirdeği ve 32 GB GDDR7 belleğe sahip bir GeForce GPU'su.
 - B200: iki kalıplı, 208 milyar transistörlü ve 180 GB HBM3e belleğe sahip bir Blackwell veri merkezi GPU'su.

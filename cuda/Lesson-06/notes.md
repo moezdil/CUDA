@@ -1,6 +1,6 @@
 # 06 > Compiling CUDA on Linux
 
-Lessons 00 to 04 compiled their programs with one short command. This lesson goes through every step of building and running a CUDA (Compute Unified Device Architecture) program on Linux, and adds the `-arch` flag that names the GPU (Graphics Processing Unit) you build for. It also shows why a kernel can print nothing when `cudaDeviceSynchronize()` is missing.
+Lessons 00 to 04 compiled their programs with one short command. This lesson goes through every step of building and running a CUDA program on Linux, and adds the `-arch` flag that names the GPU you build for. It also shows why a kernel can print nothing when `cudaDeviceSynchronize()` is missing.
 
 > [!NOTE]
 > All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
@@ -36,7 +36,7 @@ int main()
 The launch uses 2 blocks with 64 threads each, so 2 × 64 = 128 threads in total. Each block has 64 / 32 = 2 warps.
 
 - The three `#include` lines bring in the CUDA runtime functions, the built-in variables like `blockIdx` and `threadIdx`, and `printf`.
-- `__global__` marks `test01` as a kernel. The CPU (Central Processing Unit) launches it and the GPU runs it.
+- `__global__` marks `test01` as a kernel. The CPU launches it and the GPU runs it.
 - `threadIdx.x / 32` gives the warp ID, because a warp is 32 threads. Both sides are whole numbers, so the remainder is dropped. Thread 45, for example, gets 45 / 32 = 1. Threads 0-31 get 0 and threads 32-63 get 1.
 - `test01 <<<2, 64>>> ();` launches the kernel with 2 blocks of 64 threads.
 - `cudaDeviceSynchronize();` makes the CPU wait for the GPU. The section on synchronization below shows why this line matters.
@@ -68,7 +68,7 @@ First check that the CUDA compiler is installed and see which version it is. If 
 nvcc --version
 ```
 
-- `nvcc` (NVIDIA CUDA Compiler) is the CUDA compiler.
+- `nvcc` is the CUDA compiler.
 - `--version` prints the compiler version and exits. It does not compile anything.
 
 Output on this machine:
@@ -112,11 +112,11 @@ ls -lh project001
 -rwxrwxr-x 1 ubuntu ubuntu 966K Jun  9 21:58 project001
 ```
 
-The line starts with `-`, so it is a normal file. The `x` letters in `rwxrwxr-x` mean the file can be run. `ubuntu ubuntu` is the owner and group. `966K` is the size of the program, about 966 KB (kilobytes). Then come the date and time it was built and its name. If the compile had failed, `ls` would report that the file does not exist.
+The line starts with `-`, so it is a normal file. The `x` letters in `rwxrwxr-x` mean the file can be run. `ubuntu ubuntu` is the owner and group. `966K` is the size of the program, about 966 KB. Then come the date and time it was built and its name. If the compile had failed, `ls` would report that the file does not exist.
 
 ### Step 3: name the GPU architecture
 
-Without `-arch`, `nvcc` picks a safe, generic default target. It is better to name the GPU you build for. The L40S has compute capability (CC) 8.9 (see [Lesson 03](../Lesson-03/notes.md)), and its architecture name is `sm_89`:
+Without `-arch`, `nvcc` picks a safe, generic default target. It is better to name the GPU you build for. The L40S has compute capability 8.9 (see [Lesson 03](../Lesson-03/notes.md)), and its architecture name is `sm_89`:
 
 ```bash
 nvcc -arch=sm_89 -o project001 project001.cu
@@ -170,10 +170,10 @@ $ ./project001
 $
 ```
 
-The `$` is the shell prompt. It is not part of the command. After each `./project001` the next line is an empty prompt, so none of the three runs printed anything. The kernel did run on the GPU. But the program ended before the GPU's print buffer was flushed (written out to the terminal).
+The `$` is the shell prompt. It is not part of the command. After each `./project001` the next line is an empty prompt, so none of the three runs printed anything. The kernel did run on the GPU. But the program ended before the GPU's print buffer was flushed to the terminal.
 
 > [!WARNING]
-> Missing output depends on timing. On this machine it never appeared, but on another machine, driver or OS (operating system) you may see some or all of the lines in some runs. Never rely on that: without `cudaDeviceSynchronize()`, the CPU does not wait for the GPU.
+> Missing output depends on timing. On this machine it never appeared, but on another machine, driver or OS you may see some or all of the lines in some runs. Never rely on that: without `cudaDeviceSynchronize()`, the CPU does not wait for the GPU.
 
 `cudaDeviceSynchronize()` makes the CPU wait at that line until all GPU threads finish. When it returns, the print buffer is flushed and all output is on the terminal. Every run then prints the full output.
 
@@ -376,7 +376,7 @@ Put the semicolon back, compile again, and check that the build has no errors.
 | CUDA release | 13.0 |
 | GPU | NVIDIA L40S (46 GB, Ada Lovelace, CC 8.9, `sm_89`) |
 | OS | native Ubuntu 24 |
-| Access | SSH (Secure Shell) from another computer |
+| Access | SSH from another computer |
 
 The commands in this lesson work the same way on other Linux machines. Only the `-arch` value changes with the GPU.
 
@@ -446,10 +446,14 @@ int main()
 
 ## Glossary
 
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform and language extensions for writing programs that run on the GPU.
+- GPU (Graphics Processing Unit): the processor that runs kernels, with thousands of small cores.
+- CPU (Central Processing Unit): the main processor. It runs host code and launches kernels.
+- KB (kilobyte): about one thousand bytes.
 - `nvcc` (NVIDIA CUDA Compiler): the CUDA compiler driver. It handles host and device code in the same `.cu` file.
 - `-o`: sets the output program name. The default is `a.out`.
 - `-arch=sm_89`: compile for compute capability 8.9, which is the L40S (Ada Lovelace).
-- CC (compute capability): the version number of a GPU generation, such as 8.9. See [Lesson 03](../Lesson-03/notes.md).
+- compute capability (CC): the version number of a GPU generation, such as 8.9. See [Lesson 03](../Lesson-03/notes.md).
 - `cudaDeviceSynchronize()`: makes the CPU wait until all GPU work launched so far is done.
 - warp ID: the warp a thread belongs to inside its block. It is `threadIdx.x / 32`.
 - SSH (Secure Shell): a way to log in to another computer over the network and run commands there.

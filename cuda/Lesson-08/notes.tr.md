@@ -1,6 +1,6 @@
 # 08 > Vektör Toplama
 
-Ders 00 ile 07 arasındaki kernel'lar yalnızca kendi ID'lerini yazdırıyordu. Bu derste veri üzerinde gerçek iş yapan ilk CUDA (Compute Unified Device Architecture, birleşik hesaplama aygıt mimarisi) programını yazacaksın: GPU'da (Graphics Processing Unit, grafik işlem birimi) 1024 sayılık iki vektörü toplayacak. Bu arada, bellek ayırmaktan belleği serbest bırakmaya kadar neredeyse her CUDA programının izlediği altı adımı da tanıyacaksın.
+Ders 00 ile 07 arasındaki kernel'lar yalnızca kendi ID'lerini yazdırıyordu. Bu derste veri üzerinde gerçek iş yapan ilk CUDA programını yazacaksın: GPU'da 1024 sayılık iki vektörü toplayacak. Bu arada, bellek ayırmaktan belleği serbest bırakmaya kadar neredeyse her CUDA programının izlediği altı adımı da tanıyacaksın.
 
 > [!NOTE]
 > Kod, önceki derslerdeki gibi Ubuntu 24 üzerinde CUDA 13'ü ve NVIDIA L40S'i (`sm_89`) hedefliyor. Program kendi sonucunu kontrol ettiği için onu herhangi bir NVIDIA GPU'da çalıştırıp doğru çalışıp çalışmadığını görebilirsin.
@@ -16,11 +16,11 @@ c[1]    = a[1]    + b[1]
 c[1023] = a[1023] + b[1023]
 ```
 
-Buna eleman bazlı (element-wise) işlem denir. Her toplam yalnızca kendi iki girdisine ihtiyaç duyar ve hiçbir toplam bir başkasını beklemek zorunda değildir. Bu da vektör toplamayı bir GPU için mükemmel bir ilk iş yapıyor.
+Buna eleman bazlı işlem denir. Her toplam yalnızca kendi iki girdisine ihtiyaç duyar ve hiçbir toplam bir başkasını beklemek zorunda değildir. Bu da vektör toplamayı bir GPU için mükemmel bir ilk iş yapıyor.
 
 ## CPU'da: Her Seferinde Bir Eleman
 
-CPU'da (Central Processing Unit, merkezi işlem birimi) düz C ile bir döngü yazarsın:
+CPU'da düz C ile bir döngü yazarsın:
 
 ```c
 for (int i = 0; i < 1024; i++) {
@@ -38,14 +38,14 @@ En basit başlatmayla başla: 1024 thread'lik 1 block, `<<<1, 1024>>>`. Block ID
 
 <cuda-launch blocks="1" threads="1024" fn="vectorAdd"></cuda-launch>
 
-Her thread aynı tek satırı çalıştırır: `c[i] = a[i] + b[i]`; yalnızca `i` farklıdır. GPU 1024 thread'i çekirdeklerine dağıtır, 32'şerli warp'lar hâlinde (bkz. [Ders 07](../Lesson-07/notes.md)), ve onları paralel çalıştırır. Farklı veriler üzerinde çalışan birçok thread için tek komut fikri CUDA'nın kalbidir. Buna [Ders 01](../Lesson-01/notes.md)'deki gibi SIMT (Single Instruction, Multiple Threads, tek komut çoklu thread) denir.
+Her thread aynı tek satırı çalıştırır: `c[i] = a[i] + b[i]`; yalnızca `i` farklıdır. GPU 1024 thread'i çekirdeklerine dağıtır, 32'şerli warp'lar hâlinde (bkz. [Ders 07](../Lesson-07/notes.md)), ve onları paralel çalıştırır. Farklı veriler üzerinde çalışan birçok thread için tek komut fikri CUDA'nın kalbidir. Buna [Ders 01](../Lesson-01/notes.md)'deki gibi SIMT denir.
 
 İki yolu 16 elemanla karşılaştır: CPU döngüsü her eleman için bir adım olmak üzere 16 adım ister, GPU thread'leri ise 16 elemanın hepsini tek adımda doldurur:
 
 <vector-add n="16"></vector-add>
 
 > [!NOTE]
-> "Tek adım" bir fikirdir, kesin bir zamanlama değil. Bir block tek bir SM (Streaming Multiprocessor, akış çoklu işlemcisi) üzerinde çalışır. SM bu block'un 32 warp'unun hepsini aynı anda tutar ve onları hızlıca sırayla çalıştırır; böylece hiçbir thread, bir döngünün kendi indeksine gelmesini beklemez. Aşağıdaki altı adımda göreceğin gibi, GPU'ya giden ve GPU'dan gelen kopyalar da zaman alır.
+> "Tek adım" bir fikirdir, kesin bir zamanlama değil. Bir block tek bir SM üzerinde çalışır. SM bu block'un 32 warp'unun hepsini aynı anda tutar ve onları hızlıca sırayla çalıştırır; böylece hiçbir thread, bir döngünün kendi indeksine gelmesini beklemez. Aşağıdaki altı adımda göreceğin gibi, GPU'ya giden ve GPU'dan gelen kopyalar da zaman alır.
 
 ## Kernel
 
@@ -76,7 +76,7 @@ CPU'nun ve GPU'nun her birinin kendi belleği vardır. CUDA'da CPU tarafına hos
 Kod iki tarafı isimleriyle ayırır: `h_a` host'ta, `d_a` device'ta durur. Bu `h_` ve `d_` öneki yaygın bir alışkanlıktır ve seni bir kernel'a yanlışlıkla CPU pointer'ı vermekten korur.
 
 > [!TIP]
-> CUDA'da unified memory (birleşik bellek, `cudaMallocManaged`) de var: tek bir pointer iki tarafta da çalışır ve veriyi driver senin yerine taşır. Kullanışlıdır ama olan biteni gizler. Bu derste her kopyayı elle yapıyoruz, böylece her adımı görebilirsin.
+> CUDA'da unified memory (`cudaMallocManaged`) de var: tek bir pointer iki tarafta da çalışır ve veriyi driver senin yerine taşır. Kullanışlıdır ama olan biteni gizler. Bu derste her kopyayı elle yapıyoruz, böylece her adımı görebilirsin.
 
 ## Altı Adım
 
@@ -255,7 +255,7 @@ nvcc -arch=sm_89 -o vector_add vector_add.cu
 ```
 
 - `nvcc`, CUDA derleyicisidir.
-- `-arch=sm_89`, L40S için derler. Başka bir GPU'da onun kendi compute capability'sini kullan, örneğin CC (compute capability, hesaplama yeteneği) 8.0 için `-arch=sm_80` (bkz. [Ders 03](../Lesson-03/notes.md) ve [Ders 06](../Lesson-06/notes.md)).
+- `-arch=sm_89`, L40S için derler. Başka bir GPU'da onun kendi compute capability'sini kullan, örneğin compute capability 8.0 için `-arch=sm_80` (bkz. [Ders 03](../Lesson-03/notes.md) ve [Ders 06](../Lesson-06/notes.md)).
 - `-o vector_add`, programa `vector_add` adını verir.
 - `./vector_add`, programı bulunduğun klasörden çalıştırır.
 
@@ -439,6 +439,8 @@ int main()
 - unified memory (birleşik bellek): `cudaMallocManaged` ile alınan, iki tarafın da tek bir pointer ile kullanabildiği bellek.
 - GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran, binlerce küçük çekirdekli işlemci.
 - CPU (Central Processing Unit, merkezi işlem birimi): `main()`'i çalıştıran ve kernel'ları başlatan ana işlemci.
+- SM (Streaming Multiprocessor, akış çoklu işlemcisi): GPU'nun içinde block'ları çalıştıran işlemci; bir block her zaman tek bir SM'de çalışır.
+- compute capability (CC, hesaplama yeteneği): bir GPU neslinin sürüm numarası, L40S'te 8.9; `-arch=sm_XX` değerini o belirler.
 - indeks (index): bir elemanın dizideki konumu, 0'dan sayılır; `c[3]`, `c`'nin dördüncü elemanıdır.
 - paralel (parallel): sırayla tek tek değil, birçok çekirdekte aynı anda.
 - `__global__`: bir fonksiyonu kernel olarak işaretler; CPU onu başlatır, GPU çalıştırır.

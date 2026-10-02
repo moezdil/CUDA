@@ -1,21 +1,21 @@
 # 11 > CPU to GPU Data Path
 
-A kernel can only work on data that is already in GPU (Graphics Processing Unit) memory, and that data almost always starts in CPU memory. This lesson follows the bytes along the way: the PCIe link, pinned host memory, asynchronous copies, unified memory and the faster links on Grace Hopper and Grace Blackwell. [Lesson 00](../Lesson-00/notes.md) gave the short version; here you see why the path is slow and what you can do about it.
+A kernel can only work on data that is already in GPU memory, and that data almost always starts in CPU memory. This lesson follows the bytes along the way: the PCIe link, pinned host memory, asynchronous copies, unified memory and the faster links on Grace Hopper and Grace Blackwell. [Lesson 00](../Lesson-00/notes.md) gave the short version; here you see why the path is slow and what you can do about it.
 
 ## Two Memories, One Link
 
 A normal GPU server has two separate memories:
 
-- host memory: the system RAM (Random Access Memory) on the motherboard, next to the CPU (Central Processing Unit)
-- device memory: the GPU's own memory, GDDR (Graphics Double Data Rate) or HBM (High Bandwidth Memory), on the GPU board
+- host memory: the system RAM on the motherboard, next to the CPU
+- device memory: the GPU's own memory, GDDR or HBM, on the GPU board
 
-The CPU cannot read device memory like its own RAM, and a kernel cannot simply read host memory at full speed. Between them sits a link, on most machines PCIe (Peripheral Component Interconnect Express). Every byte the GPU works on crosses that link at least once.
+The CPU cannot read device memory like its own RAM, and a kernel cannot simply read host memory at full speed. Between them sits a link, on most machines PCIe. Every byte the GPU works on crosses that link at least once.
 
-On the L40S used across these lessons, the two sides are very unequal. Its 48 GB of GDDR6 feeds the SMs (Streaming Multiprocessors) at 864 GB/s. The PCIe 4.0 x16 link to the CPU moves about 31.5 GB/s in each direction. [Lesson 07](../Lesson-07/notes.md) shows what happens to data once it is inside the GPU; this lesson is about getting it there.
+On the L40S used across these lessons, the two sides are very unequal. Its 48 GB of GDDR6 feeds the SMs at 864 GB/s. The PCIe 4.0 x16 link to the CPU moves about 31.5 GB/s in each direction. [Lesson 07](../Lesson-07/notes.md) shows what happens to data once it is inside the GPU; this lesson is about getting it there.
 
 ## The PCIe Link
 
-PCIe is built from lanes. Each lane is a pair of wire pairs, one for each direction, so a link sends and receives at the same time (full duplex). A GPU slot has 16 lanes, written x16. Each new generation doubles the speed of a lane, measured in GT/s (gigatransfers per second):
+PCIe is built from lanes. Each lane is a pair of wire pairs, one for each direction, so a link sends and receives at the same time, which is called full duplex. A GPU slot has 16 lanes, written x16. Each new generation doubles the speed of a lane, measured in GT/s:
 
 | Generation | Per lane | x16, per direction | GPUs that use it |
 |---|---|---|---|
@@ -58,10 +58,10 @@ The copy stops dominating only when the GPU does a lot of work per byte it recei
 
 ## Pageable and Pinned Host Memory
 
-The copy itself is done by a DMA (Direct Memory Access) engine on the GPU: hardware that reads host memory over PCIe on its own, without the CPU moving each byte. A DMA engine needs a fixed physical address, and that is where the kind of host memory matters.
+The copy itself is done by a DMA engine on the GPU: hardware that reads host memory over PCIe on its own, without the CPU moving each byte. A DMA engine needs a fixed physical address, and that is where the kind of host memory matters.
 
-- pageable memory: what `malloc` or `new` gives you. The OS (operating system) may move these pages to another place in RAM or swap them to disk at any time, so the DMA engine cannot safely read them.
-- pinned memory (page-locked memory): host memory that the OS promises never to move. In CUDA (Compute Unified Device Architecture) you get it from `cudaMallocHost` or `cudaHostAlloc`, or you lock an existing buffer with `cudaHostRegister`.
+- pageable memory: what `malloc` or `new` gives you. The OS may move these pages to another place in RAM or swap them to disk at any time, so the DMA engine cannot safely read them.
+- pinned memory: host memory that the OS promises never to move, also called page-locked memory. In CUDA you get it from `cudaMallocHost` or `cudaHostAlloc`, or you lock an existing buffer with `cudaHostRegister`.
 
 When you copy from pageable memory, the driver works around the problem. It copies your data into a pinned staging buffer of its own with the CPU, then lets the DMA engine send that buffer to the GPU, piece by piece. Every byte is copied twice, once by the CPU and once over PCIe. From pinned memory the DMA engine reads your buffer directly, so the staging copy disappears and the link can run close to its peak.
 
@@ -86,13 +86,13 @@ The data still has to cross the link. Since Pascal, GPUs can take a page fault: 
 
 ## Coherent Links: Grace Hopper and Grace Blackwell
 
-NVIDIA's superchips replace PCIe between CPU and GPU. The GH200 Grace Hopper Superchip puts a Grace CPU (Arm, with up to 480 GB of LPDDR5X (Low-Power Double Data Rate 5X) memory) and a Hopper GPU on one board, joined by NVLink-C2C (NVLink Chip-to-Chip). The GB200 Grace Blackwell Superchip joins one Grace CPU to two B200 GPUs the same way.
+NVIDIA's superchips replace PCIe between CPU and GPU. The GH200 Grace Hopper Superchip puts a Grace CPU (Arm, with up to 480 GB of LPDDR5X memory) and a Hopper GPU on one board, joined by NVLink-C2C. The GB200 Grace Blackwell Superchip joins one Grace CPU to two B200 GPUs the same way.
 
 NVLink-C2C moves 900 GB/s in total, 450 GB/s in each direction, about 7 times PCIe 5.0 x16. It is also coherent: the CPU and the GPU see one shared address space and keep their caches in agreement, so the GPU can read CPU memory directly, even ordinary memory from `malloc`, without staging. Copies still pay off for data the GPU reads again and again, because HBM is faster still, but the link is no longer the narrow point it is on PCIe.
 
 ## GPUDirect
 
-GPUDirect is NVIDIA's name for paths that skip host memory altogether. GPUDirect P2P (peer to peer) lets two GPUs in the same machine copy to each other directly. GPUDirect RDMA (Remote Direct Memory Access) lets a NIC (Network Interface Card) read and write GPU memory directly, so data from another server lands on the GPU without a stop in CPU RAM. GPUDirect Storage does the same for NVMe (Non-Volatile Memory Express) drives and network storage. [Lesson 12](../Lesson-12/notes.md) shows how many GPUs use these paths together.
+GPUDirect is NVIDIA's name for paths that skip host memory altogether. GPUDirect P2P lets two GPUs in the same machine copy to each other directly. GPUDirect RDMA lets a NIC read and write GPU memory directly, so data from another server lands on the GPU without a stop in CPU RAM. GPUDirect Storage does the same for NVMe drives and network storage. [Lesson 12](../Lesson-12/notes.md) shows how many GPUs use these paths together.
 
 ## Why This Matters for CUDA
 
@@ -126,6 +126,7 @@ The fastest kernel cannot make up for a slow data path. When you write CUDA:
 - DMA (Direct Memory Access): hardware on the GPU that moves data over PCIe by itself, without the CPU copying each byte.
 - pageable memory: normal host memory from `malloc` or `new`, which the OS may move or swap out.
 - OS (operating system): the software, such as Linux, that manages memory and decides where pages live.
+- swap: moving memory pages from RAM to disk when RAM runs short.
 - pinned memory: host memory locked in place (page-locked), so the DMA engine can read it directly; from `cudaMallocHost`.
 - staging buffer: a pinned buffer the driver copies pageable data into before sending it to the GPU.
 - CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
@@ -145,6 +146,7 @@ The fastest kernel cannot make up for a slow data path. When you write CUDA:
 - NVLink-C2C (NVLink Chip-to-Chip): NVIDIA's coherent CPU-GPU link, 900 GB/s in total, 450 GB/s per direction.
 - coherent: CPU and GPU share one address space and keep their caches in agreement, so each can read the other's memory.
 - GPUDirect: NVIDIA's family of paths that move data to or from GPU memory without a stop in host memory.
+- P2P (peer to peer): a direct copy between two GPUs in the same machine, without going through host memory.
 - RDMA (Remote Direct Memory Access): reading or writing another machine's memory over the network without its CPU.
 - NIC (Network Interface Card): the card that connects a server to the network.
 - NVMe (Non-Volatile Memory Express): the fast interface for SSD (solid state drive) storage on PCIe.

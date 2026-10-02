@@ -1,6 +1,6 @@
 # 00 > CPU vs GPU Basics
 
-This lesson explains how a GPU (Graphics Processing Unit) differs from a CPU (Central Processing Unit). It also opens up a GPU and shows the parts inside it. Every later lesson builds on these ideas.
+This lesson explains how a GPU differs from a CPU. It also opens up a GPU and shows the parts inside it. Every later lesson builds on these ideas.
 
 ## Moving Code to the GPU Is Not Enough
 
@@ -14,7 +14,7 @@ A CPU is built for:
 
 - fast response  
 - complex logic  
-- sequential execution (one step after another)  
+- sequential execution  
 
 A GPU is built to process many things at the same time.
 
@@ -23,9 +23,9 @@ A GPU is built to process many things at the same time.
 
 ## Memory
 
-A CPU uses system RAM (Random Access Memory). Everything goes through the same shared memory space.
+A CPU uses system RAM. Everything goes through the same shared memory space.
 
-A GPU has its own memory, called VRAM (the GPU's own RAM). Gaming cards use GDDR (Graphics Double Data Rate) memory, and data center GPUs use HBM (High Bandwidth Memory). This means:
+A GPU has its own memory, called VRAM. Gaming cards use GDDR memory, and data center GPUs use HBM. This means:
 
 - CPU and GPU do not share data automatically  
 - data must be copied between them  
@@ -46,7 +46,7 @@ GPUs also have cache. They add one more thing called shared memory. Threads insi
 
 ## Core Speed
 
-A GPU is not stronger because each core is faster. A single CPU core usually runs at a higher clock speed: a desktop CPU core often boosts to 5 GHz (gigahertz) or more. A GPU core is slower: the GeForce RTX 5090, a top gaming GPU from 2025, boosts to 2.41 GHz. In a one-core against one-core test, the CPU wins.
+A GPU is not stronger because each core is faster. A single CPU core usually runs at a higher clock speed: a desktop CPU core often boosts to 5 GHz or more. A GPU core is slower: the GeForce RTX 5090, a top gaming GPU from 2025, boosts to 2.41 GHz. In a one-core against one-core test, the CPU wins.
 
 ## Where GPU Power Comes From
 
@@ -65,7 +65,7 @@ The GPU does not work alone. In a typical system:
 - the CPU manages the program  
 - the GPU runs the parallel work  
 
-They talk through a connection such as PCIe (PCI Express). The data flow looks like this:
+They talk through a connection such as PCIe. The data flow looks like this:
 
 CPU → sends data to GPU  
 GPU → processes it  
@@ -73,9 +73,9 @@ GPU → sends results back
 
 If this flow is handled badly, performance drops.
 
-## The Streaming Multiprocessor (SM)
+## The Streaming Multiprocessor
 
-The most important unit inside a GPU is the SM (Streaming Multiprocessor). An SM is a small processing unit. A GPU is many SMs working together.
+The most important unit inside a GPU is the SM. An SM is a small processing unit. A GPU is many SMs working together.
 
 Each SM has everything needed to run parallel work:
 
@@ -88,10 +88,10 @@ Each SM has everything needed to run parallel work:
 
 Each SM has different types of compute units. Each type is specialized:
 
-- floating-point units, used a lot in graphics and AI (artificial intelligence)  
+- floating-point units, used a lot in graphics and AI  
 - integer units  
 - Tensor Cores, for matrix math, which is critical for AI  
-- special function units (SFU), for more complex math  
+- special function units, for more complex math  
 - load/store units, which move data between memory and compute units  
 
 So a GPU is not just "many cores". It is a structured system of specialized units.
@@ -107,7 +107,7 @@ L2 cache is a cache layer for the whole GPU. It is not tied to one SM like L1 or
 
 ## Why This Matters
 
-CUDA (Compute Unified Device Architecture) is not only about writing code. It is about understanding the hardware. To use a GPU well, you need to know:
+CUDA is not only about writing code. It is about understanding the hardware. To use a GPU well, you need to know:
 
 - how memory works  
 - how parallel execution works  

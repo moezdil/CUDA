@@ -1,10 +1,10 @@
 # 05 > Compute Capability
 
-This lesson explains compute capability, how its numbers work, and how it decides which features and which CUDA (Compute Unified Device Architecture) toolkit versions you can use. By the end you can look at any GPU (Graphics Processing Unit) and tell what it supports.
+This lesson explains compute capability, how its numbers work, and how it decides which features and which CUDA toolkit versions you can use. By the end you can look at any GPU and tell what it supports.
 
 ## What Compute Capability Is
 
-Compute capability (CC) is NVIDIA's system for describing the features of a GPU. It is a version number for the hardware, not for the software.
+Compute capability, CC for short, is NVIDIA's system for describing the features of a GPU. It is a version number for the hardware, not for the software.
 
 It is not a marketing score or a benchmark. It says exactly what a GPU architecture can and cannot do. Think of it as a specification sheet in a single number.
 
@@ -24,11 +24,11 @@ So going from 7.x to 8.x is not just a speed bump. It means a different architec
 
 ### Volta → CC 7.0
 
-Volta introduced Tensor Cores. These are special units that speed up the matrix operations used in AI (artificial intelligence) and deep learning. Before Volta, these operations ran on general-purpose CUDA cores. After Volta, they had dedicated hardware.
+Volta introduced Tensor Cores. These are special units that speed up the matrix operations used in AI and deep learning. Before Volta, these operations ran on general-purpose CUDA cores. After Volta, they had dedicated hardware.
 
 ### Turing and Ampere → CC 7.5 and 8.x
 
-Turing (CC 7.5, the RTX 20 series) brought Tensor Cores to consumer cards. Ampere (CC 8.0 for the A100, 8.6 for the RTX 30 series) brought more powerful and efficient Tensor Cores, higher memory bandwidth and better energy efficiency. Ada Lovelace (CC 8.9, the RTX 40 series and the L40S) added FP8 (8-bit floating point) support.
+Turing (CC 7.5, the RTX 20 series) brought Tensor Cores to consumer cards. Ampere (CC 8.0 for the A100, 8.6 for the RTX 30 series) brought more powerful and efficient Tensor Cores, higher memory bandwidth and better energy efficiency. Ada Lovelace (CC 8.9, the RTX 40 series and the L40S) added FP8 support.
 
 ### Hopper → CC 9.0
 
@@ -36,7 +36,7 @@ Hopper (the H100 and H200) was another major step. It introduced new execution m
 
 ### Blackwell → CC 10.x, 11.0 and 12.x
 
-Blackwell is the main shipping generation in 2026. It has 5th-generation Tensor Cores and a new precision format called NVFP4 (NVIDIA 4-bit floating point). NVFP4 doubles throughput compared to FP8 for large model inference. FP4 acceleration does not exist on earlier architectures.
+Blackwell is the main shipping generation in 2026. It has 5th-generation Tensor Cores and a new precision format called NVFP4. NVFP4 doubles throughput compared to FP8 for large model inference. FP4 acceleration does not exist on earlier architectures.
 
 Blackwell comes in several compute capabilities, one per chip family:
 
@@ -55,12 +55,12 @@ Blackwell comes in several compute capabilities, one per chip family:
 
 The official CUDA documentation has tables that map features to compute capability versions. These tables show clear patterns:
 
-- GPUs at CC 5.0 do not support half-precision (FP16) operations
+- GPUs at CC 5.0 do not support FP16 operations
 - Tensor Cores appear only from CC 7.0 onward
 - FP8 Tensor Cores arrive with CC 8.9 (Ada Lovelace) and 9.0 (Hopper)
 - NVFP4 requires CC 10.0 or higher
 
-A missing hardware feature cannot be added later. If your GPU has no Tensor Cores, you cannot use them. Software can sometimes imitate a missing unit (emulation), but it is far slower, and for most Tensor Core features there is no such path. The hardware either has the unit or it does not.
+A missing hardware feature cannot be added later. If your GPU has no Tensor Cores, you cannot use them. Software can sometimes imitate a missing unit through emulation, but it is far slower, and for most Tensor Core features there is no such path. The hardware either has the unit or it does not.
 
 So before writing performance-sensitive CUDA code, ask "Does my GPU support what I need?" This comes before "Is my GPU fast enough?"
 
@@ -89,9 +89,9 @@ The workflow is always the same:
 
 <cc-explorer></cc-explorer>
 
-## The Low-Level Layer (PTX)
+## The Low-Level Layer
 
-CUDA code does not run directly on the GPU. It compiles to PTX (Parallel Thread Execution) first. PTX is a low-level intermediate language, similar to an assembly language for NVIDIA GPUs.
+CUDA code does not run directly on the GPU. It compiles to PTX first. PTX is a low-level intermediate language, similar to an assembly language for NVIDIA GPUs.
 
 Some PTX instructions need hardware units that exist only from a certain compute capability onward. Warp shuffle functions are one example.
 
@@ -112,6 +112,7 @@ Know your CC number. Check it against the CUDA documentation. Choose the right t
 
 - compute capability (CC): NVIDIA's version number that says what a GPU architecture can and cannot do.
 - GPU (Graphics Processing Unit): a processor built to run many simple tasks in parallel.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on its GPUs.
 - benchmark: a test program that measures speed; compute capability is not a speed score.
 - architecture: the hardware design of a GPU family; each architecture gets its own major CC number.
 - number before the dot (major number): it signals a major architectural change, such as 8 for Ampere and 9 for Hopper.

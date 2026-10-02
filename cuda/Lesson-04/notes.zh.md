@@ -1,6 +1,6 @@
 # 04 > 内置变量
 
-每个核函数都有五个只读的内置变量：`gridDim`、`blockDim`、`blockIdx`、`threadIdx` 和 `warpSize`。它们不用你传入，也不用声明。启动时，GPU（Graphics Processing Unit，图形处理器）会根据启动配置为每个线程填好这些值。这一课让每个线程把这五个变量全部打印出来，你就能看出哪些会变、哪些不变。
+每个核函数都有五个只读的内置变量：`gridDim`、`blockDim`、`blockIdx`、`threadIdx` 和 `warpSize`。它们不用你传入，也不用声明。启动时，GPU 会根据启动配置为每个线程填好这些值。这一课让每个线程把这五个变量全部打印出来，你就能看出哪些会变、哪些不变。
 
 > [!NOTE]
 > 本页所有输出都来自一块 NVIDIA L40S，环境是 CUDA 13.0 和 Ubuntu 24。
@@ -25,7 +25,7 @@
 
 `threadIdx` 是线程在所在线程块里的编号，在每个线程块里都从 0 重新开始。在一个有 4 个线程的线程块里，`threadIdx.x` 依次是 0、1、2、3。它总是小于 `blockDim.x`。
 
-`gridDim`、`blockDim`、`blockIdx` 和 `threadIdx` 都有 `.x`、`.y`、`.z` 三个字段。`gridDim` 和 `blockDim` 的类型是 `dim3`。如果你在 `<<<2, 4>>>` 里写的是普通数字，CUDA（Compute Unified Device Architecture，统一计算设备架构）会自动把 `.y = 1` 和 `.z = 1` 设好，所以 `<<<2, 4>>>` 和 `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>` 是等价的。
+`gridDim`、`blockDim`、`blockIdx` 和 `threadIdx` 都有 `.x`、`.y`、`.z` 三个字段。`gridDim` 和 `blockDim` 的类型是 `dim3`。如果你在 `<<<2, 4>>>` 里写的是普通数字，CUDA 会自动把 `.y = 1` 和 `.z = 1` 设好，所以 `<<<2, 4>>>` 和 `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>` 是等价的。
 
 ## warpSize
 
@@ -36,7 +36,7 @@
 
 ## 硬件上限
 
-运行核函数之前，CUDA 运行时会把启动配置和硬件上限做比较，只要有一个值超标，核函数就不会启动。下面是 CC（compute capability，计算能力）3.0 及以后版本的上限，从 Kepler 到 Blackwell 都适用：
+运行核函数之前，CUDA 运行时会把启动配置和硬件上限做比较，只要有一个值超标，核函数就不会启动。下面是计算能力 3.0 及以后版本的上限，从 Kepler 到 Blackwell 都适用：
 
 | 变量          | 维度         | 最大值    |
 |---------------|--------------|-----------|
@@ -88,7 +88,7 @@ int main()
 ```
 
 - 两个 CUDA 头文件声明了运行时函数（比如 `cudaDeviceSynchronize`）和内置变量，`stdio.h` 提供 `printf`。
-- `__global__` 把 `printBuiltins` 标记为核函数，它在 GPU 上运行，由 CPU（Central Processing Unit，中央处理器）启动。
+- `__global__` 把 `printBuiltins` 标记为核函数，它在 GPU 上运行，由 CPU 启动。
 - 核函数里的 `printf` 在每个线程里运行一次。每个 `%d` 依次由格式字符串下面列出的一个字段填入。
 - `printBuiltins<<<2, 4>>>()` 启动 2 个线程块，每块 4 个线程，所以一共 8 个线程运行这个核函数，打印 8 行。
 - `cudaDeviceSynchronize()` 让 CPU 一直等到核函数执行完。核函数启动会立即返回，如果不等待，GPU 的输出还没出来，`main` 可能就已经结束了。
@@ -206,7 +206,8 @@ int main()
 
 - GPU（Graphics Processing Unit，图形处理器）：运行核函数的处理器。
 - CPU（Central Processing Unit，中央处理器）：运行 `main()` 并启动核函数的主处理器。
-- CC（compute capability，计算能力）：一代 GPU 的版本号，上表中的各项上限都由它规定（[第 03 课](../Lesson-03/notes.md)）。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 的平台和语言扩展，用来编写在 GPU 上运行的程序。
+- 计算能力（compute capability，CC）：一代 GPU 的版本号，上表中的各项上限都由它规定（[第 03 课](../Lesson-03/notes.md)）。
 - `gridDim`：每个方向（x、y、z）上的线程块数量。同一次启动中，每个线程看到的值都相同。
 - `blockDim`：每个线程块在每个方向上的线程数。同一次启动中，每个线程看到的值都相同。
 - `blockIdx`：线程所在线程块的编号，在每个方向上都小于 `gridDim`。

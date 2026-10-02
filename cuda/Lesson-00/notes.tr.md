@@ -1,13 +1,13 @@
 # 00 > Bir Block, Bir Thread
 
-Bu derste olabilecek en basit CUDA (Compute Unified Device Architecture) programını çalıştıracaksın. Kernel tek bir block ve tek bir thread kullanır, yani hiç paralellik yok. Böylece işler karmaşıklaşmadan ilk çıktını görürsün. Sonraki her ders bu programı biraz değiştiriyor.
+Bu derste olabilecek en basit CUDA programını çalıştıracaksın. Kernel tek bir block ve tek bir thread kullanır, yani hiç paralellik yok. Böylece işler karmaşıklaşmadan ilk çıktını görürsün. Sonraki her ders bu programı biraz değiştiriyor.
 
 > [!NOTE]
 > Bu sayfadaki tüm çıktılar, Ubuntu 24 üzerinde CUDA 13.0 ile çalışan bir NVIDIA L40S'ten alındı.
 
 ## GPU ve CPU
 
-CPU'da (Central Processing Unit, merkezi işlem birimi) bir fonksiyon tek bir çekirdekte bir kez çalışır. GPU'da (Graphics Processing Unit, grafik işlem birimi) ise bir kernel aynı anda birçok kez çalışır. Kernel, GPU'da çalışan bir fonksiyondur ve onun çalışan her kopyasına thread denir. Kaç thread çalışacağını iki sayı belirler: block sayısı ve block başına thread sayısı.
+CPU'da bir fonksiyon tek bir çekirdekte bir kez çalışır. GPU'da ise bir kernel aynı anda birçok kez çalışır. Kernel, GPU'da çalışan bir fonksiyondur ve onun çalışan her kopyasına thread denir. Kaç thread çalışacağını iki sayı belirler: block sayısı ve block başına thread sayısı.
 
 Örneğin 3'er thread'li 2 block, 2 x 3 = 6 thread başlatır ve bu 6 thread'in hepsi aynı kernel kodunu çalıştırır.
 
@@ -17,7 +17,7 @@ CPU'da (Central Processing Unit, merkezi işlem birimi) bir fonksiyon tek bir ç
 __global__ void printIDs() { ... }
 ```
 
-`__global__`, bir fonksiyonu GPU kernel'ı olarak işaretler. Derleyici (compiler) onu CPU için değil, GPU için derler. Onu CPU çağırır ama GPU'da çalışır.
+`__global__`, bir fonksiyonu GPU kernel'ı olarak işaretler. Derleyici onu CPU için değil, GPU için derler. Onu CPU çağırır ama GPU'da çalışır.
 
 > [!NOTE]
 > İki niteleyici daha var. `__device__` GPU'da çalışır ve yalnızca GPU kodundan çağrılabilir. `__host__` normal bir CPU fonksiyonudur ve yalnızca CPU'dan çağrılabilir.
@@ -30,7 +30,7 @@ printIDs<<<1, 1>>>();
 //  blocks -+  +- threads per block
 ```
 
-`<<<...>>>` sözdizimine çalıştırma ayarı (execution configuration) denir ve fonksiyon adı ile argüman listesi arasına yazılır. İlk sayı block sayısı, ikinci sayı block başına thread sayısıdır. `<<<1, 1>>>`, tek thread'li tek bir block demektir; toplam thread sayısı 1 x 1 = 1.
+`<<<...>>>` sözdizimine çalıştırma ayarı denir ve fonksiyon adı ile argüman listesi arasına yazılır. İlk sayı block sayısı, ikinci sayı block başına thread sayısıdır. `<<<1, 1>>>`, tek thread'li tek bir block demektir; toplam thread sayısı 1 x 1 = 1.
 
 <cuda-launch blocks="1" threads="1" fn="printIDs"></cuda-launch>
 
@@ -39,8 +39,8 @@ printIDs<<<1, 1>>>();
 Her kernel başlatması üç seviye oluşturur:
 
 - thread: en küçük birim. Bir thread, kernel'ın bir kopyasını çalıştırır.
-- block: tek bir SM (Streaming Multiprocessor, akış çoklu işlemcisi) üzerinde çalışan bir grup thread. SM, GPU'nun içindeki birçok küçük işlemciden biridir. Aynı block'taki thread'ler bellek paylaşabilir.
-- grid (ızgara): bir kernel başlatmasındaki tüm block'lar. Bir başlatma, bir grid.
+- block: tek bir SM üzerinde çalışan bir grup thread. SM, GPU'nun içindeki birçok küçük işlemciden biridir. Aynı block'taki thread'ler bellek paylaşabilir.
+- grid: bir kernel başlatmasındaki tüm block'lar. Bir başlatma, bir grid.
 
 <cuda-hierarchy></cuda-hierarchy>
 
@@ -53,13 +53,13 @@ Her kernel başlatması üç seviye oluşturur:
 printf("Block ID: %d  Thread ID: %d", blockIdx.x, threadIdx.x);
 ```
 
-`blockIdx.x`, bu thread'in içinde bulunduğu block'un indeksidir. `threadIdx.x`, bu thread'in kendi block'u içindeki indeksidir. İkisi de 0'dan başlar. İkisinin de `.x`, `.y` ve `.z` parçaları vardır, çünkü grid'ler ve block'lar 1D, 2D ya da 3D (bir, iki ya da üç boyutlu) olabilir. 1D işlerde yalnızca `.x` kullanırsın. `<<<1, 1>>>` ile ikisi de her zaman 0'dır.
+`blockIdx.x`, bu thread'in içinde bulunduğu block'un indeksidir. `threadIdx.x`, bu thread'in kendi block'u içindeki indeksidir. İkisi de 0'dan başlar. İkisinin de `.x`, `.y` ve `.z` parçaları vardır, çünkü grid'ler ve block'lar 1D, 2D ya da 3D olabilir. 1D işlerde yalnızca `.x` kullanırsın. `<<<1, 1>>>` ile ikisi de her zaman 0'dır.
 
 ## Header Dosyaları
 
-- `cuda_runtime.h`: CUDA runtime API'si (Application Programming Interface, uygulama programlama arayüzü). `cudaDeviceSynchronize()` ve hata kontrol fonksiyonları burada tanımlanır.
+- `cuda_runtime.h`: CUDA runtime API'si. `cudaDeviceSynchronize()` ve hata kontrol fonksiyonları burada tanımlanır.
 - `stdio.h`: standart C, `printf` için gerekli.
-- `device_launch_parameters.h`: MSVC (Microsoft Visual C++) ya da bazı IDE'leri (Integrated Development Environment, tümleşik geliştirme ortamı) kullanırken `blockIdx`, `threadIdx`, `blockDim` ve `gridDim`'i editöre tanıtır. `nvcc`'nin buna ihtiyacı yoktur, ama zararı da yoktur.
+- `device_launch_parameters.h`: MSVC ya da bazı IDE'leri kullanırken `blockIdx`, `threadIdx`, `blockDim` ve `gridDim`'i editöre tanıtır. `nvcc`'nin buna ihtiyacı yoktur, ama zararı da yoktur.
 
 ## `cudaDeviceSynchronize()`
 
@@ -195,3 +195,8 @@ int main()
 - `cudaDeviceSynchronize()`: CPU'nun, GPU tüm işini bitirene kadar beklemesini sağlar.
 - asenkron: CPU beklemez. GPU'ya bir komut gönderir ve hemen yoluna devam eder.
 - API (Application Programming Interface, uygulama programlama arayüzü): bir kütüphanenin sunduğu fonksiyonlar kümesi, burada CUDA runtime fonksiyonları.
+- 3D (three-dimensional, üç boyutlu): `x`, `y` ve `z` boyutları olan bir şekil. 1D yalnızca `x`, 2D ise `x` ve `y` kullanır.
+- derleyici (compiler): kaynak kodunu makinenin çalıştırabileceği bir programa dönüştüren araç. CUDA'da bu `nvcc`'dir.
+- çalıştırma ayarı (execution configuration): kernel başlatmasındaki, kaç thread çalışacağını belirleyen `<<<blocks, threads>>>` kısmı.
+- MSVC (Microsoft Visual C++): Microsoft'un Windows'taki C ve C++ derleyicisi.
+- IDE (Integrated Development Environment, tümleşik geliştirme ortamı): Visual Studio gibi, derleme ve hata ayıklama araçları olan bir editör.

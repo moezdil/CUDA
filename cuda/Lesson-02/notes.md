@@ -7,13 +7,13 @@ A block can hold at most 1024 threads. To run more threads, you add more blocks.
 
 ## The 1024-Thread Limit
 
-A single block may have at most 1024 threads. This is a fixed rule of the compute capability, the version number of the GPU (Graphics Processing Unit) that [Lesson 03](../Lesson-03/notes.md) explains. It has been 1024 on every NVIDIA GPU made since 2010.
+A single block may have at most 1024 threads. This is a fixed rule of the compute capability, the version number of the GPU that [Lesson 03](../Lesson-03/notes.md) explains. It has been 1024 on every NVIDIA GPU made since 2010.
 
-The limit is not "the most threads an SM can hold". One SM (Streaming Multiprocessor) can hold more threads than that at once, spread over several blocks. On the L40S, one SM holds up to 1536 threads, for example 3 blocks of 512 threads each. On data center GPUs such as the A100 or H100, one SM holds up to 2048 threads.
+The limit is not "the most threads an SM can hold". One SM can hold more threads than that at once, spread over several blocks. On the L40S, one SM holds up to 1536 threads, for example 3 blocks of 512 threads each. On data center GPUs such as the A100 or H100, one SM holds up to 2048 threads.
 
-## Streaming Multiprocessors (SMs)
+## Streaming Multiprocessors
 
-An SM is a physical processing unit inside the GPU. Each SM has CUDA (Compute Unified Device Architecture) cores, a register file, shared memory, L1 cache (level 1 cache), and warp schedulers. At launch, the blocks are spread across the SMs. One SM can run one or more blocks at the same time, depending on how many resources each block needs. A block always stays on one SM.
+An SM is a physical processing unit inside the GPU. Each SM has CUDA cores, a register file, shared memory, L1 cache, and warp schedulers. At launch, the blocks are spread across the SMs. One SM can run one or more blocks at the same time, depending on how many resources each block needs. A block always stays on one SM.
 
 > [!NOTE]
 > The SM count depends on the GPU. The L40S has 142 SMs. A mid-range GPU like the RTX 3080 has 68.
@@ -115,7 +115,7 @@ nvcc -o first_kernel first_kernel.cu
 ./first_kernel
 ```
 
-- `nvcc` is the CUDA compiler. It builds the CPU (Central Processing Unit) part and the GPU part of the file.
+- `nvcc` is the CUDA compiler. It builds the CPU part and the GPU part of the file.
 - `-o first_kernel` names the program `first_kernel`. Without it the name is `a.out`.
 - `first_kernel.cu` is the source file with the code above.
 - `./first_kernel` runs the program from the current folder.

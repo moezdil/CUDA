@@ -1,13 +1,13 @@
 # 07 > Warp IDs
 
-[Lesson 01](../Lesson-01/notes.md) and [Lesson 02](../Lesson-02/notes.md) covered block and thread IDs. This lesson adds the warp, the group of 32 threads that the GPU (Graphics Processing Unit) really schedules, and shows how a thread works out its own warp ID and lane ID inside the kernel.
+[Lesson 01](../Lesson-01/notes.md) and [Lesson 02](../Lesson-02/notes.md) covered block and thread IDs. This lesson adds the warp, the group of 32 threads that the GPU really schedules, and shows how a thread works out its own warp ID and lane ID inside the kernel.
 
 > [!NOTE]
 > All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
 
 ## The CUDA Hierarchy
 
-The levels in CUDA (Compute Unified Device Architecture) are the grid, the blocks inside it, the warps inside each block, and the threads inside each warp:
+The levels in CUDA are the grid, the blocks inside it, the warps inside each block, and the threads inside each warp:
 
 <cuda-hierarchy warps></cuda-hierarchy>
 
@@ -17,11 +17,11 @@ You choose the number of blocks and threads per block with `<<<num_blocks, threa
 > Warp limits depend on the hardware. These values were measured on the L40S with `cudaGetDeviceProperties`:
 >
 > - Max warps per block: 32 (max 1024 threads / 32, applies to all GPUs)
-> - Max concurrent warps per SM (Streaming Multiprocessor): 48, which is 48 × 32 = 1536 threads
+> - Max concurrent warps per SM: 48, which is 48 × 32 = 1536 threads
 > - SM count: 142
 > - Max concurrent warps across the entire GPU: 142 × 48 = 6,816
 >
-> The L40S has compute capability (CC) 8.9. GPUs with CC 8.6, 8.9 and 12.0 hold 48 warps per SM. Data center GPUs such as the A100 (CC 8.0) and H100 (CC 9.0) hold 64 warps, which is 2048 threads, per SM ([Lesson 03](../Lesson-03/notes.md)).
+> The L40S has compute capability 8.9. GPUs with CC 8.6, 8.9 and 12.0 hold 48 warps per SM. Data center GPUs such as the A100 (CC 8.0) and H100 (CC 9.0) hold 64 warps, which is 2048 threads, per SM ([Lesson 03](../Lesson-03/notes.md)).
 
 ## `warp_id` Is Not a Built-in Variable
 
@@ -99,7 +99,7 @@ Move the slider to change the block size, and hover a thread to see both numbers
 
 ### `warp_ids.cu`
 
-The kernel runs with 1 block of 128 threads. The `test01` function runs on the GPU. Each thread computes its `warp_id` with `threadIdx.x / 32` and prints its block ID, thread ID, and warp ID. After the launch, `cudaDeviceSynchronize()` makes the CPU (Central Processing Unit) wait for the GPU, so the output is not lost when the program ends.
+The kernel runs with 1 block of 128 threads. The `test01` function runs on the GPU. Each thread computes its `warp_id` with `threadIdx.x / 32` and prints its block ID, thread ID, and warp ID. After the launch, `cudaDeviceSynchronize()` makes the CPU wait for the GPU, so the output is not lost when the program ends.
 
 ```c
 #include "cuda_runtime.h"
@@ -324,6 +324,7 @@ int main()
 ## Glossary
 
 - GPU (Graphics Processing Unit): the processor that runs the kernels.
+- CPU (Central Processing Unit): the main processor of the computer. It launches the kernels and waits for the GPU.
 - SM (Streaming Multiprocessor): the processor inside the GPU that runs blocks and their warps. The L40S has 142.
 - warp: a group of 32 threads that the GPU runs as one unit. The GPU schedules warps, not single threads.
 - warp size: always 32 on NVIDIA GPUs. Software cannot change it.

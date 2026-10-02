@@ -7,13 +7,13 @@ Bir block en fazla 1024 thread alabilir; daha fazla thread çalıştırmak için
 
 ## 1024 Thread Sınırı
 
-Tek bir block'ta en fazla 1024 thread olabilir. Bu, compute capability'nin sabit bir kuralıdır. Compute capability, GPU'nun (Graphics Processing Unit, grafik işlem birimi) sürüm numarasıdır; onu [Ders 03](../Lesson-03/notes.md)'te göreceksin. Bu sınır, 2010'dan beri üretilen her NVIDIA GPU'sunda 1024'tür.
+Tek bir block'ta en fazla 1024 thread olabilir. Bu, compute capability'nin sabit bir kuralıdır. Compute capability, GPU'nun sürüm numarasıdır; onu [Ders 03](../Lesson-03/notes.md)'te göreceksin. Bu sınır, 2010'dan beri üretilen her NVIDIA GPU'sunda 1024'tür.
 
-Bu sınır, "bir SM'nin alabileceği en fazla thread" değildir. Bir SM (Streaming Multiprocessor, akış çoklu işlemcisi), birkaç block'a dağılmış olarak aynı anda bundan daha fazla thread tutabilir. L40S'te bir SM en fazla 1536 thread tutar, örneğin 512'şer thread'li 3 block. A100 ya da H100 gibi veri merkezi GPU'larında bir SM en fazla 2048 thread tutar.
+Bu sınır, "bir SM'nin alabileceği en fazla thread" değildir. Bir SM, birkaç block'a dağılmış olarak aynı anda bundan daha fazla thread tutabilir. L40S'te bir SM en fazla 1536 thread tutar, örneğin 512'şer thread'li 3 block. A100 ya da H100 gibi veri merkezi GPU'larında bir SM en fazla 2048 thread tutar.
 
-## Streaming Multiprocessor'lar (SM'ler)
+## Streaming Multiprocessor'lar
 
-SM, GPU'nun içindeki fiziksel bir işlem birimidir. Her SM'de CUDA (Compute Unified Device Architecture) çekirdekleri, bir register file (yazmaç dosyası), shared memory (paylaşımlı bellek), L1 cache (level 1 cache, birinci seviye önbellek) ve warp zamanlayıcıları bulunur. Başlatma sırasında block'lar SM'lere dağıtılır. Bir SM, block'ların ne kadar kaynağa ihtiyaç duyduğuna bağlı olarak aynı anda bir ya da daha fazla block çalıştırabilir. Bir block her zaman tek bir SM'de kalır.
+SM, GPU'nun içindeki fiziksel bir işlem birimidir. Her SM'de CUDA çekirdekleri, bir register file, shared memory, L1 cache ve warp zamanlayıcıları bulunur. Başlatma sırasında block'lar SM'lere dağıtılır. Bir SM, block'ların ne kadar kaynağa ihtiyaç duyduğuna bağlı olarak aynı anda bir ya da daha fazla block çalıştırabilir. Bir block her zaman tek bir SM'de kalır.
 
 > [!NOTE]
 > SM sayısı GPU'ya göre değişir: L40S'te 142, RTX 3080 gibi orta seviye bir GPU'da 68 SM vardır.
@@ -62,7 +62,7 @@ Bu satır hatasız derlenir, çünkü derleyici başlatma ayarını kontrol etme
 
 ## Block Zamanlaması
 
-Block'ların SM'lerde çalışma sırası non-deterministic'tir (belirlenemez), yani sabit değildir. Her block, kendisine yer olan bir SM'ye gider. Block 0 ve Block 1 aynı anda farklı SM'lerde çalışabilir. Bu yüzden çıktı satırları her çalıştırmada farklı bir sırayla karışır.
+Block'ların SM'lerde çalışma sırası non-deterministic'tir, yani sabit değildir. Her block, kendisine yer olan bir SM'ye gider. Block 0 ve Block 1 aynı anda farklı SM'lerde çalışabilir. Bu yüzden çıktı satırları her çalıştırmada farklı bir sırayla karışır.
 
 <sm-scheduler blocks="2" sms="2"></sm-scheduler>
 
@@ -115,7 +115,7 @@ nvcc -o first_kernel first_kernel.cu
 ./first_kernel
 ```
 
-- `nvcc`, CUDA derleyicisidir. Dosyanın hem CPU (Central Processing Unit, merkezi işlem birimi) hem GPU kısmını derler.
+- `nvcc`, CUDA derleyicisidir. Dosyanın hem CPU hem GPU kısmını derler.
 - `-o first_kernel`, programa `first_kernel` adını verir. Bu olmazsa adı `a.out` olur.
 - `first_kernel.cu`, yukarıdaki kodu içeren kaynak dosyadır.
 - `./first_kernel`, programı bulunduğun klasörden çalıştırır.

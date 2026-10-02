@@ -1,10 +1,10 @@
 # 06 > Memory Bandwidth, Cores and Clock Speed
 
-What makes a GPU (Graphics Processing Unit) fast is not one number. This lesson covers memory bandwidth, core count, clock speed, energy and specialized hardware, and works through each one with real numbers from current GPUs.
+What makes a GPU fast is not one number. This lesson covers memory bandwidth, core count, clock speed, energy and specialized hardware, and works through each one with real numbers from current GPUs.
 
 ## Memory Bandwidth
 
-A GPU needs data to work on, and that data comes from memory. Memory bandwidth is how much data can move between memory and the GPU every second, usually given in GB/s (gigabytes per second) or TB/s (terabytes per second).
+A GPU needs data to work on, and that data comes from memory. Memory bandwidth is how much data can move between memory and the GPU every second, usually given in GB/s or TB/s.
 
 ## A Small Example
 
@@ -23,16 +23,16 @@ A GPU is only fast if it gets data fast enough. Otherwise, it waits. This is cal
 There are two kinds of modern GPUs:
 
 - Consumer GPUs, like the RTX 50 series, are made for gaming and general use.
-- Data center GPUs, like the H100, the Blackwell B200 or the new Rubin GPUs, are made for AI (artificial intelligence) and large-scale computation.
+- Data center GPUs, like the H100, the Blackwell B200 or the new Rubin GPUs, are made for AI and large-scale computation.
 
 Both kinds can have many cores and sometimes similar architectures. The big difference is memory.
 
-Data center GPUs use HBM (High Bandwidth Memory). HBM is stacked memory that sits right next to the GPU chip in the same package. It can deliver huge amounts of data very quickly.
+Data center GPUs use HBM. HBM is stacked memory that sits right next to the GPU chip in the same package. It can deliver huge amounts of data very quickly.
 
 > [!NOTE]
 > HBM comes in generations: the H100 uses HBM3 (3.35 TB/s), the B200 uses HBM3e (up to 8 TB/s), and Rubin GPUs, shipping since the second half of 2026, use HBM4 (up to 22 TB/s).
 
-Consumer GPUs use GDDR (Graphics Double Data Rate) memory: GDDR6X on the RTX 4090 and GDDR7 on the RTX 50 series. This is fast, but not as fast as HBM.
+Consumer GPUs use GDDR memory: GDDR6X on the RTX 4090 and GDDR7 on the RTX 50 series. This is fast, but not as fast as HBM.
 
 Two GPUs can look similar on paper. The one with higher memory bandwidth keeps its cores busy. The other may wait for data. This is one main reason why data center GPUs are so strong in AI workloads.
 
@@ -47,7 +47,7 @@ Three main factors affect memory bandwidth:
 <bandwidth-calc></bandwidth-calc>
 
 > [!TIP]
-> Bandwidth = bus width in bits × speed per pin in Gbps (gigabits per second) / 8. The RTX 4090 has a 384-bit bus at 21 Gbps: 384 × 21 / 8 = 1,008 GB/s. The RTX 5090 has a 512-bit bus at 28 Gbps: 512 × 28 / 8 = 1,792 GB/s, about 78% more.
+> Bandwidth = bus width in bits × speed per pin in Gbps / 8. The RTX 4090 has a 384-bit bus at 21 Gbps: 384 × 21 / 8 = 1,008 GB/s. The RTX 5090 has a 512-bit bus at 28 Gbps: 512 × 28 / 8 = 1,792 GB/s, about 78% more.
 
 GPU performance is not only about cores. It is also about how fast the cores get data. Even the strongest GPU becomes weak if it waits for memory.
 
@@ -69,7 +69,7 @@ The second GPU has more cores, but it is slower. So we also need to know how fas
 
 ## Clock Speed
 
-Clock speed is how quickly each core executes instructions, given in GHz (gigahertz, billions of cycles per second).
+Clock speed is how quickly each core executes instructions, given in GHz.
 
 Performance depends on two things together:
 
@@ -87,7 +87,7 @@ GPUs follow two design directions. Some are built for gaming and general use. Ot
 - Data center GPUs often run at lower clock speeds and spend their chip area and power on Tensor Cores and memory bandwidth.
 - Consumer GPUs often run at higher clock speeds for graphics.
 
-The RTX 4090 and the H100 SXM show this. They have almost the same number of FP32 (32-bit floating point) cores, 16,384 and 16,896. The RTX 4090 boosts to 2.52 GHz, the H100 only to 1.98 GHz. But the H100 moves 3.35 TB/s from memory, more than 3 times the 1,008 GB/s of the RTX 4090.
+The RTX 4090 and the H100 SXM show this. They have almost the same number of FP32 cores, 16,384 and 16,896. The RTX 4090 boosts to 2.52 GHz, the H100 only to 1.98 GHz. But the H100 moves 3.35 TB/s from memory, more than 3 times the 1,008 GB/s of the RTX 4090.
 
 Neither is better in general. Each is optimized for different workloads.
 
@@ -105,9 +105,9 @@ Tensor Cores are one example. They are units built for matrix math, especially i
 
 ## Throughput
 
-Core count, clock speed and TFLOPS (trillions of floating-point operations per second) alone do not tell the full story. A better question is how much work the GPU can finish in a given time. This is called "throughput".
+Core count, clock speed and TFLOPS alone do not tell the full story. A better question is how much work the GPU can finish in a given time. This is called "throughput".
 
-Peak FP32 TFLOPS come from cores × clock × 2, because one FMA (fused multiply-add) counts as 2 operations. For the RTX 4090: 16,384 × 2.52 GHz × 2 ≈ 82.6 TFLOPS. For the H100 SXM: 16,896 × 1.98 GHz × 2 ≈ 66.9 TFLOPS. On this number the RTX 4090 wins, yet the H100 is far faster for AI training, thanks to its Tensor Cores and memory bandwidth.
+Peak FP32 TFLOPS come from cores × clock × 2, because one FMA counts as 2 operations. For the RTX 4090: 16,384 × 2.52 GHz × 2 ≈ 82.6 TFLOPS. For the H100 SXM: 16,896 × 1.98 GHz × 2 ≈ 66.9 TFLOPS. On this number the RTX 4090 wins, yet the H100 is far faster for AI training, thanks to its Tensor Cores and memory bandwidth.
 
 > [!WARNING]
 > TFLOPS on a spec sheet is a peak that assumes every core does an FMA on every cycle. Real programs reach only part of it, and a program that waits for memory reaches much less.
@@ -118,7 +118,7 @@ Throughput also depends on many things, such as the type of computation, the pre
 
 A GPU needs fast memory, enough cores, enough speed, reasonable energy use, and sometimes specialized hardware. Real performance comes only when these are balanced.
 
-GPU performance is not a single number. It is a system where memory, compute power, efficiency and specialized hardware work together. Knowing this makes specifications easier to read and CUDA (Compute Unified Device Architecture) concepts easier to understand. The next lessons go deeper: the memory levels inside a GPU in [Lesson 07](../Lesson-07/notes.md), and how to tell whether a kernel is limited by memory or by math in [Lesson 09](../Lesson-09/notes.md).
+GPU performance is not a single number. It is a system where memory, compute power, efficiency and specialized hardware work together. Knowing this makes specifications easier to read and CUDA concepts easier to understand. The next lessons go deeper: the memory levels inside a GPU in [Lesson 07](../Lesson-07/notes.md), and how to tell whether a kernel is limited by memory or by math in [Lesson 09](../Lesson-09/notes.md).
 
 ## Glossary
 
@@ -137,9 +137,11 @@ GPU performance is not a single number. It is a system where memory, compute pow
 - GDDR (Graphics Double Data Rate) / GDDR6X / GDDR7: the memory family used in consumer GPUs; fast, but not as fast as HBM.
 - workload: the kind of work a program gives the GPU, such as training a model or running a game.
 - bus width: how many bits memory can move at the same time, like the width of a road.
-- memory speed: how fast each memory pin sends data, given in Gbps (gigabits per second).
+- memory speed: how fast each memory pin sends data, given in Gbps.
+- Gbps (gigabits per second): a billion bits per second; the RTX 4090 memory runs at 21 Gbps per pin.
 - instruction: one basic command a core runs, such as an add or a multiply.
-- clock speed: how quickly each core executes instructions, given in GHz (gigahertz).
+- clock speed: how quickly each core executes instructions, given in GHz.
+- GHz (gigahertz): a billion clock cycles per second; the RTX 4090 boosts to 2.52 GHz.
 - FP32 (32-bit floating point): the standard number format for GPU math; FP32 cores are what spec sheets count as "CUDA cores".
 - efficiency: how much work a GPU gets done for each watt of power it uses.
 - trade-off: giving up some of one thing to get more of another, such as speed for lower power use.

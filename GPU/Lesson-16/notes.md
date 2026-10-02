@@ -1,10 +1,10 @@
-# 16 > Running Linux on Windows (A Practical Setup with WSL)
+# 16 > Running Linux on Windows with WSL
 
-This lesson explains how to run Linux inside Windows with WSL (Windows Subsystem for Linux). It also shows how the GPU (Graphics Processing Unit) and CUDA work inside WSL, and where the limits are.
+This lesson explains how to run Linux inside Windows with WSL. It also shows how the GPU and CUDA work inside WSL, and where the limits are.
 
 ## Why Linux
 
-Serious CUDA work usually leads to Linux. Windows still works, but the GPU ecosystem has been built around Linux for years. Most tools, docs and real deployments expect Linux. GPU systems for AI (Artificial Intelligence) and HPC (High-Performance Computing) almost always run Linux.
+Serious CUDA work usually leads to Linux. Windows still works, but the GPU ecosystem has been built around Linux for years. Most tools, docs and real deployments expect Linux. GPU systems for AI and HPC almost always run Linux.
 
 ## What WSL is
 
@@ -47,8 +47,8 @@ Inside WSL, you install the Linux version of the CUDA Toolkit, not the Windows o
 
 WSL is a serious development environment. Still, a few things work differently from native Linux:
 
-- GPU support needs a GeForce or RTX card in WDDM (Windows Display Driver Model) mode, the normal mode for a desktop card. Data center GPUs are not supported.
-- Unified memory is limited. The CPU (Central Processing Unit) and the GPU cannot access the same managed memory at the same time.
+- GPU support needs a GeForce or RTX card in WDDM mode, the normal mode for a desktop card. Data center GPUs are not supported.
+- Unified memory is limited. The CPU and the GPU cannot access the same managed memory at the same time.
 - `nvidia-smi` cannot show every value, for example GPU utilization.
 
 Also check that your GPU fits CUDA 13. WSL itself works with Pascal and newer, but CUDA 13 needs compute capability 7.5 or higher. A GeForce GTX 1080 is compute capability 6.1, and 6.1 is below 7.5, so CUDA 13 cannot build code for it. A GeForce RTX 2060 is compute capability 7.5, so it works.

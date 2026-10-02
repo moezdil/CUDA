@@ -1,6 +1,6 @@
 # 03 > Compute Capability
 
-Compute capability (CC) is a version number for a GPU (Graphics Processing Unit) generation. It sets the features and hardware limits you met in Lessons 00 to 02, such as the warp size of 32 and the 1024-thread block limit. Every CUDA (Compute Unified Device Architecture) feature needs a minimum compute capability, so this number tells you what your code may use.
+Compute capability is a version number for a GPU generation. It sets the features and hardware limits you met in Lessons 00 to 02, such as the warp size of 32 and the 1024-thread block limit. Every CUDA feature needs a minimum compute capability, so this number tells you what your code may use.
 
 ## What the Number Means
 
@@ -40,7 +40,7 @@ H100 and B100 have the same per-SM thread and memory limits. The per-SM register
 <cc-progress></cc-progress>
 
 > [!NOTE]
-> Blackwell is still faster than Hopper because of more SMs (148 on B200 vs 132 on H100 SXM5), 5th generation Tensor Cores, faster HBM3e (High Bandwidth Memory) and NVLink 5.0, NVIDIA's link between GPUs.
+> Blackwell is still faster than Hopper because of more SMs (148 on B200 vs 132 on H100 SXM5), 5th generation Tensor Cores, faster HBM3e and NVLink 5.0, NVIDIA's link between GPUs.
 
 ## Threads per Warp
 
@@ -65,7 +65,7 @@ The limit is per block, not per SM. One SM can hold more threads than one block 
 
 ## FP32 Cores per SM
 
-FP32 (32-bit floating point) is the usual `float` type. Pascal, Volta, and Ampere data center GPUs have 64 FP32 cores per SM. Ada Lovelace (the L40S), Hopper and Blackwell have 128. More FP32 cores means more floating-point operations per clock cycle on each SM.
+FP32 is the usual `float` type. Pascal, Volta, and Ampere data center GPUs have 64 FP32 cores per SM. Ada Lovelace (the L40S), Hopper and Blackwell have 128. More FP32 cores means more floating-point operations per clock cycle on each SM.
 
 ## Shared Memory per SM
 
@@ -89,7 +89,7 @@ More shared memory lets a kernel keep more data on-chip instead of going to glob
 - shared memory: fast on-chip memory inside each SM, shared by all threads in a block. Much faster than global (device) memory.
 - register: one slot of fast storage in the SM's register file, holding a thread's local variable. An SM has 65536 32-bit registers, and one thread can use at most 255.
 - KB (kilobyte): 1024 bytes.
-- HBM (High Bandwidth Memory): the fast stacked memory on data center GPUs.
+- HBM3e (High Bandwidth Memory 3e): a newer generation of HBM, the fast stacked memory on data center GPUs such as the B200.
 - major version: the first number of the CC, such as 8 in 8.9. A new major version means a new architecture generation.
 - minor version: the second number of the CC, such as 9 in 8.9. It marks a revision inside the same generation.
 - architecture: the design of one GPU generation. NVIDIA names them after scientists: Pascal, Volta, Ampere, Ada Lovelace, Hopper, Blackwell.
@@ -99,3 +99,5 @@ More shared memory lets a kernel keep more data on-chip instead of going to glob
 - thread block size: the number of threads in one block, the second number in `<<<blocks, threads>>>`. At most 1024 on every GPU in the table.
 - clock cycle: one tick of the processor's clock. At 2 GHz there are 2 billion cycles per second.
 - global memory: the large main memory of the GPU, GDDR6 on the L40S and HBM on the H100. Every thread can reach it, but it is much slower than shared memory.
+- GPU (Graphics Processing Unit): the processor with thousands of small cores that runs kernels.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for running your own code on the GPU.

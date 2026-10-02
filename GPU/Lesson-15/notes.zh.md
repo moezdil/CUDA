@@ -1,14 +1,14 @@
-# 15 > 搭建 CUDA 开发环境（使用 JetBrains 的现代工作流）
+# 15 > 用 JetBrains 搭建 CUDA 开发环境
 
 这一课讲怎样搭建 CUDA 工作环境：在 CUDA Toolkit 之上使用 JetBrains 的工具，主要是 CLion。从 2025 年 5 月起，CLion 对非商业用途（比如学习和开源项目）免费。
 
 ## 为什么选 JetBrains 和 CLion
 
-你需要一套每天都能顺手使用、不用跟工具较劲的环境。这个仓库就是围绕 CLion 这个 IDE（Integrated Development Environment，集成开发环境）搭建这套环境的。
+你需要一套每天都能顺手使用、不用跟工具较劲的环境。这个仓库就是围绕 CLion 这个 IDE 搭建这套环境的。
 
-原因在于现代开发的方式。GPU（Graphics Processing Unit，图形处理器）架构和工具包更新得很快，项目也不再绑定在单一平台上。你可能在 Linux 上开发，在远程 GPU 上测试，再部署到别处。像 Visual Studio 这样绑定在单一系统上的 IDE，会限制这种工作方式。
+原因在于现代开发的方式。GPU 架构和工具包更新得很快，项目也不再绑定在单一平台上。你可能在 Linux 上开发，在远程 GPU 上测试，再部署到别处。像 Visual Studio 这样绑定在单一系统上的 IDE，会限制这种工作方式。
 
-JetBrains 的工具以 CMake（Cross-platform Make，跨平台构建工具）为核心。CMake 是一个用来描述如何构建项目的工具。CMake 项目不绑定在某一个环境上：你可以在不同的系统上、用不同的编译器构建它，项目结构保持不变。真实的 GPU 系统就是这样构建的。
+JetBrains 的工具以 CMake 为核心。CMake 是一个用来描述如何构建项目的工具。CMake 项目不绑定在某一个环境上：你可以在不同的系统上、用不同的编译器构建它，项目结构保持不变。真实的 GPU 系统就是这样构建的。
 
 ## 先有 CUDA Toolkit
 
@@ -36,7 +36,7 @@ add_executable(hello hello.cu)
 ## Windows 上的 Visual Studio
 
 > [!NOTE]
-> 在 Windows 上，即使你从不打开 Visual Studio，`nvcc` 也需要 MSVC（Microsoft Visual C++）编译器。CUDA 13.4 支持 Visual Studio 2019、2022 和 2026。所以 Visual Studio 只是一个依赖项，而不是你的工作区。装一次，之后就可以忘掉它。
+> 在 Windows 上，即使你从不打开 Visual Studio，`nvcc` 也需要 MSVC 编译器。CUDA 13.4 支持 Visual Studio 2019、2022 和 2026。所以 Visual Studio 只是一个依赖项，而不是你的工作区。装一次，之后就可以忘掉它。
 
 你所有真正的工作都在 CLion 里完成。
 

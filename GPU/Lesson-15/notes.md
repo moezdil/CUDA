@@ -1,14 +1,14 @@
-# 15 > Setting Up CUDA Development (A Modern Workflow with JetBrains)
+# 15 > Setting Up CUDA Development with JetBrains
 
 This lesson explains how to set up a CUDA work environment. It uses JetBrains tools, mainly CLion, on top of the CUDA Toolkit. CLion has been free for non-commercial use, such as learning and open source, since May 2025.
 
 ## Why JetBrains and CLion
 
-You need a setup you can use every day without fighting the tools. This repo builds that setup around CLion, an IDE (Integrated Development Environment).
+You need a setup you can use every day without fighting the tools. This repo builds that setup around CLion, an IDE.
 
-The reason is how modern development works. GPU (Graphics Processing Unit) architectures and toolkits change fast. Projects are no longer tied to one platform. You might develop on Linux, test on a remote GPU and deploy somewhere else. An IDE tied to one system, like Visual Studio, limits this kind of work.
+The reason is how modern development works. GPU architectures and toolkits change fast. Projects are no longer tied to one platform. You might develop on Linux, test on a remote GPU and deploy somewhere else. An IDE tied to one system, like Visual Studio, limits this kind of work.
 
-JetBrains tools are built around CMake (Cross-platform Make). CMake is a tool that describes how to build a project. A CMake project is not tied to one environment. You can build it on different systems with different compilers and keep the same structure. Real GPU systems are built this way.
+JetBrains tools are built around CMake. CMake is a tool that describes how to build a project. A CMake project is not tied to one environment. You can build it on different systems with different compilers and keep the same structure. Real GPU systems are built this way.
 
 ## The CUDA Toolkit comes first
 
@@ -36,7 +36,7 @@ add_executable(hello hello.cu)
 ## Visual Studio on Windows
 
 > [!NOTE]
-> On Windows, `nvcc` needs the MSVC (Microsoft Visual C++) compiler, even if you never open Visual Studio. CUDA 13.4 works with Visual Studio 2019, 2022 and 2026. So Visual Studio is a dependency, not your workspace. You install it once and then forget it.
+> On Windows, `nvcc` needs the MSVC compiler, even if you never open Visual Studio. CUDA 13.4 works with Visual Studio 2019, 2022 and 2026. So Visual Studio is a dependency, not your workspace. You install it once and then forget it.
 
 All your real work happens in CLion.
 

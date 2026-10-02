@@ -609,7 +609,7 @@ cuda("cuda-stack", function(el){
     [T("Languages"), T("how you write GPU code"), T("You write GPU code in one of these. All of them run on the same GPU."), [
       ["CUDA C/C++", T("the main one"), T("C++ with a few additions such as <code>__global__</code> and <code>&lt;&lt;&lt; &gt;&gt;&gt;</code>. Every kernel in these lessons is written in it.")],
       ["CUDA Fortran", T("Fortran + CUDA"), T("Fortran with the same CUDA ideas. Common in older science and weather code.")],
-      ["OpenACC", T("directive-based"), T("You add <code>#pragma acc</code> lines (directives) above normal C or Fortran loops, and the compiler writes the GPU code. No kernels by hand.")],
+      ["OpenACC", T("directive-based"), T("You add <code>#pragma acc</code> directive lines above normal C or Fortran loops, and the compiler writes the GPU code. No kernels by hand.")],
       ["Python", "CuPy · Numba · CUDA Python", T("<b>CuPy</b>: NumPy-style arrays that live on the GPU. <b>Numba</b>: compiles Python functions into GPU kernels. <b>NVIDIA CUDA Python</b>: direct access to the CUDA driver and runtime from Python.")]]],
     [T("AI libraries"), T("ready-made fast GPU code"), T("Fast GPU code you call instead of writing it. PyTorch and TensorFlow use these under the hood."), [
       ["cuDNN", T("deep learning"), T("CUDA Deep Neural Network library. Building blocks like convolution and attention, tuned for each GPU.")],
@@ -622,7 +622,7 @@ cuda("cuda-stack", function(el){
       ["Compute Sanitizer", T("memory error checker"), T("Runs your program and reports bad memory access inside kernels, like reading past the end of an array.")]]],
     [T("Compiler"), T("from .cu file to GPU code"), T("Turns your <code>.cu</code> file into a program the GPU can run."), [
       ["nvcc", T("the CUDA compiler"), T("NVIDIA CUDA Compiler. Splits a <code>.cu</code> file: host code goes to the normal C++ compiler, device code to NVIDIA's compiler.")],
-      ["PTX", T("virtual ISA"), T("Parallel Thread Execution. A virtual instruction set architecture (ISA) that is not tied to one GPU. It is stored inside the program.")],
+      ["PTX", T("virtual ISA"), T("Parallel Thread Execution. A virtual instruction set that is not tied to one GPU. It is stored inside the program.")],
       ["SASS", T("real machine code"), T("Streaming ASSembler. The real machine code for one GPU generation, for example <code>sm_89</code>.")],
       [T("driver JIT"), T("PTX → SASS at run time"), T("Just-in-time compilation. If the program has no SASS for your GPU, the driver turns the stored PTX into SASS when it starts. That is how old programs run on new GPUs.")]]],
     [T("Hardware capabilities"), T("built into the GPU"), T("Features of the GPU chip itself. Software can use them, but cannot add them."), [

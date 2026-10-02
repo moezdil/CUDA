@@ -1,6 +1,6 @@
 # 07 > The Memory Hierarchy
 
-A GPU (Graphics Processing Unit) does not have one memory. It has a ladder of them: a few tiny, very fast ones close to the cores and one huge, slow one far away. This lesson walks down that ladder on the L40S, shows who can see each level and how big and fast it is, and counts how much data fits where.
+A GPU does not have one memory. It has a ladder of them: a few tiny, very fast ones close to the cores and one huge, slow one far away. This lesson walks down that ladder on the L40S, shows who can see each level and how big and fast it is, and counts how much data fits where.
 
 ## One Ladder, Three Questions
 
@@ -8,11 +8,11 @@ A GPU (Graphics Processing Unit) does not have one memory. It has a ladder of th
 
 For every level, ask three questions:
 
-- Where is it? Inside an SM (Streaming Multiprocessor), elsewhere on the GPU chip, or on separate memory chips next to it.
-- Who can see it? One thread, one block (all threads of a thread block), or the whole GPU (every thread of every block).
+- Where is it? Inside an SM, elsewhere on the GPU chip, or on separate memory chips next to it.
+- Who can see it? One thread, all threads of one block, or every thread on the whole GPU.
 - How big and how fast is it? Small levels are fast, big levels are slow. No level is both big and fast.
 
-Speed comes in two flavors. Bandwidth is how many bytes per second a level can deliver. Latency is how long one load waits before its data arrives, counted in clock cycles (ticks of the GPU clock).
+Speed comes in two flavors. Bandwidth is how many bytes per second a level can deliver. Latency is how long one load waits before its data arrives, counted in clock cycles.
 
 <mem-hierarchy></mem-hierarchy>
 
@@ -20,39 +20,39 @@ Speed comes in two flavors. Bandwidth is how many bytes per second a level can d
 
 Registers sit inside each SM, right next to the cores. Each thread gets its own registers for its local variables, and no other thread can read them. Using a register costs no extra wait: the core reads it as part of the instruction.
 
-The register file of one L40S SM holds 65,536 registers of 32 bits, which is 256 KB (kilobytes). One thread can use at most 255 of them. The H100 has the same 256 KB per SM.
+The register file of one L40S SM holds 65,536 registers of 32 bits, which is 256 KB. One thread can use at most 255 of them. The H100 has the same 256 KB per SM.
 
 > [!NOTE]
-> Added up over the chip, registers are not small. The L40S has 142 SMs × 256 KB = 36,352 KB of registers, about 35.5 MB (megabytes), more than its 142 × 100 KB = 14,200 KB of shared memory.
+> Added up over the chip, registers are not small. The L40S has 142 SMs × 256 KB = 36,352 KB of registers, about 35.5 MB, more than its 142 × 100 KB = 14,200 KB of shared memory.
 
 ## Shared Memory and L1
 
 Each SM also has one pool of fast on-chip memory, split between two jobs:
 
 - shared memory, which a kernel manages by hand. All threads of one block can read and write it, so they use it to share data. Threads of other blocks cannot see it.
-- the L1 cache (Level 1 cache), which the hardware manages. It keeps recently loaded global memory data close to the SM, so a second load of the same data is fast.
+- the L1 cache, which the hardware manages. It keeps recently loaded global memory data close to the SM, so a second load of the same data is fast.
 
-On the L40S, a CC (compute capability) 8.9 GPU, the pool is 128 KB per SM. A kernel picks the split, called the carveout: 0, 8, 16, 32, 64 or 100 KB of shared memory, the rest is L1. CUDA (Compute Unified Device Architecture) keeps 1 KB per block for itself, so one block can use at most 99 KB. On the H100 the pool is 256 KB per SM, with up to 228 KB of shared memory.
+On the L40S, a CC 8.9 GPU, the pool is 128 KB per SM. A kernel picks the split, called the carveout: 0, 8, 16, 32, 64 or 100 KB of shared memory, the rest is L1. CUDA keeps 1 KB per block for itself, so one block can use at most 99 KB. On the H100 the pool is 256 KB per SM, with up to 228 KB of shared memory.
 
 Published microbenchmarks on an RTX 4090, which uses the same AD102 chip as the L40S, measured about 30 cycles for a shared memory load and about 43 cycles for an L1 hit.
 
 ## L2 Cache
 
-The L2 cache (Level 2 cache) sits on the GPU chip but outside the SMs. All SMs share it, so it serves the whole GPU. Every read from and write to global memory passes through it.
+The L2 cache sits on the GPU chip but outside the SMs. All SMs share it, so it serves the whole GPU. Every read from and write to global memory passes through it.
 
 The L40S has 96 MB of L2. The H100 has 50 MB. The same microbenchmarks measured about 273 cycles for an L2 hit on the RTX 4090, roughly 9 times a shared memory load.
 
 ## Global Memory
 
-Global memory is the GPU's main memory, the 48 GB of VRAM (GPU memory) on the L40S. It lives on separate memory chips, so every thread of every block can reach it, and the CPU (Central Processing Unit) copies data in and out of it. Data in global memory also stays there between kernel launches.
+Global memory is the GPU's main memory, the 48 GB of VRAM on the L40S. It lives on separate memory chips, so every thread of every block can reach it, and the CPU copies data in and out of it. Data in global memory also stays there between kernel launches.
 
-On the L40S it is GDDR6 (Graphics Double Data Rate 6) at 864 GB/s (gigabytes per second). The H100 SXM has 80 GB of HBM3 (High Bandwidth Memory 3) at 3.35 TB/s (terabytes per second). Global memory is the slowest level: about 541 cycles per load on the RTX 4090, twice an L2 hit and about 18 times a shared memory load.
+On the L40S it is GDDR6 at 864 GB/s. The H100 SXM has 80 GB of HBM3 at 3.35 TB/s. Global memory is the slowest level: about 541 cycles per load on the RTX 4090, twice an L2 hit and about 18 times a shared memory load.
 
 ## Constant and Texture Memory
 
 Two special views of global memory have their own small caches.
 
-Constant memory is 64 KB of read-only data. Each SM caches 8 KB of it. When every thread of a warp (a group of 32 threads that run together) reads the same address, one read is broadcast to all 32. When they read different addresses, the reads are done one after another.
+Constant memory is 64 KB of read-only data. Each SM caches 8 KB of it. When every thread of a warp reads the same address, one read is broadcast to all 32. When they read different addresses, the reads are done one after another.
 
 Texture memory is a read-only path through the L1 cache, built for graphics, where nearby threads read nearby pixels. On Ada and Hopper the texture cache and L1 are one unit, so most CUDA code simply reads global memory and lets L1 cache it.
 
@@ -79,7 +79,7 @@ The cycles were measured on an RTX 4090. An H800, a Hopper GPU like the H100, me
 
 ## Worked Example: What Fits Where
 
-A float (a 32-bit floating point number) takes 4 bytes. In CUDA's tables 1 KB is 1,024 bytes and 1 MB is 1,024 KB.
+A float takes 4 bytes. In CUDA's tables 1 KB is 1,024 bytes and 1 MB is 1,024 KB.
 
 One L40S SM has up to 100 KB of shared memory:
 

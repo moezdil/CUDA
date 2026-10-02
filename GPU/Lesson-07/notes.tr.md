@@ -1,18 +1,18 @@
 # 07 > Bellek Hiyerarşisi
 
-Bir GPU'nun (Graphics Processing Unit, grafik işlem birimi) tek bir belleği yoktur. Bir merdiveni vardır: çekirdeklere yakın birkaç küçük ve çok hızlı bellek, uzakta da çok büyük ve yavaş bir bellek. Bu derste L40S üzerinde bu merdivenden aşağı iniyorsun; her basamağı kimin görebildiğine, ne kadar büyük ve hızlı olduğuna bakıyor ve nereye ne kadar veri sığdığını hesaplıyorsun.
+Bir GPU'nun tek bir belleği yoktur. Bir merdiveni vardır: çekirdeklere yakın birkaç küçük ve çok hızlı bellek, uzakta da çok büyük ve yavaş bir bellek. Bu derste L40S üzerinde bu merdivenden aşağı iniyorsun; her basamağı kimin görebildiğine, ne kadar büyük ve hızlı olduğuna bakıyor ve nereye ne kadar veri sığdığını hesaplıyorsun.
 
 ## Bir Merdiven, Üç Soru
 
-[Ders 00](../Lesson-00/notes.md) register'ları, paylaşımlı belleği ve L2 önbelleği tanıttı, [Ders 06](../Lesson-06/notes.md) de bellek bant genişliğinin bir GPU'yu neden sınırladığını gösterdi. Bu ders hepsini sıraya koyuyor. Bu sıraya bellek hiyerarşisi (memory hierarchy) denir.
+[Ders 00](../Lesson-00/notes.md) register'ları, paylaşımlı belleği ve L2 önbelleği tanıttı, [Ders 06](../Lesson-06/notes.md) de bellek bant genişliğinin bir GPU'yu neden sınırladığını gösterdi. Bu ders hepsini sıraya koyuyor. Bu sıraya bellek hiyerarşisi denir.
 
 Her basamak için üç soru sor:
 
-- Nerede duruyor? Bir SM'nin (Streaming Multiprocessor) içinde mi, GPU çipinin başka bir yerinde mi, yoksa yanındaki ayrı bellek çiplerinde mi?
-- Kim görebiliyor? Tek bir thread mi, tek bir block mu (bir thread block'undaki bütün thread'ler), yoksa bütün GPU mu (her block'un her thread'i)?
+- Nerede duruyor? Bir SM'nin içinde mi, GPU çipinin başka bir yerinde mi, yoksa yanındaki ayrı bellek çiplerinde mi?
+- Kim görebiliyor? Tek bir thread mi, bir block'taki bütün thread'ler mi, yoksa bütün GPU'daki her thread mi?
 - Ne kadar büyük ve ne kadar hızlı? Küçük basamaklar hızlı, büyük basamaklar yavaştır. Hem büyük hem hızlı olan bir basamak yoktur.
 
-Hızın iki anlamı var. Bant genişliği (bandwidth), bir basamağın saniyede kaç bayt verebildiğidir. Gecikme (latency), tek bir yüklemenin verisi gelene kadar ne kadar beklediğidir ve saat döngüsü (clock cycle, GPU saatinin bir tıkı) ile sayılır.
+Hızın iki anlamı var. Bant genişliği, bir basamağın saniyede kaç bayt verebildiğidir. Gecikme, tek bir yüklemenin verisi gelene kadar ne kadar beklediğidir ve saat döngüsü ile sayılır.
 
 <mem-hierarchy></mem-hierarchy>
 
@@ -20,47 +20,47 @@ Hızın iki anlamı var. Bant genişliği (bandwidth), bir basamağın saniyede 
 
 Register'lar her SM'nin içinde, çekirdeklerin hemen yanında durur. Her thread yerel değişkenleri için kendi register'larını alır ve başka hiçbir thread onları okuyamaz. Register kullanmanın ek bir bekleme maliyeti yoktur: çekirdek onu komutun bir parçası olarak okur.
 
-Bir L40S SM'sinin register dosyası (register file) 32 bitlik 65.536 register tutar, yani 256 KB (kilobyte, kilobayt). Bir thread en fazla 255 tanesini kullanabilir. H100'de de SM başına 256 KB vardır.
+Bir L40S SM'sinin register dosyası 32 bitlik 65.536 register tutar, yani 256 KB. Bir thread en fazla 255 tanesini kullanabilir. H100'de de SM başına 256 KB vardır.
 
 > [!NOTE]
-> Bütün çip boyunca toplandığında register'lar hiç de az değildir. L40S'te 142 SM × 256 KB = 36.352 KB register vardır, yaklaşık 35,5 MB (megabyte, megabayt); bu, 142 × 100 KB = 14.200 KB'lık paylaşımlı bellekten fazladır.
+> Bütün çip boyunca toplandığında register'lar hiç de az değildir. L40S'te 142 SM × 256 KB = 36.352 KB register vardır, yaklaşık 35,5 MB; bu, 142 × 100 KB = 14.200 KB'lık paylaşımlı bellekten fazladır.
 
 ## Paylaşımlı Bellek ve L1
 
-Her SM'de ayrıca çip üstünde (on-chip) hızlı bir bellek alanı vardır ve iki iş arasında bölünür:
+Her SM'de ayrıca çip üstünde hızlı bir bellek alanı vardır ve iki iş arasında bölünür:
 
-- paylaşımlı bellek (shared memory), kernel tarafından elle yönetilir. Bir block'taki bütün thread'ler onu okuyup yazabilir, bu yüzden veri paylaşmak için kullanırlar. Başka block'ların thread'leri onu göremez.
-- L1 önbellek (Level 1 cache, birinci seviye önbellek), donanım tarafından yönetilir. Global bellekten son yüklenen veriyi SM'ye yakın tutar, böylece aynı verinin ikinci yüklemesi hızlı olur.
+- paylaşımlı bellek, kernel tarafından elle yönetilir. Bir block'taki bütün thread'ler onu okuyup yazabilir, bu yüzden veri paylaşmak için kullanırlar. Başka block'ların thread'leri onu göremez.
+- L1 önbellek, donanım tarafından yönetilir. Global bellekten son yüklenen veriyi SM'ye yakın tutar, böylece aynı verinin ikinci yüklemesi hızlı olur.
 
-CC (compute capability) 8.9 olan L40S'te bu alan SM başına 128 KB'tır. Bölüşümü kernel seçer, buna carveout (paylaştırma oranı) denir: paylaşımlı bellek için 0, 8, 16, 32, 64 ya da 100 KB, geri kalanı L1. CUDA (Compute Unified Device Architecture) her block için 1 KB'ı kendine ayırır, bu yüzden bir block en fazla 99 KB kullanabilir. H100'de bu alan SM başına 256 KB'tır ve en fazla 228 KB'ı paylaşımlı bellek olabilir.
+CC 8.9 olan L40S'te bu alan SM başına 128 KB'tır. Bölüşümü kernel seçer, buna carveout denir: paylaşımlı bellek için 0, 8, 16, 32, 64 ya da 100 KB, geri kalanı L1. CUDA her block için 1 KB'ı kendine ayırır, bu yüzden bir block en fazla 99 KB kullanabilir. H100'de bu alan SM başına 256 KB'tır ve en fazla 228 KB'ı paylaşımlı bellek olabilir.
 
-Yayımlanmış mikro ölçümler (microbenchmark), L40S ile aynı AD102 çipini kullanan bir RTX 4090 üzerinde, paylaşımlı bellek yüklemesi için yaklaşık 30 döngü, L1 isabeti için yaklaşık 43 döngü ölçtü.
+Yayımlanmış mikro ölçümler, L40S ile aynı AD102 çipini kullanan bir RTX 4090 üzerinde, paylaşımlı bellek yüklemesi için yaklaşık 30 döngü, L1 isabeti için yaklaşık 43 döngü ölçtü.
 
 ## L2 Önbellek
 
-L2 önbellek (Level 2 cache, ikinci seviye önbellek) GPU çipinin üzerinde ama SM'lerin dışında durur. Bütün SM'ler onu paylaşır, yani bütün GPU'ya hizmet eder. Global belleğe yapılan her okuma ve yazma ondan geçer.
+L2 önbellek GPU çipinin üzerinde ama SM'lerin dışında durur. Bütün SM'ler onu paylaşır, yani bütün GPU'ya hizmet eder. Global belleğe yapılan her okuma ve yazma ondan geçer.
 
 L40S'te 96 MB L2 vardır, H100'de 50 MB. Aynı mikro ölçümler RTX 4090'da bir L2 isabeti için yaklaşık 273 döngü ölçtü; bu, bir paylaşımlı bellek yüklemesinin kabaca 9 katıdır.
 
 ## Global Bellek
 
-Global bellek (global memory) GPU'nun ana belleğidir, L40S'teki 48 GB'lık VRAM (GPU belleği). Ayrı bellek çiplerinde durur, böylece her block'un her thread'i ona ulaşabilir ve CPU (Central Processing Unit, merkezi işlem birimi) veriyi ona kopyalar ve geri alır. Global bellekteki veri kernel çalıştırmaları arasında da yerinde kalır.
+Global bellek GPU'nun ana belleğidir, L40S'teki 48 GB'lık VRAM. Ayrı bellek çiplerinde durur, böylece her block'un her thread'i ona ulaşabilir ve CPU veriyi ona kopyalar ve geri alır. Global bellekteki veri kernel çalıştırmaları arasında da yerinde kalır.
 
-L40S'te bu bellek 864 GB/s (gigabytes per second, saniyede gigabayt) hızında GDDR6'dır (Graphics Double Data Rate 6). H100 SXM'de 3,35 TB/s (terabytes per second, saniyede terabayt) hızında 80 GB HBM3 (High Bandwidth Memory 3) vardır. Global bellek en yavaş basamaktır: RTX 4090'da yükleme başına yaklaşık 541 döngü, yani bir L2 isabetinin iki katı ve bir paylaşımlı bellek yüklemesinin yaklaşık 18 katı.
+L40S'te bu bellek 864 GB/s hızında GDDR6'dır. H100 SXM'de 3,35 TB/s hızında 80 GB HBM3 vardır. Global bellek en yavaş basamaktır: RTX 4090'da yükleme başına yaklaşık 541 döngü, yani bir L2 isabetinin iki katı ve bir paylaşımlı bellek yüklemesinin yaklaşık 18 katı.
 
 ## Sabit Bellek ve Doku Belleği
 
 Global belleğin iki özel görünümünün kendi küçük önbellekleri vardır.
 
-Sabit bellek (constant memory) 64 KB'lık salt okunur veridir. Her SM bunun 8 KB'ını önbellekte tutar. Bir warp'taki (birlikte çalışan 32 thread'lik grup) bütün thread'ler aynı adresi okuduğunda, tek okuma 32'sinin hepsine yayınlanır (broadcast). Farklı adresleri okuduklarında okumalar birbiri ardına yapılır.
+Sabit bellek 64 KB'lık salt okunur veridir. Her SM bunun 8 KB'ını önbellekte tutar. Bir warp'taki bütün thread'ler aynı adresi okuduğunda, tek okuma 32'sinin hepsine yayınlanır. Farklı adresleri okuduklarında okumalar birbiri ardına yapılır.
 
-Doku belleği (texture memory), L1 önbellekten geçen salt okunur bir yoldur; yan yana thread'lerin yan yana pikselleri okuduğu grafik için tasarlanmıştır. Ada ve Hopper'da doku önbelleği ile L1 tek bir birimdir, bu yüzden çoğu CUDA kodu doğrudan global belleği okur ve önbelleğe almayı L1'e bırakır.
+Doku belleği, L1 önbellekten geçen salt okunur bir yoldur; yan yana thread'lerin yan yana pikselleri okuduğu grafik için tasarlanmıştır. Ada ve Hopper'da doku önbelleği ile L1 tek bir birimdir, bu yüzden çoğu CUDA kodu doğrudan global belleği okur ve önbelleğe almayı L1'e bırakır.
 
 ## Yerel Bellek ve Register Taşması
 
-Yerel bellek (local memory), bir register gibi tek bir thread'e özeldir ama global bellekte durur. L1 ve L2'de önbelleğe alınır, ama bulunamazsa herhangi bir global bellek yüklemesi kadar pahalıdır. Her thread bundan en fazla 512 KB kullanabilir.
+Yerel bellek, bir register gibi tek bir thread'e özeldir ama global bellekte durur. L1 ve L2'de önbelleğe alınır, ama bulunamazsa herhangi bir global bellek yüklemesi kadar pahalıdır. Her thread bundan en fazla 512 KB kullanabilir.
 
-Register'lar yetmediğinde derleyici veriyi yerel belleğe koyar. Buna register taşması (register spill) denir. Bir thread'in bir diziyi yalnızca çalışma anında bilinen bir değerle indekslediği durumda da olur, çünkü register'lar bu şekilde indekslenemez.
+Register'lar yetmediğinde derleyici veriyi yerel belleğe koyar. Buna register taşması denir. Bir thread'in bir diziyi yalnızca çalışma anında bilinen bir değerle indekslediği durumda da olur, çünkü register'lar bu şekilde indekslenemez.
 
 > [!WARNING]
 > "Yerel" burada yakın değil, özel demektir. Yerel bellek çipin dışındadır ve global bellek kadar yavaştır. `-Xptxas -v` ile derlersen derleyici her kernel'ın register sayısını, taşma yazmalarını ve taşma okumalarını bayt olarak bildirir.
@@ -79,13 +79,13 @@ Döngüler bir RTX 4090'da ölçüldü. H100 gibi bir Hopper GPU'su olan H800'de
 
 ## Örnek Hesap: Nereye Ne Sığar
 
-Bir float (32 bitlik kayan noktalı sayı) 4 bayt yer kaplar. CUDA'nın tablolarında 1 KB 1.024 bayt, 1 MB de 1.024 KB'tır.
+Bir float 4 bayt yer kaplar. CUDA'nın tablolarında 1 KB 1.024 bayt, 1 MB de 1.024 KB'tır.
 
 Bir L40S SM'sinde en fazla 100 KB paylaşımlı bellek vardır:
 
 - 100 × 1.024 = 102.400 bayt.
 - 102.400 / 4 = 25.600 float.
-- 32 × 32'lik bir float karosu (tile) 32 × 32 × 4 = 4.096 bayt = 4 KB eder, yani bir SM'ye 100 / 4 = 25 karo sığar.
+- 32 × 32'lik bir float karosu 32 × 32 × 4 = 4.096 bayt = 4 KB eder, yani bir SM'ye 100 / 4 = 25 karo sığar.
 - Bir block en fazla 99 KB kullanabilir: 99 × 1.024 / 4 = 25.344 float.
 
 H100'de SM başına 228 KB, 228 × 1.024 / 4 = 58.368 float tutar; bu iki kattan fazladır.

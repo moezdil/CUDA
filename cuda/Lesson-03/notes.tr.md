@@ -1,10 +1,10 @@
 # 03 > Compute Capability
 
-Compute capability (CC, hesaplama yeteneği), bir GPU (Graphics Processing Unit, grafik işlem birimi) neslinin sürüm numarasıdır. Ders 00 ile 02 arasında gördüğün özellikleri ve donanım sınırlarını, örneğin 32'lik warp boyutunu ve 1024 thread'lik block sınırını, bu numara belirler. Her CUDA (Compute Unified Device Architecture) özelliği en az belirli bir compute capability ister; bu yüzden bu sayı, kodunun neleri kullanabileceğini söyler.
+Compute capability, bir GPU neslinin sürüm numarasıdır. Ders 00 ile 02 arasında gördüğün özellikleri ve donanım sınırlarını, örneğin 32'lik warp boyutunu ve 1024 thread'lik block sınırını, bu numara belirler. Her CUDA özelliği en az belirli bir compute capability ister; bu yüzden bu sayı, kodunun neleri kullanabileceğini söyler.
 
 ## Sayı Ne Anlama Geliyor
 
-Biçim major.minor'dır (ana.alt sürüm), örneğin Hopper için 9.0 ya da bu derslerde kullanılan L40S için 8.9. Yeni bir major sürüm, yeni donanımla gelen yeni bir mimari nesli demektir; yeni bir minor sürüm ise aynı nesil içindeki bir revizyondur.
+Biçim major.minor'dır, örneğin Hopper için 9.0 ya da bu derslerde kullanılan L40S için 8.9. Yeni bir major sürüm, yeni donanımla gelen yeni bir mimari nesli demektir; yeni bir minor sürüm ise aynı nesil içindeki bir revizyondur.
 
 CC 7.0 için derlenen kod, CC'si 7.0 ya da daha yüksek olan her GPU'da çalışır; CC 9.0 özelliklerini kullanan kod ise eski GPU'larda çalışmaz. Örneğin CC 8.0 isteyen bir program L40S'te çalışır (8.9, 8.0'dan büyüktür), ama CC 9.0 isteyen bir program çalışmaz.
 
@@ -33,14 +33,14 @@ Tablo, Pascal'dan Blackwell'e kadar veri merkezi GPU'larını ve bu derslerdeki 
 | FP32 Çekirdek / SM     | 64                | 64                | 64                | 128               | 128               | 128               |
 | Shared Memory / SM     | 64 KB             | 96 KB'a kadar     | 164 KB'a kadar    | 100 KB'a kadar    | 228 KB'a kadar    | 228 KB'a kadar    |
 
-SM, Streaming Multiprocessor (akış çoklu işlemcisi) demektir; GPU'nun içinde block'ların çalıştığı işlemcidir. FP32, 32 bitlik kayan noktalı sayı (floating point), KB ise kilobayt demektir.
+SM, Streaming Multiprocessor demektir; GPU'nun içinde block'ların çalıştığı işlemcidir. FP32, 32 bitlik kayan noktalı sayı, KB ise kilobayt demektir.
 
 H100 ve B100'ün SM başına thread ve bellek sınırları aynıdır. SM başına register sayısı ise bu nesiller boyunca hiç değişmedi.
 
 <cc-progress></cc-progress>
 
 > [!NOTE]
-> Blackwell yine de Hopper'dan hızlıdır. Nedenleri: daha fazla SM (B200'de 148, H100 SXM5'te 132), 5. nesil Tensor Core'lar, daha hızlı HBM3e (High Bandwidth Memory, yüksek bant genişlikli bellek) ve NVIDIA'nın GPU'lar arası bağlantısı NVLink 5.0.
+> Blackwell yine de Hopper'dan hızlıdır. Nedenleri: daha fazla SM (B200'de 148, H100 SXM5'te 132), 5. nesil Tensor Core'lar, daha hızlı HBM3e ve NVIDIA'nın GPU'lar arası bağlantısı NVLink 5.0.
 
 ## Warp Başına Thread
 
@@ -65,11 +65,11 @@ Sınır SM başına değil, block başınadır. Bir SM, birkaç block'tan geldi�
 
 ## SM Başına FP32 Çekirdek
 
-FP32 (32-bit floating point, 32 bitlik kayan noktalı sayı), bildiğin `float` tipidir. Pascal, Volta ve Ampere veri merkezi GPU'larında SM başına 64, Ada Lovelace (L40S), Hopper ve Blackwell'de 128 FP32 çekirdek vardır. Daha fazla FP32 çekirdek, her SM'de saat döngüsü başına daha fazla kayan noktalı işlem demektir.
+FP32, bildiğin `float` tipidir. Pascal, Volta ve Ampere veri merkezi GPU'larında SM başına 64, Ada Lovelace (L40S), Hopper ve Blackwell'de 128 FP32 çekirdek vardır. Daha fazla FP32 çekirdek, her SM'de saat döngüsü başına daha fazla kayan noktalı işlem demektir.
 
 ## SM Başına Shared Memory
 
-Shared memory (paylaşımlı bellek), her SM'nin içindeki hızlı bir bellektir ve bir block'taki bütün thread'ler onu kullanabilir. Nesiller boyunca büyüdü:
+Shared memory, her SM'nin içindeki hızlı bir bellektir ve bir block'taki bütün thread'ler onu kullanabilir. Nesiller boyunca büyüdü:
 
 - Pascal: 64 KB
 - Volta: 96 KB'a kadar
@@ -77,7 +77,7 @@ Shared memory (paylaşımlı bellek), her SM'nin içindeki hızlı bir bellektir
 - Ada Lovelace (L40S): 100 KB'a kadar
 - Hopper ve Blackwell: 228 KB'a kadar
 
-Daha fazla shared memory, bir kernel'ın global memory'ye (genel bellek) gitmek yerine daha fazla veriyi çipin üzerinde tutabilmesi demektir.
+Daha fazla shared memory, bir kernel'ın global memory'ye gitmek yerine daha fazla veriyi çipin üzerinde tutabilmesi demektir.
 
 ## Sözlük
 
@@ -89,7 +89,7 @@ Daha fazla shared memory, bir kernel'ın global memory'ye (genel bellek) gitmek 
 - shared memory (paylaşımlı bellek): her SM'nin içinde, bir block'taki bütün thread'lerin paylaştığı hızlı, çip üstü bellek; global (device) bellekten çok daha hızlıdır.
 - register (yazmaç): SM'nin register file'ındaki hızlı bir depolama yeri; bir thread'in yerel bir değişkenini tutar. Bir SM'de 65536 adet 32 bitlik register vardır ve bir thread en fazla 255 tanesini kullanabilir.
 - KB (kilobayt): 1024 bayt.
-- HBM (High Bandwidth Memory, yüksek bant genişlikli bellek): veri merkezi GPU'larındaki hızlı, üst üste yığılmış bellek.
+- HBM3e (High Bandwidth Memory 3e, yüksek bant genişlikli bellek): HBM'in yeni bir nesli; B200 gibi veri merkezi GPU'larındaki hızlı, üst üste yığılmış bellek.
 - major sürüm (major version): CC'nin ilk sayısı, örneğin 8.9'daki 8; yeni bir major sürüm, yeni bir mimari nesli demektir.
 - minor sürüm (minor version): CC'nin ikinci sayısı, örneğin 8.9'daki 9; aynı nesil içindeki bir revizyonu gösterir.
 - mimari (architecture): bir GPU neslinin tasarımı. NVIDIA onlara bilim insanlarının adını verir: Pascal, Volta, Ampere, Ada Lovelace, Hopper, Blackwell.
@@ -99,3 +99,5 @@ Daha fazla shared memory, bir kernel'ın global memory'ye (genel bellek) gitmek 
 - block boyutu (thread block size): bir block'taki thread sayısı, `<<<blocks, threads>>>` içindeki ikinci sayı; tablodaki her GPU'da en fazla 1024.
 - saat döngüsü (clock cycle): işlemci saatinin bir tıkı; 2 GHz'lik bir saatte saniyede 2 milyar döngü vardır.
 - global memory (genel bellek): GPU'nun büyük ana belleği; L40S'te GDDR6, H100'de HBM. Her thread ona erişebilir ama shared memory'den çok daha yavaştır.
+- GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran, binlerce küçük çekirdekli işlemci.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, kendi kodunu GPU'da çalıştırmanı sağlayan platformu.

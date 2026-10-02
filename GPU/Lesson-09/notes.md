@@ -1,6 +1,6 @@
 # 09 > Compute or Memory Bound
 
-Every kernel is held back by one of two things: how fast the GPU (Graphics Processing Unit) can do math, or how fast it can move data. This lesson shows how to tell which one with a single number, arithmetic intensity, and a simple chart called the roofline. All examples use the NVIDIA L40S that runs the programs in these lessons.
+Every kernel is held back by one of two things: how fast the GPU can do math, or how fast it can move data. This lesson shows how to tell which one with a single number, arithmetic intensity, and a simple chart called the roofline. All examples use the NVIDIA L40S that runs the programs in these lessons.
 
 ## Two Limits on Every Kernel
 
@@ -15,12 +15,12 @@ Whichever is bigger sets the time. If the data part is bigger, the kernel is mem
 
 ## Counting FLOPs
 
-A FLOP (floating-point operation) is one add, subtract, multiply or divide on floating-point numbers. FLOPS (floating-point operations per second) is a speed: how many of them happen every second.
+A FLOP is one add, subtract, multiply or divide on floating-point numbers. FLOPS is a speed: how many of them happen every second.
 
-[Lesson 06](../Lesson-06/notes.md) showed where the peak comes from: cores × clock × 2, because one FMA (fused multiply-add) counts as 2 FLOPs. For the L40S: 18,176 FP32 (32-bit floating point) cores × 2.52 GHz × 2 ≈ 91.6 TFLOPS (trillions of FLOPS), which is the FP32 number on NVIDIA's spec sheet.
+[Lesson 06](../Lesson-06/notes.md) showed where the peak comes from: cores × clock × 2, because one FMA counts as 2 FLOPs. For the L40S: 18,176 FP32 cores × 2.52 GHz × 2 ≈ 91.6 TFLOPS, which is the FP32 number on NVIDIA's spec sheet.
 
 > [!NOTE]
-> FLOPs (lowercase s) is a count of work. FLOPS (capital S) is a speed. A kernel that does 1,000 FLOPs on a GPU that reaches 91.6 TFLOPS needs at least 1,000 / 91.6 trillion seconds for its math.
+> FLOPs with a lowercase s is a count of work. FLOPS with a capital S is a speed. A kernel that does 1,000 FLOPs on a GPU that reaches 91.6 TFLOPS needs at least 1,000 / 91.6 trillion seconds for its math.
 
 To count the FLOPs of a kernel, count the math in one thread and multiply by the number of threads. `c[i] = a[i] + b[i]` is 1 FLOP per element. `y[i] = a * x[i] + y[i]` is 2 FLOPs per element, a multiply and an add.
 
@@ -30,7 +30,7 @@ Bytes moved means the bytes that travel between GPU memory and the chip. One `fl
 
 For `c[i] = a[i] + b[i]` each thread reads `a[i]` and `b[i]` and writes `c[i]`: 3 floats × 4 bytes = 12 bytes per element.
 
-The speed limit for this side is the memory bandwidth from [Lesson 06](../Lesson-06/notes.md). The L40S has 48 GB of GDDR6 (Graphics Double Data Rate 6) memory with a bandwidth of 864 GB/s (gigabytes per second).
+The speed limit for this side is the memory bandwidth from [Lesson 06](../Lesson-06/notes.md). The L40S has 48 GB of GDDR6 memory with a bandwidth of 864 GB/s.
 
 ## Arithmetic Intensity
 
@@ -65,7 +65,7 @@ The H100 has far more bandwidth for its FP32 compute, so even fairly light kerne
 
 ## The Roofline Model
 
-The roofline model draws all of this as one chart. The x axis is arithmetic intensity, the y axis is attainable GFLOPS (billions of FLOPS). Both axes are logarithmic, so each step is a multiple.
+The roofline model draws all of this as one chart. The x axis is arithmetic intensity, the y axis is attainable GFLOPS. Both axes are logarithmic, so each step is a multiple.
 
 attainable GFLOPS = min(peak GFLOPS, arithmetic intensity × bandwidth)
 
@@ -84,11 +84,11 @@ Take vector add on the L40S with 100 million floats per array (N = 100,000,000).
 - Time for math: 100,000,000 / 91.6 trillion ≈ 0.0011 ms (about 1.1 µs).
 - Time for data: 1.2 GB / 864 GB/s ≈ 1.39 ms.
 
-The data part is about 1,270 times longer. The roofline gives the same answer: 0.083 × 864 ≈ 72 GFLOPS attainable, under 0.1% of the 91,600 GFLOPS peak. Vector add is deeply memory bound on every GPU. It is the program from the vector addition lesson in the CUDA (Compute Unified Device Architecture) Practice track ([CUDA Lesson 08](../../cuda/Lesson-08/notes.md)).
+The data part is about 1,270 times longer. The roofline gives the same answer: 0.083 × 864 ≈ 72 GFLOPS attainable, under 0.1% of the 91,600 GFLOPS peak. Vector add is deeply memory bound on every GPU. It is the program from the vector addition lesson in the CUDA Practice track ([CUDA Lesson 08](../../cuda/Lesson-08/notes.md)).
 
 ## Worked Example: SAXPY and Dot Product
 
-SAXPY (Single-precision A times X Plus Y) computes `y[i] = a * x[i] + y[i]`. Per element it does 2 FLOPs (one FMA) and moves 12 bytes: it reads `x[i]` and `y[i]` and writes `y[i]`. Arithmetic intensity: 2 / 12 ≈ 0.167 FLOP/byte. On the L40S: 0.167 × 864 ≈ 144 GFLOPS attainable.
+SAXPY computes `y[i] = a * x[i] + y[i]`. Per element it does 2 FLOPs (one FMA) and moves 12 bytes: it reads `x[i]` and `y[i]` and writes `y[i]`. Arithmetic intensity: 2 / 12 ≈ 0.167 FLOP/byte. On the L40S: 0.167 × 864 ≈ 144 GFLOPS attainable.
 
 A dot product computes `s += x[i] * y[i]` over two arrays. Per element it does 2 FLOPs and reads 8 bytes, with nothing written per element. Arithmetic intensity: 2 / 8 = 0.25 FLOP/byte. On the L40S: 0.25 × 864 = 216 GFLOPS attainable.
 
@@ -117,14 +117,14 @@ The intensity grows with N, because each loaded number is used N times. For N = 
 
 The answer tells you where to spend your effort:
 
-- Memory bound: optimize data movement. Read each byte once, read it in large aligned chunks (coalesced access), keep reused data in shared memory or registers, use smaller number formats so fewer bytes travel, and fuse kernels so data is not written out and read back in between.
+- Memory bound: optimize data movement. Read each byte once, read it in large aligned chunks for coalesced access, keep reused data in shared memory or registers, use smaller number formats so fewer bytes travel, and fuse kernels so data is not written out and read back in between.
 - Compute bound: optimize the math. Use Tensor Cores, use cheaper formats where accuracy allows, and remove work that does not need to happen.
 
 Optimizing the wrong side does nothing. Making vector add do its math twice as fast leaves its time at about 1.39 ms, because the math was never the limit.
 
 ## A Higher Roof: Tensor Cores
 
-The roofs above are FP32 on the regular cores. Tensor Cores give a much higher compute roof for matrix math. The L40S reaches 362 TFLOPS in FP16 (16-bit floating point) on its Tensor Cores without sparsity, about 4 times its FP32 peak. With the same 864 GB/s, the ridge point moves up to about 362,000 / 864 ≈ 419 FLOP/byte.
+The roofs above are FP32 on the regular cores. Tensor Cores give a much higher compute roof for matrix math. The L40S reaches 362 TFLOPS in FP16 on its Tensor Cores without sparsity, about 4 times its FP32 peak. With the same 864 GB/s, the ridge point moves up to about 362,000 / 864 ≈ 419 FLOP/byte.
 
 A higher roof only helps kernels that are compute bound. Vector add stays at 72 GFLOPS whatever the roof. [Lesson 10](../Lesson-10/notes.md) explains number formats and Tensor Cores.
 
@@ -141,13 +141,14 @@ Most simple kernels you write first, such as vector add, scaling, copying and re
 - warp: a group of 32 threads that run together; while some warps wait for data, others compute.
 - memory bound: a kernel whose time is set by moving data, not by math; it sits on the slanted part of the roofline.
 - compute bound: a kernel whose time is set by math, not by moving data; it sits on the flat part of the roofline.
-- FLOP (floating-point operation): one add, subtract, multiply or divide on floating-point numbers; FLOPs (lowercase s) counts them.
+- FLOP (floating-point operation): one add, subtract, multiply or divide on floating-point numbers; FLOPs with a lowercase s counts them.
 - FLOPS (floating-point operations per second): a speed; GFLOPS is billions and TFLOPS trillions of FLOPs every second.
 - FMA (fused multiply-add): one instruction that computes a × b + c and counts as 2 FLOPs.
 - FP32 (32-bit floating point): the standard number format for GPU math; one `float` is 4 bytes.
 - peak FLOPS: cores × clock × 2; for the L40S, 91.6 TFLOPS in FP32.
 - bytes moved: the bytes that travel between GPU memory and the chip, counting every read and every write.
 - memory bandwidth: how many bytes per second memory can deliver; 864 GB/s on the L40S.
+- GB/s (gigabytes per second): billions of bytes moved every second, the unit of memory bandwidth.
 - GDDR6 (Graphics Double Data Rate 6): the memory type on the L40S, slower than the HBM (High Bandwidth Memory) of data center GPUs like the H100.
 - arithmetic intensity: FLOPs divided by bytes moved, in FLOP/byte; it depends on the kernel, not the GPU.
 - ridge point: peak FLOPS divided by memory bandwidth; about 106 FLOP/byte on the L40S, 20 on the H100 SXM.
@@ -159,6 +160,7 @@ Most simple kernels you write first, such as vector add, scaling, copying and re
 - matrix multiply: `C = A × B`; 2N³ FLOPs over at least 12N² bytes for N × N FP32 matrices, so intensity N / 6.
 - shared memory: fast on-chip memory that the threads of one block share; it lets a kernel reuse data instead of loading it again.
 - coalesced access: neighbouring threads reading neighbouring addresses, so memory serves them in a few large transfers.
+- reduction: combining many values into one, such as a sum or a maximum.
 - Tensor Cores: units built for matrix math with a much higher roof; 362 TFLOPS in FP16 on the L40S without sparsity.
 - FP16 (16-bit floating point): a 2-byte number format; Tensor Cores run it far faster than FP32 cores run FP32.
 - sparsity: a Tensor Core feature that skips zeros in a fixed pattern; spec sheets often quote numbers with it, which are twice the dense numbers.

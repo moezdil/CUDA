@@ -1,6 +1,6 @@
 # 04 > Yerleşik Değişkenler
 
-Her kernel'ın salt okunur beş yerleşik değişkeni vardır: `gridDim`, `blockDim`, `blockIdx`, `threadIdx` ve `warpSize`. Bunları ne parametre olarak verirsin ne de tanımlarsın; GPU (Graphics Processing Unit, grafik işlem birimi) başlatma anında, başlatma ayarına göre her thread için doldurur. Bu derste her thread beşini de yazdırıyor; böylece hangilerinin değiştiğini, hangilerinin aynı kaldığını görebilirsin.
+Her kernel'ın salt okunur beş yerleşik değişkeni vardır: `gridDim`, `blockDim`, `blockIdx`, `threadIdx` ve `warpSize`. Bunları ne parametre olarak verirsin ne de tanımlarsın; GPU başlatma anında, başlatma ayarına göre her thread için doldurur. Bu derste her thread beşini de yazdırıyor; böylece hangilerinin değiştiğini, hangilerinin aynı kaldığını görebilirsin.
 
 > [!NOTE]
 > Bu sayfadaki tüm çıktılar, Ubuntu 24 üzerinde CUDA 13.0 ile çalışan bir NVIDIA L40S'ten alındı.
@@ -25,7 +25,7 @@ Her kernel'ın salt okunur beş yerleşik değişkeni vardır: `gridDim`, `block
 
 `threadIdx`, thread'in kendi block'u içindeki indeksidir ve her block'ta 0'dan yeniden başlar. 4 thread'li bir block'ta `threadIdx.x` 0, 1, 2, 3 olur. Her zaman `blockDim.x`'ten küçüktür.
 
-`gridDim`, `blockDim`, `blockIdx` ve `threadIdx`'in hepsinin `.x`, `.y`, `.z` alanları vardır; `gridDim` ve `blockDim` `dim3` tipindedir. `<<<2, 4>>>`'ü düz sayılarla yazarsan CUDA (Compute Unified Device Architecture) `.y = 1` ve `.z = 1` değerlerini senin yerine ayarlar. Yani `<<<2, 4>>>`, `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>` ile aynıdır.
+`gridDim`, `blockDim`, `blockIdx` ve `threadIdx`'in hepsinin `.x`, `.y`, `.z` alanları vardır; `gridDim` ve `blockDim` `dim3` tipindedir. `<<<2, 4>>>`'ü düz sayılarla yazarsan CUDA `.y = 1` ve `.z = 1` değerlerini senin yerine ayarlar. Yani `<<<2, 4>>>`, `<<<dim3(2, 1, 1), dim3(4, 1, 1)>>>` ile aynıdır.
 
 ## warpSize
 
@@ -36,7 +36,7 @@ Her kernel'ın salt okunur beş yerleşik değişkeni vardır: `gridDim`, `block
 
 ## Donanım Sınırları
 
-CUDA runtime, bir kernel'ı çalıştırmadan önce başlatma ayarını donanım sınırlarıyla karşılaştırır. Değerlerden biri fazla büyükse kernel başlamaz. Kepler'den Blackwell'e kadar, CC (compute capability, hesaplama yeteneği) 3.0 ve sonrası için sınırlar şunlardır:
+CUDA runtime, bir kernel'ı çalıştırmadan önce başlatma ayarını donanım sınırlarıyla karşılaştırır. Değerlerden biri fazla büyükse kernel başlamaz. Kepler'den Blackwell'e kadar, compute capability 3.0 ve sonrası için sınırlar şunlardır:
 
 | Değişken      | Boyut        | En fazla  |
 |---------------|--------------|-----------|
@@ -88,7 +88,7 @@ int main()
 ```
 
 - İki CUDA header'ı, runtime fonksiyonlarını (`cudaDeviceSynchronize` gibi) ve yerleşik değişkenleri tanımlar; `stdio.h` ise `printf`'i sağlar.
-- `__global__`, `printBuiltins`'i bir kernel olarak işaretler. GPU'da çalışır ve CPU'dan (Central Processing Unit, merkezi işlem birimi) başlatılır.
+- `__global__`, `printBuiltins`'i bir kernel olarak işaretler. GPU'da çalışır ve CPU'dan başlatılır.
 - Kernel içindeki `printf`, her thread için bir kez çalışır. Her `%d`, biçim metninin ardından sıralanan alanlardan biriyle, aynı sırayla doldurulur.
 - `printBuiltins<<<2, 4>>>()`, 4'er thread'li 2 block başlatır. Yani kernel'ı 8 thread çalıştırır ve 8 satır yazdırılır.
 - `cudaDeviceSynchronize()`, CPU'nun kernel bitene kadar beklemesini sağlar. Kernel başlatması hemen geri döner; bu bekleme olmadan `main`, GPU çıktısı görünmeden bitebilir.
@@ -206,7 +206,8 @@ int main()
 
 - GPU (Graphics Processing Unit, grafik işlem birimi): kernel'ları çalıştıran işlemci.
 - CPU (Central Processing Unit, merkezi işlem birimi): `main()`'i çalıştıran ve kernel'ları başlatan ana işlemci.
-- CC (compute capability, hesaplama yeteneği): bir GPU neslinin sürüm numarası; yukarıdaki tablodaki sınırları belirler ([Ders 03](../Lesson-03/notes.md)).
+- CUDA (Compute Unified Device Architecture): GPU'da çalışan programlar yazmak için NVIDIA'nın platformu ve dil eklentileri.
+- compute capability (CC, hesaplama yeteneği): bir GPU neslinin sürüm numarası; yukarıdaki tablodaki sınırları belirler ([Ders 03](../Lesson-03/notes.md)).
 - `gridDim`: her yöndeki (x, y, z) block sayısı; başlatmadaki her thread için aynıdır.
 - `blockDim`: her yöndeki block başına thread sayısı; başlatmadaki her thread için aynıdır.
 - `blockIdx`: thread'in bulunduğu block'un indeksi; her yönde her zaman `gridDim`'den küçüktür.

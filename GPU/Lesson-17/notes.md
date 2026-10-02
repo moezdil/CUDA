@@ -1,6 +1,6 @@
 # 17 > Installing CUDA Toolkit on Linux
 
-This lesson shows how to install the CUDA Toolkit on Linux in WSL (Windows Subsystem for Linux). After this, your system can compile and run code on the GPU (Graphics Processing Unit). The steps follow NVIDIA's installation guide as of October 2026.
+This lesson shows how to install the CUDA Toolkit on Linux in WSL. After this, your system can compile and run code on the GPU. The steps follow NVIDIA's installation guide as of October 2026.
 
 ## Match your platform
 
@@ -35,7 +35,7 @@ sudo apt-get update
 sudo apt-get -y install cuda-toolkit-13-3
 ```
 
-- `wget` downloads a file from a URL. The `wsl-ubuntu/x86_64` part of the address picks the repository for WSL on a 64-bit Intel or AMD CPU (Central Processing Unit).
+- `wget` downloads a file from a URL. The `wsl-ubuntu/x86_64` part of the address picks the repository for WSL on a 64-bit Intel or AMD CPU.
 - `cuda-keyring_1.1-1_all.deb` is a small package. It holds NVIDIA's signing key and the address of the repository, so your system trusts NVIDIA's packages.
 - `sudo` runs a command with admin rights. Installing packages changes the system, so it needs them.
 - `dpkg -i` installs a local `.deb` file, here the keyring.
@@ -45,7 +45,7 @@ sudo apt-get -y install cuda-toolkit-13-3
 
 This installs CUDA Toolkit 13.3. It includes:
 
-* CUDA compiler (nvcc)
+* CUDA compiler nvcc
 * CUDA runtime
 * core libraries
 
@@ -84,8 +84,8 @@ export PATH=/usr/local/cuda/bin:$PATH
 
 CUDA is closely tied to GPU architecture. Each new architecture needs a CUDA version that knows it:
 
-* FP8 (8-bit floating point) on Hopper, since CUDA 11.8
-* FP4 (4-bit floating point) on Blackwell, since CUDA 12.8
+* FP8 on Hopper, since CUDA 11.8
+* FP4 on Blackwell, since CUDA 12.8
 * Rubin (compute capability 10.7) in the libraries, since CUDA 13.4
 
 If your CUDA version does not support them, your code still runs but does not use the hardware well, or cannot target the newest GPU at all.
@@ -105,7 +105,7 @@ PyTorch installed with `pip` brings its own copy of the CUDA libraries, so it on
 
 Your system is now ready. You have:
 
-* a Linux environment (WSL)
+* a Linux environment, here WSL
 * GPU access
 * CUDA Toolkit 13.3
 * a working CUDA compiler

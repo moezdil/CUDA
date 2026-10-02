@@ -1,13 +1,13 @@
 # 09 > Çok Sayıda Block, Grid Boyutu ve Zaman Ölçümü
 
-[Ders 08](../Lesson-08/notes.md), 1024 elemanlı iki vektörü tek bir block ile topladı. Bu derste boyut iki katına, 2048 elemana çıkıyor ve bunu tek bir block karşılayamıyor. Neredeyse her CUDA kernel'ının kullandığı indeks formülünü, her vektör uzunluğu için grid boyutunu nasıl seçeceğini, başlattığın işin gerçekte kaç SM'yi (Streaming Multiprocessor, akış çoklu işlemcisi) meşgul ettiğini ve bir kernel'ın süresini kendini kandırmadan nasıl ölçeceğini öğreniyorsun.
+[Ders 08](../Lesson-08/notes.md), 1024 elemanlı iki vektörü tek bir block ile topladı. Bu derste boyut iki katına, 2048 elemana çıkıyor ve bunu tek bir block karşılayamıyor. Neredeyse her CUDA kernel'ının kullandığı indeks formülünü, her vektör uzunluğu için grid boyutunu nasıl seçeceğini, başlattığın işin gerçekte kaç SM'yi meşgul ettiğini ve bir kernel'ın süresini kendini kandırmadan nasıl ölçeceğini öğreniyorsun.
 
 > [!NOTE]
 > Kod, Ubuntu 24 üzerinde CUDA 13'ü ve bu derslerde kullanılan NVIDIA L40S'i (CC 8.9, 142 SM) hedefliyor. Süreler GPU'ya bağlı, bu yüzden programı kendi GPU'nda çalıştır ve ayarları kendin karşılaştır.
 
 ## 1024'ten 2048 Elemana
 
-Vektörler artık 2048'er eleman tutuyor. Eleman başına bir thread demek 2048 thread demek. Tek bir block en fazla 1024 thread alabilir. Bu sınır, [Ders 03](../Lesson-03/notes.md)'te gördüğün gibi compute capability'nin (CC, hesaplama yeteneği) bir parçası. Bu yüzden `<<<1, 2048>>>` başlatılırken reddedilir ([Ders 02](../Lesson-02/notes.md)).
+Vektörler artık 2048'er eleman tutuyor. Eleman başına bir thread demek 2048 thread demek. Tek bir block en fazla 1024 thread alabilir. Bu sınır, [Ders 03](../Lesson-03/notes.md)'te gördüğün gibi compute capability'nin bir parçası. Bu yüzden `<<<1, 2048>>>` başlatılırken reddedilir ([Ders 02](../Lesson-02/notes.md)).
 
 Çıkış yolu daha fazla block. En basit bölme, 1024 thread'lik 2 block, yani `<<<2, 1024>>>`:
 
@@ -117,7 +117,7 @@ float ms;
 cudaEventElapsedTime(&ms, start, stop);
 ```
 
-`cudaEventElapsedTime`, iki işaret arasındaki süreyi milisaniye olarak verir. 1 milisaniye 1000 mikrosaniyedir (µs).
+`cudaEventElapsedTime`, iki işaret arasındaki süreyi milisaniye olarak verir. 1 milisaniye 1000 mikrosaniyedir.
 
 Ölçüm kalıbını adım adım geç, sonra iki klasik hatadan birini aç:
 

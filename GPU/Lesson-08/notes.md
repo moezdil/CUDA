@@ -1,24 +1,24 @@
 # 08 > Warps and Latency Hiding
 
-A GPU (Graphics Processing Unit) does not run its threads one by one. It runs them in groups of 32 called warps, and it hides slow memory by switching between warps instead of waiting. This lesson explains how that works, why a GPU wants far more threads than it has cores, and what occupancy means.
+A GPU does not run its threads one by one. It runs them in groups of 32 called warps, and it hides slow memory by switching between warps instead of waiting. This lesson explains how that works, why a GPU wants far more threads than it has cores, and what occupancy means.
 
 ## SIMT: One Instruction, Many Threads
 
-NVIDIA calls its execution model SIMT (Single Instruction, Multiple Threads). You write a kernel as if for one thread, and the GPU runs many threads with that same code. Each thread has its own registers and its own data, for example its own element of an array.
+NVIDIA calls its execution model SIMT. You write a kernel as if for one thread, and the GPU runs many threads with that same code. Each thread has its own registers and its own data, for example its own element of an array.
 
 The hardware does not fetch and decode the instruction once per thread. It does it once for a group of threads, and all threads in the group execute it together, each on its own data. This saves a lot of chip area and power, which is why a GPU can fit so many cores.
 
-SIMT looks like SIMD (Single Instruction, Multiple Data) on a CPU (Central Processing Unit), where one instruction works on a short vector. The difference is that in SIMT you write ordinary scalar code per thread, and the hardware groups the threads for you.
+SIMT looks like SIMD on a CPU, where one instruction works on a short vector. The difference is that in SIMT you write ordinary scalar code per thread, and the hardware groups the threads for you.
 
 ## The Warp
 
 The group that runs one instruction together is the warp. On every NVIDIA GPU so far, a warp is 32 threads. A block of 256 threads is 256 / 32 = 8 warps, and a block of 100 threads still takes 4 warps, because the last warp is only partly filled (100 = 3 × 32 + 4).
 
-The threads inside a warp are called lanes, numbered 0 to 31. In the CUDA (Compute Unified Device Architecture) Practice track, [Lesson 07](../../cuda/Lesson-07/notes.md) shows how a thread works out its own warp ID and lane ID.
+The threads inside a warp are called lanes, numbered 0 to 31. In the CUDA Practice track, [Lesson 07](../../cuda/Lesson-07/notes.md) shows how a thread works out its own warp ID and lane ID.
 
 ## Warp Schedulers
 
-[Lesson 00](../Lesson-00/notes.md) introduced the SM (Streaming Multiprocessor), the small processor a GPU is built from. An SM of the L40S (Ada Lovelace, CC (compute capability) 8.9) is split into 4 partitions. Each partition has one warp scheduler, a 64 KB (kilobyte) slice of the register file and 32 FP32 (32-bit floating point) lanes.
+[Lesson 00](../Lesson-00/notes.md) introduced the SM, the small processor a GPU is built from. The L40S is an Ada Lovelace GPU with CC 8.9, and each of its SMs is split into 4 partitions. Each partition has one warp scheduler, a 64 KB slice of the register file and 32 FP32 lanes.
 
 On every clock cycle, each warp scheduler picks one warp that is ready and issues its next instruction. So one SM can start up to 4 warp instructions per cycle, one per scheduler.
 
@@ -26,7 +26,7 @@ An SM can hold up to 48 warps at the same time on the L40S, which is 48 × 32 = 
 
 ## When a Warp Waits for Memory
 
-A load from VRAM (GPU memory) takes hundreds of clock cycles. [Lesson 07](../Lesson-07/notes.md) shows the memory hierarchy behind this. When a warp needs a value that has not arrived yet, it cannot run its next instruction. The warp stalls.
+A load from VRAM takes hundreds of clock cycles. [Lesson 07](../Lesson-07/notes.md) shows the memory hierarchy behind this. When a warp needs a value that has not arrived yet, it cannot run its next instruction. The warp stalls.
 
 A CPU core would try to avoid this with big caches and by guessing ahead. A GPU does something simpler: the warp scheduler skips the stalled warp and issues an instruction from another warp that is ready. When the data arrives, the first warp becomes ready again and gets its turn later.
 
@@ -104,7 +104,7 @@ All 32 threads of a warp share one instruction stream. If an `if` sends some lan
 
 Occupancy is a means, not the goal. Once the schedulers have enough ready warps to cover the waiting, more warps change nothing, as the sixth warp in the diagram shows.
 
-A warp can also hide latency on its own. If its next instructions do not depend on the value still on its way, the scheduler can keep issuing them. This is ILP (instruction-level parallelism). A kernel that keeps more data in registers and gives each thread more independent work can run faster at 33% occupancy than a simpler kernel at 100%.
+A warp can also hide latency on its own. If its next instructions do not depend on the value still on its way, the scheduler can keep issuing them. This is ILP. A kernel that keeps more data in registers and gives each thread more independent work can run faster at 33% occupancy than a simpler kernel at 100%.
 
 > [!WARNING]
 > Forcing a kernel down to fewer registers to raise occupancy can make it slower. Values that no longer fit are spilled to local memory, which lives in VRAM, and every spill adds the very memory traffic you wanted to hide.
@@ -116,7 +116,7 @@ Every choice you make in a kernel feeds into this. The block size you launch wit
 Choose a block size that is a multiple of 32, so no warp is partly empty. 128 or 256 is a good default on the L40S. Keep lanes of the same warp on the same branch where you can.
 
 > [!TIP]
-> Compile with `nvcc -arch=sm_89 -Xptxas -v -o NAME NAME.cu` and nvcc (NVIDIA CUDA Compiler) prints the registers and shared memory each kernel uses. With those numbers you can work out occupancy by hand, as above.
+> Compile with `nvcc -arch=sm_89 -Xptxas -v -o NAME NAME.cu` and nvcc prints the registers and shared memory each kernel uses. With those numbers you can work out occupancy by hand, as above.
 
 ## Summary
 
@@ -136,6 +136,7 @@ A warp is 32 threads that run one instruction together. Each warp scheduler issu
 - SM (Streaming Multiprocessor): the small processor a GPU is built from; the L40S has 142.
 - CC (compute capability): the version number of a GPU's features; the L40S is 8.9.
 - warp scheduler: the unit that picks a ready warp and issues its next instruction each clock cycle; an Ada SM has 4.
+- issue: to send a warp's next instruction off to run; each warp scheduler issues at most one per clock cycle.
 - resident warps: the warps an SM holds at the same time; at most 48 on the L40S.
 - register: the fastest storage in an SM; each thread keeps its own variables in registers.
 - register file: all registers of an SM, 65,536 32-bit registers on the L40S.

@@ -1,6 +1,6 @@
 # 02 > Architecture, Generation and Chips
 
-People say "GPU" (Graphics Processing Unit) for several different things: a design, a product family, a piece of silicon and the card you install. This lesson separates them into architecture, generation, chip and GPU. Once you can tell them apart, you can read any NVIDIA product name, spec sheet or data center part and know what is really inside. All of this matters for CUDA (Compute Unified Device Architecture), NVIDIA's way of programming GPUs for general computation, not just graphics.
+People say "GPU" for several different things: a design, a product family, a piece of silicon and the card you install. This lesson separates them into architecture, generation, chip and GPU. Once you can tell them apart, you can read any NVIDIA product name, spec sheet or data center part and know what is really inside. All of this matters for CUDA, NVIDIA's way of programming GPUs for general computation, not just graphics.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Architecture is the internal design of the GPU chip. It defines not only the cor
 - how memory is accessed  
 - how parallel work is executed  
 
-Think of it as the engine design. Two GPUs can look alike from the outside but behave very differently because of their architecture. Architecture directly affects performance, efficiency and supported features. Features like ray tracing and AI (artificial intelligence) acceleration are introduced at the architecture level.
+Think of it as the engine design. Two GPUs can look alike from the outside but behave very differently because of their architecture. Architecture directly affects performance, efficiency and supported features. Features like ray tracing and AI acceleration are introduced at the architecture level.
 
 NVIDIA used to release a new architecture every two years or so. For data center GPUs it now moves about once a year: Blackwell (2024), Blackwell Ultra (2025) and Rubin (shipping since the second half of 2026), with Rubin Ultra (2027) and Feynman (2028) announced. [Lesson 04](../Lesson-04/notes.md) walks through all of them.
 
@@ -22,7 +22,7 @@ In these lessons, generation is not about how the GPU is built. It is about wher
 > [!NOTE]
 > Outside these lessons, people often say "generation" for an architecture too, as in "the Blackwell generation". Here it means the product family a GPU belongs to, such as GeForce or Data Center.
 
-NVIDIA GPUs serve two main worlds. The first is everyday users: gaming, content creation and general graphics. The second is cloud systems, data centers, AI training and scientific computing. This second world is called HPC (High Performance Computing).
+NVIDIA GPUs serve two main worlds. The first is everyday users: gaming, content creation and general graphics. The second is cloud systems, data centers, AI training and scientific computing. This second world is called HPC.
 
 ## Product Names
 
@@ -37,16 +37,16 @@ You may still see older names. Quadro was the old brand for professional GPUs; i
 
 ## Architecture and Generation Are Independent
 
-Architecture describes how the GPU is built. Generation describes where it is used. So the same architecture can appear in very different products. The RTX 3090 (personal use) and the A100 (large-scale computing) are both Ampere. Today the RTX 5090, the RTX PRO 6000, the B200 and Jetson AGX Thor are all Blackwell.
+Architecture describes how the GPU is built. Generation describes where it is used. So the same architecture can appear in very different products. The RTX 3090 for personal use and the A100 for large-scale computing are both Ampere. Today the RTX 5090, the RTX PRO 6000, the B200 and Jetson AGX Thor are all Blackwell.
 
 <arch-matrix></arch-matrix>
 
-Same architecture does not even mean the same CC (Compute Capability), the version number CUDA uses for a chip's features. The A100 is CC 8.0 and the RTX 3090 is CC 8.6, both Ampere. The B200 is CC 10.0 and the RTX 5090 is CC 12.0, both Blackwell, because they use different chips. [Lesson 05](../Lesson-05/notes.md) covers CC in depth.
+Same architecture does not even mean the same CC, the version number CUDA uses for a chip's features. The A100 is CC 8.0 and the RTX 3090 is CC 8.6, both Ampere. The B200 is CC 10.0 and the RTX 5090 is CC 12.0, both Blackwell, because they use different chips. [Lesson 05](../Lesson-05/notes.md) covers CC in depth.
 
 > [!TIP]
 > The CC, not the product name, decides which CUDA features a GPU supports. When you compile CUDA code, you target a CC.
 
-Not every architecture covers both worlds. Ada Lovelace is mostly for consumer GPUs, with some server cards like the L40S. Hopper is only for data centers and AI training, which is why you do not see Hopper GPUs in normal PCs (Personal Computers). The difference is about purpose, not only performance.
+Not every architecture covers both worlds. Ada Lovelace is mostly for consumer GPUs, with some server cards like the L40S. Hopper is only for data centers and AI training, which is why you do not see Hopper GPUs in normal PCs. The difference is about purpose, not only performance.
 
 ## The GPU Chip
 
@@ -56,17 +56,17 @@ The chip is the real "engine". The GA100 chip inside the A100, for example, is o
 
 ## Chip Names
 
-NVIDIA chip names link a chip to its architecture. The first letter is G (for GPU), the next letter or two name the architecture, and the number is the chip's place in that family:
+NVIDIA chip names link a chip to its architecture. The first letter is G for GPU, the next letter or two name the architecture, and the number is the chip's place in that family:
 
 - GF100 → Fermi  
 - GA100 → Ampere  
 - AD102 → Ada Lovelace (RTX 4090, L40S)  
 - GB202 → Blackwell (RTX 5090)  
 
-Read GB202 like this: G (GPU) + B (Blackwell) + 202 (one chip of the Blackwell family). So the prefix tells you the architecture before you look at any spec.
+Read GB202 like this: G for GPU, B for Blackwell, and 202 for one chip of the Blackwell family. So the prefix tells you the architecture before you look at any spec.
 
 > [!WARNING]
-> Not every name with these letters is a single GPU chip. GB200 is a "superchip": one Grace CPU (Central Processing Unit) and two Blackwell GPUs on one board. GH200 is the same idea with Hopper. When a name looks odd, check what it really is.
+> Not every name with these letters is a single GPU chip. GB200 is a "superchip": one Grace CPU and two Blackwell GPUs on one board. GH200 is the same idea with Hopper. When a name looks odd, check what it really is.
 
 ## The GPU
 
@@ -75,7 +75,7 @@ A GPU is the full product you use, a complete system built around the chip. It i
 - the chip itself  
 - VRAM, the GPU's own memory attached next to the chip  
 - power delivery components  
-- output interfaces (like HDMI (High-Definition Multimedia Interface) or DisplayPort)  
+- output interfaces like HDMI or DisplayPort  
 - a cooling system  
 
 GeForce cards live in a normal PC case with no special cooling, so they must handle their own heat, and that heat is large: an RTX 5090 is rated for up to 575 W. That is why they carry large heatsinks and several fans.
@@ -90,7 +90,7 @@ Spec sites like TechPowerUp make the split visible: the page for the A100 names 
 
 An architecture is not one chip. It is a family of chips that share the same base design. Ada Lovelace (2022) includes AD102, AD103 and AD104; the prefix "AD" links them before you read any spec. Blackwell consumer chips start with "GB": GB202 in the RTX 5090, GB203 in the RTX 5080 and GB205 in the RTX 5070.
 
-The size of a chip is counted in SMs (Streaming Multiprocessors), the building blocks that hold the cores (see [Lesson 00](../Lesson-00/notes.md)). A full AD102 has 144 SMs, a full AD103 has 80 and a full AD104 has 60. So AD102 goes into top-tier GPUs, and AD104 into smaller, more efficient cards such as the RTX 4070 Ti.
+The size of a chip is counted in SMs, the building blocks that hold the cores (see [Lesson 00](../Lesson-00/notes.md)). A full AD102 has 144 SMs, a full AD103 has 80 and a full AD104 has 60. So AD102 goes into top-tier GPUs, and AD104 into smaller, more efficient cards such as the RTX 4070 Ti.
 
 ## Same Chip, Different GPUs
 
@@ -99,7 +99,7 @@ One chip can end up in very different GPUs. A manufacturer can disable some core
 - RTX 4090: GeForce card with fans and HDMI, 128 of 144 SMs on, 450 W power limit, 24 GB of GDDR6X memory.  
 - L40S: fanless data center card, 142 of 144 SMs on, 350 W power limit, 48 GB of GDDR6 memory.  
 
-On the RTX 4090, 144 − 128 = 16 SMs are off, which is 16 / 144 ≈ 11% of the chip. On the L40S only 144 − 142 = 2 are off. Each Ada SM has 128 FP32 (32-bit floating point) cores, so the L40S has 142 × 128 = 18,176 of them and the RTX 4090 has 128 × 128 = 16,384. Chips with a few faulty SMs can still be sold this way, with those SMs turned off.
+On the RTX 4090, 144 − 128 = 16 SMs are off, which is 16 / 144 ≈ 11% of the chip. On the L40S only 144 − 142 = 2 are off. Each Ada SM has 128 FP32 cores, so the L40S has 142 × 128 = 18,176 of them and the RTX 4090 has 128 × 128 = 16,384. Chips with a few faulty SMs can still be sold this way, with those SMs turned off.
 
 NVIDIA also does not build every final GPU itself. Board partners like ASUS, MSI or Gigabyte take the same chip and change the cooling design, the power configuration and the boost behavior. Same base chip, slightly different result.
 
@@ -151,9 +151,11 @@ The architecture describes the chip, not the full product. Performance starts at
 - AD104: a smaller Ada Lovelace chip with 60 SMs, used in cards such as the RTX 4070 Ti.
 - GB202: the largest consumer Blackwell chip, used in the RTX 5090.
 - superchip: a board that joins a CPU and GPUs, such as GB200 (one Grace CPU and two Blackwell GPUs).
+- CPU (Central Processing Unit): the main processor of a computer; Grace is NVIDIA's own data center CPU.
 - VRAM: the GPU's own memory, attached next to the chip; an L40S has 48 GB of it.
 - power delivery: the parts on the card that turn power from the power supply into the steady voltages the chip needs.
 - output interfaces: ports on a GPU such as HDMI or DisplayPort.
+- HDMI (High-Definition Multimedia Interface): the common port for sending picture and sound to a monitor or TV.
 - cooling: removing the heat the chip makes, with fans on the card, airflow from the server or liquid.
 - heatsink: a block of metal fins that consumer GPUs use to get rid of their own heat.
 - PC (Personal Computer) case: the box that holds a desktop computer's parts; a consumer GPU must cool itself inside it.
@@ -162,6 +164,7 @@ The architecture describes the chip, not the full product. Performance starts at
 - liquid cooling: cooling with liquid that flows through plates on the chips, used in dense racks such as the GB200 NVL72.
 - TechPowerUp: a website that lists GPU specs and links each GPU to the chip it uses.
 - SM (Streaming Multiprocessor): the building block of an NVIDIA GPU that holds its cores; chip size is counted in SMs.
+- FP32 (32-bit floating point): a number with a decimal point stored in 32 bits; spec sheets count FP32 cores as CUDA cores.
 - core: one compute unit on the chip; a manufacturer can turn some off, for example to sell chips with a few faulty ones.
 - power limit: the most power, in watts, a GPU may draw; a lower limit means less heat but also less speed.
 - clock speed: how many cycles per second the chip runs, a setting a manufacturer can tune.

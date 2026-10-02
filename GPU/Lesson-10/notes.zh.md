@@ -1,6 +1,6 @@
 # 10 > 数值格式与 Tensor Core
 
-GPU（Graphics Processing Unit，图形处理器）处理的每个数，都用固定数量的位来存储。这一课讲这些位是怎样分配的，从 FP64 一直讲到 4 位的 NVFP4，逐个看今天在用的格式，再讲 Tensor Core：它们就在普通的 CUDA（Compute Unified Device Architecture，统一计算设备架构）核心旁边，把更少的位变成快得多的速度。
+GPU 处理的每个数，都用固定数量的位来存储。这一课讲这些位是怎样分配的，从 FP64 一直讲到 4 位的 NVFP4，逐个看今天在用的格式，再讲 Tensor Core：它们就在普通的 CUDA 核心旁边，把更少的位变成快得多的速度。
 
 ## 浮点数是怎样存储的
 
@@ -12,7 +12,7 @@ GPU（Graphics Processing Unit，图形处理器）处理的每个数，都用�
 
 value = (−1)^sign × 2^(exponent − bias) × 1.mantissa
 
-算一个例子：把 6.5 存成 FP32（32-bit floating point，32 位浮点），它有 1 个符号位、8 个指数位、23 个尾数位，偏置是 127。
+算一个例子：把 6.5 存成 FP32，它有 1 个符号位、8 个指数位、23 个尾数位，偏置是 127。
 
 - 6.5 的二进制是 110.1，也就是 1.101 × 2^2。
 - 符号：正数，所以是 0。
@@ -32,7 +32,7 @@ value = (−1)^sign × 2^(exponent − bias) × 1.mantissa
 - 指数位越多，范围越大：数能有多大、多小。
 - 尾数位越多，精度越高：相邻两个数挨得多近。
 
-FP16（16-bit floating point，16 位浮点）和 BF16（bfloat16，brain floating point，脑浮点）都用 16 位，但分法不同。FP16 有 5 个指数位和 10 个尾数位。它的最大值是 65,504，所以 70,000 会变成无穷大。BF16 有 8 个指数位，范围和 FP32 一样（最大约 3.4 × 10^38），但只有 7 个尾数位。所以 1 + 1/512 = 1.001953125 在 FP16 里是精确的，而 BF16 会把它舍入成 1，因为它在 1 附近的步长是 1/128。
+FP16 和 BF16 都用 16 位，但分法不同。FP16 有 5 个指数位和 10 个尾数位。它的最大值是 65,504，所以 70,000 会变成无穷大。BF16 有 8 个指数位，范围和 FP32 一样（最大约 3.4 × 10^38），但只有 7 个尾数位。所以 1 + 1/512 = 1.001953125 在 FP16 里是精确的，而 BF16 会把它舍入成 1，因为它在 1 附近的步长是 1/128。
 
 ## 各种格式
 
@@ -49,7 +49,7 @@ FP16（16-bit floating point，16 位浮点）和 BF16（bfloat16，brain floati
 | FP4 E2M1 | 1 / 2 / 1 | 6 | 配合块缩放做推理 |
 | INT8 | 8 位整数 | 127（从 −128 起） | 量化推理 |
 
-E4M3 和 E5M2 这些名字只是在数位数：4 个指数位和 3 个尾数位，或者 5 个和 2 个。TF32（TensorFloat-32）就是把尾数截到 10 位的 FP32。它仍然放在 32 位寄存器里，但 Tensor Core 只用其中 19 位。INT8（8-bit integer，8 位整数）完全没有指数：256 个等间距的整数，再乘以按每个张量或每个通道选定的缩放因子。
+E4M3 和 E5M2 这些名字只是在数位数：4 个指数位和 3 个尾数位，或者 5 个和 2 个。TF32 就是把尾数截到 10 位的 FP32。它仍然放在 32 位寄存器里，但 Tensor Core 只用其中 19 位。INT8 完全没有指数：256 个等间距的整数，再乘以按每个张量或每个通道选定的缩放因子。
 
 选一种格式，输入一个值。格子显示符号位、指数位和尾数位，表格显示实际存下的值和舍入误差有多大：
 
@@ -58,12 +58,12 @@ E4M3 和 E5M2 这些名字只是在数位数：4 个指数位和 3 个尾数位�
 各种格式用在哪里：
 
 - 科学计算和仿真（天气、化学、物理）需要 FP64，因为微小的误差会在几百万步里不断放大。
-- 训练 AI（artificial intelligence，人工智能）模型主要用 BF16，越来越多地用 FP8，权重的主副本和求和仍保留 FP32。训练需要范围，因为梯度可能非常小。
+- 训练 AI 模型主要用 BF16，越来越多地用 FP8，权重的主副本和求和仍保留 FP32。训练需要范围，因为梯度可能非常小。
 - 推理，也就是运行训练好的模型，是最小格式的天下：FP8、INT8，现在还有 FP4。训练好的模型比训练过程更能容忍舍入。
 
 ## 块缩放与 NVFP4
 
-FP4 E2M1 自己只能表示 15 个值：0 以及 ±0.5、±1、±1.5、±2、±3、±4、±6。单独用远远不够。NVFP4（NVIDIA 4-bit floating point，NVIDIA 4 位浮点）用共享缩放因子解决这个问题：每 16 个值组成一块，共用一个 FP8 E4M3 数，每个值存成"缩放因子 × 它的 4 位元素"。缩放因子的选法是让块里最大的值落在 6 附近，也就是 FP4 的上限；另外还有一个 FP32 缩放因子覆盖整个张量。算一个例子：如果一块里最大的值是 0.1，缩放因子就是 0.1 / 6 ≈ 0.0167，E4M3 把它存成 0.017578125，于是 0.1 存成 0.017578125 × 6 = 0.10546875。普通 FP4 会把 0.1 舍入成 0。代价是每 16 个值多 8 位：4 + 8 / 16 = 每个值 4.5 位。MXFP4（microscaling FP4，微缩放 FP4）是 OCP（Open Compute Project，开放计算项目）的开放格式，它改用 32 个值一块，缩放因子是 2 的幂。
+FP4 E2M1 自己只能表示 15 个值：0 以及 ±0.5、±1、±1.5、±2、±3、±4、±6。单独用远远不够。NVFP4 用共享缩放因子解决这个问题：每 16 个值组成一块，共用一个 FP8 E4M3 数，每个值存成"缩放因子 × 它的 4 位元素"。缩放因子的选法是让块里最大的值落在 6 附近，也就是 FP4 的上限；另外还有一个 FP32 缩放因子覆盖整个张量。算一个例子：如果一块里最大的值是 0.1，缩放因子就是 0.1 / 6 ≈ 0.0167，E4M3 把它存成 0.017578125，于是 0.1 存成 0.017578125 × 6 = 0.10546875。普通 FP4 会把 0.1 舍入成 0。代价是每 16 个值多 8 位：4 + 8 / 16 = 每个值 4.5 位。MXFP4 是 OCP 的开放格式，它改用 32 个值一块，缩放因子是 2 的幂。
 
 ## 算一个例子：700 亿参数的模型
 
@@ -76,11 +76,11 @@ FP4 E2M1 自己只能表示 15 个值：0 以及 ±0.5、±1、±1.5、±2、±3
 L40S 有 48 GB。用 FP16，权重至少要 3 块 L40S（140 / 48 ≈ 2.9）。用 FP8 要 2 块（70 / 48 ≈ 1.5）。用 NVFP4，权重一块就放得下。但 L40S 是 Ada Lovelace 架构：它有 FP8 Tensor Core，没有 FP4 的。4 位权重要先转换成更宽的格式才能参与计算。Blackwell GPU，比如 B200 或 RTX 5090，可以直接做 FP4 乘法。
 
 > [!WARNING]
-> 这些数字只是权重。运行模型还需要内存放激活值和 KV（key-value，键值）缓存，也就是之前各个 token 的键和值，它会随批大小和提示长度增长。
+> 这些数字只是权重。运行模型还需要内存放激活值和 KV 缓存，也就是之前各个 token 的键和值，它会随批大小和提示长度增长。
 
 ## Tensor Core 是什么
 
-CUDA 核心对单个数做一次 FMA（fused multiply-add，融合乘加），也就是 a × b + c。Tensor Core 则对小块矩阵做矩阵乘累加：
+CUDA 核心对单个数做一次 FMA，也就是 a × b + c。Tensor Core 则对小块矩阵做矩阵乘累加：
 
 D = A × B + C
 
@@ -90,7 +90,7 @@ A 和 B 是窄格式（比如 FP16 或 FP8）的小矩阵。C 和 D 通常保持
 
 ## 哪个架构加入了哪种格式
 
-每一代 Tensor Core 都加入了新格式。计算能力（CC，compute capability）的数字来自[第 05 课](../Lesson-05/notes.md)：
+每一代 Tensor Core 都加入了新格式。CC 一栏的计算能力数字来自[第 05 课](../Lesson-05/notes.md)：
 
 | 架构 | CC | Tensor Core 代数 | 新格式 |
 |---|---|---|---|
@@ -115,17 +115,17 @@ NVIDIA 的 L40S 数据手册给出了这些峰值。稠密是正常情况，稀�
 | Tensor Core，FP8 | 733 TFLOPS | 1,466 TFLOPS |
 | Tensor Core，INT8 | 733 TOPS | 1,466 TOPS |
 
-Tensor Core 上的稠密 FP16 是 CUDA 核心 FP32 峰值的 362 / 91.6 ≈ 4 倍，稠密 FP8 是 733 / 91.6 ≈ 8 倍。TFLOPS（trillions of floating-point operations per second，每秒万亿次浮点运算）和 TOPS（trillions of operations per second，每秒万亿次运算，用于整数）都是峰值。
+Tensor Core 上的稠密 FP16 是 CUDA 核心 FP32 峰值的 362 / 91.6 ≈ 4 倍，稠密 FP8 是 733 / 91.6 ≈ 8 倍。TFLOPS 和 TOPS 都是峰值；TOPS 计的是整数运算。
 
 > [!WARNING]
 > 数据手册常常先写稀疏的数字，只用一个小星号标出。H100 SXM 标的 FP8 是 3,958 TFLOPS，这是带稀疏的；稠密是 1,979。永远拿稠密和稠密比。
 
-在[第 09 课](../Lesson-09/notes.md)的屋顶线模型里，这些都是更高的计算屋顶。带宽 864 GB/s 时，FP8 屋顶把脊点推到 733,000 / 864 ≈ 848 FLOP（floating-point operations，浮点运算）每字节。位数少在显存这一侧也有好处：一个 FP8 值占 1 字节而不是 4 字节，同一个矩阵要搬运的字节数少 4 倍。
+在[第 09 课](../Lesson-09/notes.md)的屋顶线模型里，这些都是更高的计算屋顶。带宽 864 GB/s 时，FP8 屋顶把脊点推到 733,000 / 864 ≈ 848 FLOP 每字节。位数少在显存这一侧也有好处：一个 FP8 值占 1 字节而不是 4 字节，同一个矩阵要搬运的字节数少 4 倍。
 
 ## 这对 CUDA 意味着什么
 
 - 普通 C++ 的 `float` 和 `double` 运算跑在普通的 FP32 和 FP64 单元上，不在 Tensor Core 上。窄格式有自己的类型：`cuda_fp16.h` 里的 `__half`，`cuda_bf16.h` 里的 `__nv_bfloat16`，`cuda_fp8.h` 里的 `__nv_fp8_e4m3`，`cuda_fp4.h` 里的 `__nv_fp4_e2m1`。
-- 核函数可以通过 `mma.h` 里的 WMMA（Warp Matrix Multiply-Accumulate，线程束矩阵乘累加）API、PTX（Parallel Thread Execution，并行线程执行）的 `mma` 指令，或者 cuBLAS、CUTLASS 这类替你完成的库来使用 Tensor Core。
+- 核函数可以通过 `mma.h` 里的 WMMA API、PTX 的 `mma` 指令，或者 cuBLAS、CUTLASS 这类替你完成的库来使用 Tensor Core。
 - 这种格式必须在你的 GPU 的计算能力上存在。在 L40S 上，用 `-arch=sm_89` 编译才能得到 FP8 Tensor Core 指令；FP4 指令需要 Blackwell 目标。
 - 累加用的格式永远要比乘法用的更宽。用 FP16 去累加成千上万个 FP16 乘积，很快就会丢掉有效数字。
 
@@ -136,6 +136,7 @@ Tensor Core 上的稠密 FP16 是 CUDA 核心 FP32 峰值的 362 / 91.6 ≈ 4 �
 ## 术语表
 
 - GPU（Graphics Processing Unit，图形处理器）：这些课讲的处理器，由许多并行工作的核心组成。
+- CUDA（Compute Unified Device Architecture，统一计算设备架构）：NVIDIA 用来编写在其 GPU 上运行的程序的平台。
 - 浮点数（floating-point number）：存成符号、指数和尾数的数，就像以 2 为底的科学计数法。
 - 符号位（sign）：表示一个数是正（0）还是负（1）的那一位。
 - 指数（exponent）：存放 2 的次方的那些位，因此决定格式的范围。
@@ -151,18 +152,21 @@ Tensor Core 上的稠密 FP16 是 CUDA 核心 FP32 峰值的 362 / 91.6 ≈ 4 �
 - FP6 / FP4：6 位和 4 位浮点，在 Blackwell 上配合块缩放使用。
 - NVFP4（NVIDIA 4-bit floating point，NVIDIA 4 位浮点）：FP4 E2M1 值，每 16 个一块共用一个 FP8 E4M3 缩放因子，每个张量再有一个 FP32 缩放因子。
 - MXFP4（microscaling FP4，微缩放 FP4）：OCP（Open Compute Project，开放计算项目）的开放 4 位格式，32 个值一块，缩放因子是 2 的幂。
+- OCP（Open Compute Project，开放计算项目）：发布开放硬件标准的行业组织，MX 格式也出自这里。
 - 块缩放 / 缩放因子（block scaling / scale factor）：每块值共用的一个数，块里每个值都要乘以它。
 - INT8（8-bit integer，8 位整数）：从 −128 到 127 的整数，推理时配合缩放因子使用。
-- 训练（training）：用数据教 AI（artificial intelligence，人工智能）模型，靠梯度调整它的权重。
+- AI（artificial intelligence，人工智能）：从数据中学习的软件，比如语言模型。
+- 训练（training）：用数据教 AI 模型，靠梯度调整它的权重。
 - 推理（inference）：运行训练好的模型来得到答案。
 - 参数 / 权重（parameter / weights）：模型学到的数；个数乘以每个数的字节数就是它们占的内存。
-- KV（key-value，键值）缓存：语言模型在推理时保存在内存里的之前各个 token 的键和值。
+- KV 缓存（key-value cache，键值缓存）：语言模型在推理时保存在内存里的之前各个 token 的键和值。
 - Tensor Core：用一条指令在小矩阵块上计算 D = A × B + C 的单元。
 - CUDA 核心（CUDA core）：普通的 GPU 核心，每时钟做一次 FP32 FMA。
 - FMA（fused multiply-add，融合乘加）：计算 a × b + c 的一条指令。
 - 线程束（warp）：一起发出指令的 32 个线程；Tensor Core 指令由整个线程束发出。
 - 2:4 稀疏（2:4 sparsity）：每 4 个权重里至少有 2 个 0，Tensor Core 可以跳过它们，吞吐最多提高到 2 倍。
 - 稠密 / 稀疏（dense / sparse）：不带稀疏的峰值，或者需要 2:4 稀疏权重的翻倍峰值。
+- FLOP（floating-point operation，浮点运算）：对浮点数做一次加、减、乘或除。
 - TFLOPS / TOPS：每秒万亿次浮点运算，或每秒万亿次整数运算。
 - 计算能力（compute capability，CC）：NVIDIA 用来表示 GPU 硬件支持哪些功能的版本号。
 - 脊点（ridge point）：峰值 FLOPS 除以显存带宽；算术强度低于它的核函数受显存限制。

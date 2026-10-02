@@ -1,13 +1,13 @@
 # 07 > 线程束编号
 
-[第 01 课](../Lesson-01/notes.md)和[第 02 课](../Lesson-02/notes.md)讲了线程块编号和线程编号。这一课引入线程束（warp）：它是 GPU（Graphics Processing Unit，图形处理器）真正调度的单位，由 32 个线程组成。这一课还会说明，线程如何在核函数里算出自己的线程束编号和通道编号。
+[第 01 课](../Lesson-01/notes.md)和[第 02 课](../Lesson-02/notes.md)讲了线程块编号和线程编号。这一课引入线程束：它是 GPU 真正调度的单位，由 32 个线程组成。这一课还会说明，线程如何在核函数里算出自己的线程束编号和通道编号。
 
 > [!NOTE]
 > 本页所有输出都来自一块 NVIDIA L40S，使用 CUDA 13.0，系统是 Ubuntu 24。
 
 ## CUDA 的层次结构
 
-CUDA（Compute Unified Device Architecture，统一计算设备架构）从上到下分为这几层：网格、网格里的线程块、每个线程块里的线程束，以及每个线程束里的线程：
+CUDA 从上到下分为这几层：网格、网格里的线程块、每个线程块里的线程束，以及每个线程束里的线程：
 
 <cuda-hierarchy warps></cuda-hierarchy>
 
@@ -17,11 +17,11 @@ CUDA（Compute Unified Device Architecture，统一计算设备架构）从上�
 > 线程束的上限取决于硬件。下面这些值是在 L40S 上用 `cudaGetDeviceProperties` 测出来的：
 >
 > - 每个线程块最多容纳的线程束数：32（最多 1024 个线程 / 32，适用于所有 GPU）
-> - 每个 SM（Streaming Multiprocessor，流式多处理器）最多可同时驻留的线程束数：48，也就是 48 × 32 = 1536 个线程
+> - 每个 SM 最多可同时驻留的线程束数：48，也就是 48 × 32 = 1536 个线程
 > - SM 数量：142
 > - 整块 GPU 最多可同时驻留的线程束数：142 × 48 = 6,816
 >
-> L40S 的计算能力（compute capability，CC）是 8.9。CC 8.6、8.9 和 12.0 的 GPU 每个 SM 可容纳 48 个线程束。A100（CC 8.0）和 H100（CC 9.0）这类数据中心 GPU 每个 SM 可容纳 64 个线程束，也就是 2048 个线程（[第 03 课](../Lesson-03/notes.md)）。
+> L40S 的计算能力是 8.9。CC 8.6、8.9 和 12.0 的 GPU 每个 SM 可容纳 48 个线程束。A100（CC 8.0）和 H100（CC 9.0）这类数据中心 GPU 每个 SM 可容纳 64 个线程束，也就是 2048 个线程（[第 03 课](../Lesson-03/notes.md)）。
 
 ## `warp_id` 不是内置变量
 
@@ -78,7 +78,7 @@ Block ID: 0 --- Thread ID: 1023 --- Warp ID: 31
 
 ## 通道编号
 
-每个线程束有 32 个线程。线程在所属线程束里的位置（0 到 31）就是它的通道编号（lane ID）。用取模运算符 `threadIdx.x % 32` 就能求出，它得到的是除法的余数。商对应线程束，余数对应线程在线程束里的位置：
+每个线程束有 32 个线程。线程在所属线程束里的位置（0 到 31）就是它的通道编号。用取模运算符 `threadIdx.x % 32` 就能求出，它得到的是除法的余数。商对应线程束，余数对应线程在线程束里的位置：
 
 | `threadIdx.x` | 线程束编号（`/ 32`） | 通道编号（`% 32`） |
 |---|---|---|
@@ -99,7 +99,7 @@ Block ID: 0 --- Thread ID: 1023 --- Warp ID: 31
 
 ### `warp_ids.cu`
 
-核函数以 1 个线程块、128 个线程运行。`test01` 函数在 GPU 上执行。每个线程用 `threadIdx.x / 32` 算出自己的 `warp_id`，然后打印自己的线程块编号、线程编号和线程束编号。启动之后，`cudaDeviceSynchronize()` 让 CPU（Central Processing Unit，中央处理器）等待 GPU，这样程序结束时输出就不会丢失。
+核函数以 1 个线程块、128 个线程运行。`test01` 函数在 GPU 上执行。每个线程用 `threadIdx.x / 32` 算出自己的 `warp_id`，然后打印自己的线程块编号、线程编号和线程束编号。启动之后，`cudaDeviceSynchronize()` 让 CPU 等待 GPU，这样程序结束时输出就不会丢失。
 
 ```c
 #include "cuda_runtime.h"
@@ -204,7 +204,7 @@ nvcc -arch=sm_89 -o warp_ids_2blocks warp_ids_2blocks.cu
 
 - 以 `#` 开头的行是注释，shell 会忽略它们。
 - `nvcc` 是 CUDA 编译器。
-- `-arch=sm_89` 表示针对计算能力 8.9（也就是 L40S）编译。针对正确的架构编译，代码才能用上该架构的全部功能。
+- `-arch=sm_89` 表示针对计算能力 8.9 编译，也就是 L40S。针对正确的架构编译，代码才能用上该架构的全部功能。
 - `-o warp_ids` 把程序命名为 `warp_ids`。不加的话，名字是 `a.out`，第二次编译就会覆盖第一个程序。
 - `warp_ids.cu` 是源文件。
 - `./warp_ids` 从当前文件夹运行这个程序。
@@ -324,6 +324,7 @@ int main()
 ## 术语表
 
 - GPU（Graphics Processing Unit，图形处理器）：运行核函数的处理器。
+- CPU（Central Processing Unit，中央处理器）：计算机的主处理器。它启动核函数并等待 GPU。
 - SM（Streaming Multiprocessor，流式多处理器）：GPU 内部运行线程块及其线程束的处理器。L40S 有 142 个。
 - 线程束（warp）：GPU 作为一个整体运行的一组 32 个线程。GPU 调度的是线程束，而不是单个线程。
 - 线程束的大小（warp size）：在 NVIDIA GPU 上永远是 32。软件无法更改。

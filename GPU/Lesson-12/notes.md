@@ -1,16 +1,16 @@
 # 12 > Many GPUs Together
 
-Big AI (artificial intelligence) models are trained on hundreds or thousands of GPUs (Graphics Processing Units) at once. This lesson shows why one GPU is not enough, how GPUs are wired together inside a server, a rack and a whole cluster, and how the work is split between them. At the end it goes the other way: one big GPU split into several small ones.
+Big AI models are trained on hundreds or thousands of GPUs at once. This lesson shows why one GPU is not enough, how GPUs are wired together inside a server, a rack and a whole cluster, and how the work is split between them. At the end it goes the other way: one big GPU split into several small ones.
 
 ## Why One GPU Is Not Enough
 
 There are two reasons to use more than one GPU. The model does not fit into the memory of one GPU, or training on one GPU would take far too long.
 
-Take a model with 70 billion parameters (the numbers the model learns). Stored in BF16 (brain floating point, 16 bits), each parameter takes 2 bytes, see [Lesson 10](../Lesson-10/notes.md):
+Take a model with 70 billion parameters. Stored in BF16, each parameter takes 2 bytes, see [Lesson 10](../Lesson-10/notes.md):
 
 - Weights only: 70 × 10⁹ × 2 bytes = 140 GB. That is already more than the 80 GB of an H100 and almost 3 times the 48 GB of the L40S.
-- Training needs much more. A common recipe keeps about 16 bytes per parameter: 2 for the BF16 weights, 2 for the gradients, 4 for an FP32 (32-bit floating point) master copy of the weights and 8 for the two values the Adam optimizer keeps per parameter. That is 70 × 10⁹ × 16 = 1,120 GB.
-- 1,120 GB / 80 GB = 14. So at least 14 H100 GPUs are needed just to hold this state, before a single activation (the intermediate results of each layer) is stored.
+- Training needs much more. A common recipe keeps about 16 bytes per parameter: 2 for the BF16 weights, 2 for the gradients, 4 for an FP32 master copy of the weights and 8 for the two values the Adam optimizer keeps per parameter. That is 70 × 10⁹ × 16 = 1,120 GB.
+- 1,120 GB / 80 GB = 14. So at least 14 H100 GPUs are needed just to hold this state, before a single activation is stored.
 
 > [!NOTE]
 > Activations grow with the batch size and the sequence length, and for long inputs they can need more memory than the weights. This is why real training runs use far more GPUs than the 14 from this estimate.
@@ -30,9 +30,9 @@ The diagram shows four sizes, from one GPU to a cluster of racks, with the link 
 
 ## PCIe and NVLink
 
-Every GPU talks to the CPU (Central Processing Unit) over PCIe (Peripheral Component Interconnect Express), see [Lesson 11](../Lesson-11/notes.md). The L40S used across these lessons has PCIe 4.0 x16, which gives 64 GB/s (gigabytes per second) in both directions together, 32 GB/s each way. Two L40S cards in one server can only talk over PCIe. The L40S has no NVLink.
+Every GPU talks to the CPU over PCIe, see [Lesson 11](../Lesson-11/notes.md). The L40S used across these lessons has PCIe 4.0 x16, which gives 64 GB/s in both directions together, 32 GB/s each way. Two L40S cards in one server can only talk over PCIe. The L40S has no NVLink.
 
-NVLink is NVIDIA's direct link from GPU to GPU. Each generation roughly doubled the bandwidth per GPU, both directions counted together. The newest ones reach several TB/s (terabytes per second):
+NVLink is NVIDIA's direct link from GPU to GPU. Each generation roughly doubled the bandwidth per GPU, both directions counted together. The newest ones reach several TB/s:
 
 | NVLink | Architecture | Example GPU | Bandwidth per GPU |
 |---|---|---|---|
@@ -62,10 +62,10 @@ Because every link inside one NVLink domain is this fast, the 72 GPUs can share 
 
 ## Between Servers: InfiniBand and Ethernet
 
-Beyond one NVLink domain, servers and racks are joined by a network. Data centers for AI use InfiniBand or a fast Ethernet. Each GPU usually gets its own network card: a DGX H100 has 8 ConnectX-7 cards at 400 Gb/s (gigabits per second), one per GPU, and a GB300 NVL72 gives each GPU 800 Gb/s with ConnectX-8.
+Beyond one NVLink domain, servers and racks are joined by a network. Data centers for AI use InfiniBand or a fast Ethernet. Each GPU usually gets its own network card: a DGX H100 has 8 ConnectX-7 cards at 400 Gb/s, one per GPU, and a GB300 NVL72 gives each GPU 800 Gb/s with ConnectX-8.
 
 > [!WARNING]
-> Network speeds are in Gb/s (bits), GPU links in GB/s (bytes). Divide by 8: 400 Gb/s = 50 GB/s and 800 Gb/s = 100 GB/s per direction. So an H100 can send 450 GB/s over NVLink but only 50 GB/s over its network card, 9 times less.
+> Network speeds count bits and are written Gb/s, GPU links count bytes and are written GB/s. Divide by 8: 400 Gb/s = 50 GB/s and 800 Gb/s = 100 GB/s per direction. So an H100 can send 450 GB/s over NVLink but only 50 GB/s over its network card, 9 times less.
 
 This gap shapes everything about multi-GPU programs: put the most talkative work inside one NVLink domain, and send only what must cross the network.
 
@@ -73,7 +73,7 @@ This gap shapes everything about multi-GPU programs: put the most talkative work
 
 When GPUs train one model together, they must combine their results again and again. A pattern where all GPUs of a group take part in one exchange is called a collective. The most important one is all-reduce: every GPU starts with its own list of numbers, and at the end every GPU holds the sum of all the lists.
 
-The library that does this on NVIDIA GPUs is NCCL (NVIDIA Collective Communications Library). It finds the fastest path, NVLink, PCIe or the network, and runs collectives such as all-reduce, broadcast (one GPU sends the same data to all) and all-gather (every GPU gets every GPU's part).
+The library that does this on NVIDIA GPUs is NCCL. It finds the fastest path, NVLink, PCIe or the network, and runs collectives such as all-reduce, broadcast and all-gather.
 
 A common way to run all-reduce is the ring. The GPUs form a circle, each one sends pieces to its neighbour, and after two rounds around the circle every GPU has the full sum. With N GPUs and data of size S, each GPU sends 2 × (N - 1) / N × S. That is almost 2 × S, no matter how many GPUs are in the ring.
 
@@ -97,7 +97,7 @@ These are the best cases on paper. In a real 8-GPU PCIe server, several cards sh
 
 ## Three Ways to Split the Work
 
-Data parallelism: every GPU holds the full model and works on a different part of the batch. After each step, an all-reduce sums the gradients, so all copies stay the same. It is the simplest method, but every GPU must fit the whole model. Variants such as FSDP (Fully Sharded Data Parallel) split the weights and optimizer values across GPUs and gather them only when needed.
+Data parallelism: every GPU holds the full model and works on a different part of the batch. After each step, an all-reduce sums the gradients, so all copies stay the same. It is the simplest method, but every GPU must fit the whole model. Variants such as FSDP split the weights and optimizer values across GPUs and gather them only when needed.
 
 Tensor parallelism: each layer's large matrices are cut into pieces, and every GPU computes its piece of every layer. The GPUs must exchange partial results inside every layer, many times per step, so tensor parallelism is kept inside one NVLink domain.
 
@@ -107,16 +107,16 @@ Large training runs combine all three: tensor parallelism inside a server or rac
 
 ## The Other Direction: MIG
 
-Sometimes one GPU is too big. A small model or a notebook user may need only a fraction of an H100. MIG (Multi-Instance GPU) splits one GPU into up to 7 isolated instances. Each instance gets its own SMs (Streaming Multiprocessors), its own part of the L2 cache and its own part of the memory, so one user cannot slow down or read the data of another. An H100 80 GB, for example, can become 7 instances with 10 GB each.
+Sometimes one GPU is too big. A small model or a notebook user may need only a fraction of an H100. MIG splits one GPU into up to 7 isolated instances. Each instance gets its own SMs, its own part of the L2 cache and its own part of the memory, so one user cannot slow down or read the data of another. An H100 80 GB, for example, can become 7 instances with 10 GB each.
 
 MIG exists on data center GPUs since Ampere: the A100, H100, H200 and B200 allow up to 7 instances, the A30 up to 4. The RTX PRO 6000 Blackwell brings MIG to a workstation card, with up to 4 instances.
 
 > [!NOTE]
-> The L40S has no MIG and no NVLink. Several programs can still share it, but by taking turns (time slicing), without hardware isolation.
+> The L40S has no MIG and no NVLink. Several programs can still share it by taking turns, which is called time slicing, but without hardware isolation.
 
 ## Why This Matters for CUDA
 
-In CUDA (Compute Unified Device Architecture), a kernel always runs on one GPU. A program that uses several GPUs selects each one with `cudaSetDevice` and launches kernels on each. Data moves between GPUs with `cudaMemcpyPeer`, over NVLink when it exists and over PCIe when it does not. For all-reduce and other collectives, programs call NCCL instead of writing their own.
+In CUDA, a kernel always runs on one GPU. A program that uses several GPUs selects each one with `cudaSetDevice` and launches kernels on each. Data moves between GPUs with `cudaMemcpyPeer`, over NVLink when it exists and over PCIe when it does not. For all-reduce and other collectives, programs call NCCL instead of writing their own.
 
 Communication should overlap with computation: while a GPU computes the gradients of one layer, NCCL can already send those of the previous layer. On a MIG instance, `cudaGetDeviceProperties` reports only the SMs of that instance, so a kernel should size its grid from the reported SM count, as in [Lesson 05](../Lesson-05/notes.md), never from a hardcoded number like 132.
 
@@ -134,6 +134,7 @@ Communication should overlap with computation: while a GPU computes the gradient
 - CPU (Central Processing Unit): the main processor of the server; GPUs reach it over PCIe.
 - NVLink: NVIDIA's direct GPU-to-GPU link; 900 GB/s per GPU on the H100, 1.8 TB/s on the B200.
 - GB/s (gigabytes per second) / Gb/s (gigabits per second): bytes or bits per second; 8 Gb/s = 1 GB/s.
+- TB/s (terabytes per second): 1,000 GB/s; NVLink 5 gives a B200 1.8 TB/s.
 - NVSwitch: a switch chip for NVLink that lets every GPU reach every other GPU at full rate.
 - NVL72: a rack with 72 GPUs in one NVLink domain, such as the GB200 NVL72.
 - NVLink domain: a group of GPUs that all reach each other over NVLink.
@@ -141,6 +142,8 @@ Communication should overlap with computation: while a GPU computes the gradient
 - collective: an exchange in which all GPUs of a group take part, such as all-reduce.
 - all-reduce: a collective after which every GPU holds the sum of all GPUs' data.
 - NCCL (NVIDIA Collective Communications Library): the library that runs collectives on NVIDIA GPUs.
+- broadcast: a collective in which one GPU sends the same data to all others.
+- all-gather: a collective after which every GPU holds every GPU's part.
 - ring: an all-reduce method where GPUs pass pieces around a circle; each sends about 2 × the data size.
 - data parallelism: every GPU holds the whole model and works on a different part of the batch.
 - FSDP (Fully Sharded Data Parallel): data parallelism that splits weights and optimizer values across GPUs.
@@ -149,3 +152,4 @@ Communication should overlap with computation: while a GPU computes the gradient
 - MIG (Multi-Instance GPU): splitting one GPU into up to 7 isolated instances.
 - SM (Streaming Multiprocessor): a GPU's building block; a MIG instance gets its own SMs.
 - time slicing: programs sharing a GPU by taking turns, without isolation.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing programs that run on the GPU.

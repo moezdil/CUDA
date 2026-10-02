@@ -1,13 +1,13 @@
 # 00 > One Block, One Thread
 
-This lesson runs the simplest possible CUDA (Compute Unified Device Architecture) program. Its kernel uses one block and one thread, with no parallelism, so you can see the first output before anything gets complex. Every later lesson changes this program a little.
+This lesson runs the simplest possible CUDA program. Its kernel uses one block and one thread, with no parallelism, so you can see the first output before anything gets complex. Every later lesson changes this program a little.
 
 > [!NOTE]
 > All outputs on this page come from an NVIDIA L40S with CUDA 13.0 on Ubuntu 24.
 
 ## GPU vs CPU
 
-On the CPU (Central Processing Unit), a function runs once on one core. On the GPU (Graphics Processing Unit), a kernel runs many times in parallel. A kernel is a function that runs on the GPU. Each running copy of it is called a thread. Two numbers set how many threads run: the number of blocks and the number of threads per block.
+On the CPU, a function runs once on one core. On the GPU, a kernel runs many times in parallel. A kernel is a function that runs on the GPU. Each running copy of it is called a thread. Two numbers set how many threads run: the number of blocks and the number of threads per block.
 
 For example, 2 blocks of 3 threads each start 2 x 3 = 6 threads. All 6 run the same kernel code.
 
@@ -39,7 +39,7 @@ The `<<<...>>>` syntax is the execution configuration. It goes between the funct
 Every kernel launch creates three levels:
 
 - thread: the smallest unit. One thread runs one copy of the kernel.
-- block: a group of threads that runs on one SM (Streaming Multiprocessor). An SM is one of the many small processors inside a GPU. The threads of a block can share memory.
+- block: a group of threads that runs on one SM. An SM is one of the many small processors inside a GPU. The threads of a block can share memory.
 - grid: all blocks of one kernel launch. One launch, one grid.
 
 <cuda-hierarchy></cuda-hierarchy>
@@ -53,13 +53,13 @@ Every kernel launch creates three levels:
 printf("Block ID: %d  Thread ID: %d", blockIdx.x, threadIdx.x);
 ```
 
-`blockIdx.x` is the index of the block this thread is in. `threadIdx.x` is the index of this thread inside its block. Both start at 0. Both have `.x`, `.y` and `.z` parts, because grids and blocks can be 1D, 2D or 3D (one-, two- or three-dimensional). For 1D work, you only use `.x`. With `<<<1, 1>>>`, both are always 0.
+`blockIdx.x` is the index of the block this thread is in. `threadIdx.x` is the index of this thread inside its block. Both start at 0. Both have `.x`, `.y` and `.z` parts, because grids and blocks can be 1D, 2D or 3D. For 1D work, you only use `.x`. With `<<<1, 1>>>`, both are always 0.
 
 ## Header Files
 
-- `cuda_runtime.h`: the CUDA runtime API (Application Programming Interface). It declares `cudaDeviceSynchronize()` and the error-checking functions.
+- `cuda_runtime.h`: the CUDA runtime API. It declares `cudaDeviceSynchronize()` and the error-checking functions.
 - `stdio.h`: standard C, needed for `printf`.
-- `device_launch_parameters.h`: makes `blockIdx`, `threadIdx`, `blockDim` and `gridDim` known to the editor when you use MSVC (Microsoft Visual C++) or certain IDEs (Integrated Development Environments). `nvcc` does not need it, but it does no harm.
+- `device_launch_parameters.h`: makes `blockIdx`, `threadIdx`, `blockDim` and `gridDim` known to the editor when you use MSVC or certain IDEs. `nvcc` does not need it, but it does no harm.
 
 ## `cudaDeviceSynchronize()`
 
@@ -195,3 +195,8 @@ int main()
 - `cudaDeviceSynchronize()`: makes the CPU wait until the GPU finishes all its work.
 - asynchronous: the CPU does not wait. It sends a command to the GPU and moves on at once.
 - API (Application Programming Interface): the set of functions a library offers, here the CUDA runtime functions.
+- 3D (three-dimensional): a shape with `x`, `y` and `z` sizes. 1D uses only `x`, 2D uses `x` and `y`.
+- compiler: the program that turns your source code into a program the machine can run. For CUDA it is `nvcc`.
+- execution configuration: the `<<<blocks, threads>>>` part of a kernel launch that sets how many threads run.
+- MSVC (Microsoft Visual C++): Microsoft's C and C++ compiler on Windows.
+- IDE (Integrated Development Environment): an editor with build and debug tools, such as Visual Studio.

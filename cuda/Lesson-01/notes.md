@@ -13,13 +13,13 @@ printIDs<<<1, 4>>>();
 //  blocks -+  +- threads per block (was 1, now 4)
 ```
 
-The GPU (Graphics Processing Unit) runs 4 copies of `printIDs` at the same time. Each copy gets its own `threadIdx.x` of 0, 1, 2 or 3. `blockIdx.x` is 0 for all of them, because there is still only one block.
+The GPU runs 4 copies of `printIDs` at the same time. Each copy gets its own `threadIdx.x` of 0, 1, 2 or 3. `blockIdx.x` is 0 for all of them, because there is still only one block.
 
 <cuda-launch blocks="1" threads="4" fn="printIDs"></cuda-launch>
 
-## SIMT (Single Instruction, Multiple Threads)
+## SIMT
 
-All 4 threads run the same instructions, but each one has its own ID and its own variables. Thread 2 reads `threadIdx.x` and gets 2, thread 3 gets 3. So the same `printf` line prints a different number in each thread. In this kernel the threads do not wait for each other or share any data. This model is called SIMT (Single Instruction, Multiple Threads).
+All 4 threads run the same instructions, but each one has its own ID and its own variables. Thread 2 reads `threadIdx.x` and gets 2, thread 3 gets 3. So the same `printf` line prints a different number in each thread. In this kernel the threads do not wait for each other or share any data. This model is called SIMT.
 
 ## Warps
 
@@ -84,7 +84,7 @@ nvcc -o first_kernel first_kernel.cu
 ./first_kernel
 ```
 
-- `nvcc` is the CUDA (Compute Unified Device Architecture) compiler. It builds the CPU (Central Processing Unit) part and the GPU part of the file.
+- `nvcc` is the CUDA compiler. It builds the CPU part and the GPU part of the file.
 - `-o first_kernel` names the program `first_kernel`. Without it the name is `a.out`.
 - `first_kernel.cu` is the source file with the code above.
 - `./first_kernel` runs the program from the current folder.

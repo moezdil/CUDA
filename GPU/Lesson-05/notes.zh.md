@@ -1,10 +1,10 @@
 # 05 > 计算能力
 
-这一课讲解什么是计算能力、它的编号规则，以及它如何决定你能使用哪些功能和哪些 CUDA（Compute Unified Device Architecture）工具包版本。学完之后，你看到任何一块 GPU（Graphics Processing Unit，图形处理器）都能说出它支持什么。
+这一课讲解什么是计算能力、它的编号规则，以及它如何决定你能使用哪些功能和哪些 CUDA 工具包版本。学完之后，你看到任何一块 GPU 都能说出它支持什么。
 
 ## 什么是计算能力
 
-计算能力（CC，compute capability）是 NVIDIA 用来描述 GPU 功能的体系。它是硬件的版本号，而不是软件的版本号。
+计算能力，简称 CC，是 NVIDIA 用来描述 GPU 功能的体系。它是硬件的版本号，而不是软件的版本号。
 
 它不是营销分数，也不是基准测试成绩。它准确地说明一种 GPU 架构能做什么、不能做什么。可以把它看成浓缩成一个数字的规格表。
 
@@ -24,11 +24,11 @@
 
 ### Volta → CC 7.0
 
-Volta 引入了 Tensor Core。这是专门加速人工智能（AI，artificial intelligence）和深度学习中矩阵运算的单元。在 Volta 之前，这些运算在通用的 CUDA 核心上执行；从 Volta 开始，它们有了专用硬件。
+Volta 引入了 Tensor Core。这是专门加速人工智能和深度学习中矩阵运算的单元。在 Volta 之前，这些运算在通用的 CUDA 核心上执行；从 Volta 开始，它们有了专用硬件。
 
 ### Turing 和 Ampere → CC 7.5 和 8.x
 
-Turing（CC 7.5，RTX 20 系列）把 Tensor Core 带到了消费级显卡上。Ampere（A100 为 CC 8.0，RTX 30 系列为 8.6）带来了更强、更高效的 Tensor Core，更高的显存带宽和更好的能效。Ada Lovelace（CC 8.9，RTX 40 系列和 L40S）增加了 FP8（8 位浮点）支持。
+Turing（CC 7.5，RTX 20 系列）把 Tensor Core 带到了消费级显卡上。Ampere（A100 为 CC 8.0，RTX 30 系列为 8.6）带来了更强、更高效的 Tensor Core，更高的显存带宽和更好的能效。Ada Lovelace（CC 8.9，RTX 40 系列和 L40S）增加了 FP8 支持。
 
 ### Hopper → CC 9.0
 
@@ -36,7 +36,7 @@ Hopper（H100 和 H200）又是一大步。它为超大型 AI 模型引入了新
 
 ### Blackwell → CC 10.x、11.0 和 12.x
 
-Blackwell 是 2026 年主力出货的一代。它拥有第五代 Tensor Core 和一种名为 NVFP4（NVIDIA 4 位浮点）的新精度格式。在大模型推理中，NVFP4 的吞吐量是 FP8 的两倍。更早的架构没有 FP4 加速。
+Blackwell 是 2026 年主力出货的一代。它拥有第五代 Tensor Core 和一种名为 NVFP4 的新精度格式。在大模型推理中，NVFP4 的吞吐量是 FP8 的两倍。更早的架构没有 FP4 加速。
 
 Blackwell 按芯片系列分为几种计算能力：
 
@@ -55,12 +55,12 @@ Blackwell 按芯片系列分为几种计算能力：
 
 CUDA 官方文档中有把功能和计算能力版本对应起来的表格。这些表格呈现出清晰的规律：
 
-- CC 5.0 的 GPU 不支持半精度（FP16）运算
+- CC 5.0 的 GPU 不支持 FP16 运算
 - Tensor Core 只在 CC 7.0 及以上出现
 - FP8 Tensor Core 随 CC 8.9（Ada Lovelace）和 9.0（Hopper）到来
 - NVFP4 需要 CC 10.0 或更高
 
-缺少的硬件功能无法事后补上。如果你的 GPU 没有 Tensor Core，你就用不了它们。软件有时能模仿缺失的单元（模拟），但速度慢得多，而且大多数 Tensor Core 功能根本没有这条路。硬件要么有这个单元，要么没有。
+缺少的硬件功能无法事后补上。如果你的 GPU 没有 Tensor Core，你就用不了它们。软件有时能通过模拟来模仿缺失的单元，但速度慢得多，而且大多数 Tensor Core 功能根本没有这条路。硬件要么有这个单元，要么没有。
 
 所以在编写对性能敏感的 CUDA 代码之前，先问“我的 GPU 支持我需要的功能吗？”，再问“我的 GPU 够快吗？”
 
@@ -89,11 +89,11 @@ CUDA 官方文档中有把功能和计算能力版本对应起来的表格。这
 
 <cc-explorer></cc-explorer>
 
-## 底层（PTX）
+## 底层
 
-CUDA 代码并不直接在 GPU 上运行，而是先编译成 PTX（Parallel Thread Execution）。PTX 是一种底层中间语言，类似于 NVIDIA GPU 的汇编语言。
+CUDA 代码并不直接在 GPU 上运行，而是先编译成 PTX。PTX 是一种底层中间语言，类似于 NVIDIA GPU 的汇编语言。
 
-有些 PTX 指令需要的硬件单元只在某个计算能力之后才有。线程束洗牌（warp shuffle）函数就是一个例子。
+有些 PTX 指令需要的硬件单元只在某个计算能力之后才有。线程束洗牌函数就是一个例子。
 
 > [!NOTE]
 > 线程束洗牌函数让同一个线程束中的线程不经过共享内存或全局内存就能交换数据。它从 CC 3.0（Kepler）起就已存在。
@@ -112,6 +112,7 @@ CUDA 代码并不直接在 GPU 上运行，而是先编译成 PTX（Parallel Thr
 
 - 计算能力（CC，compute capability）：NVIDIA 的版本号，说明一种 GPU 架构能做什么、不能做什么。
 - GPU（Graphics Processing Unit）：为并行运行大量简单任务而设计的处理器。
+- CUDA（Compute Unified Device Architecture）：NVIDIA 的平台，用来编写在其 GPU 上运行的程序。
 - 基准测试：测量速度的测试程序；计算能力不是速度分数。
 - 架构：一个 GPU 系列的硬件设计；每种架构都有自己的主 CC 编号。
 - 小数点前的数字（主版本号）：表示重大的架构变化，比如 Ampere 是 8，Hopper 是 9。

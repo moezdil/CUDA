@@ -1,10 +1,10 @@
-# 16 > 在 Windows 上运行 Linux（用 WSL 搭建实用环境）
+# 16 > 用 WSL 在 Windows 上运行 Linux
 
-这一课讲怎样用 WSL（Windows Subsystem for Linux，适用于 Linux 的 Windows 子系统）在 Windows 里运行 Linux。它还会介绍 GPU（Graphics Processing Unit，图形处理器）和 CUDA 在 WSL 里是怎样工作的，以及有哪些限制。
+这一课讲怎样用 WSL 在 Windows 里运行 Linux。它还会介绍 GPU 和 CUDA 在 WSL 里是怎样工作的，以及有哪些限制。
 
 ## 为什么是 Linux
 
-认真做 CUDA 开发，最终通常都会走向 Linux。Windows 也能用，但多年来 GPU 生态一直是围绕 Linux 建立的，大多数工具、文档和实际部署都默认使用 Linux。用于 AI（Artificial Intelligence，人工智能）和 HPC（High-Performance Computing，高性能计算）的 GPU 系统几乎全都运行 Linux。
+认真做 CUDA 开发，最终通常都会走向 Linux。Windows 也能用，但多年来 GPU 生态一直是围绕 Linux 建立的，大多数工具、文档和实际部署都默认使用 Linux。用于 AI 和 HPC 的 GPU 系统几乎全都运行 Linux。
 
 ## WSL 是什么
 
@@ -47,8 +47,8 @@ GPU 驱动程序装在 Windows 一侧，而不是 WSL 里。你安装普通的 W
 
 WSL 是一个正经的开发环境。不过，有几件事和原生 Linux 不一样：
 
-- GPU 支持需要处于 WDDM（Windows Display Driver Model，Windows 显示驱动模型）模式的 GeForce 或 RTX 显卡，这是桌面显卡的普通模式。数据中心 GPU 不受支持。
-- 统一内存的功能有限。CPU（Central Processing Unit，中央处理器）和 GPU 不能同时访问同一块托管内存。
+- GPU 支持需要处于 WDDM 模式的 GeForce 或 RTX 显卡，这是桌面显卡的普通模式。数据中心 GPU 不受支持。
+- 统一内存的功能有限。CPU 和 GPU 不能同时访问同一块托管内存。
 - `nvidia-smi` 不能显示所有数值，比如 GPU 利用率。
 
 还要确认你的 GPU 适用于 CUDA 13。WSL 本身支持 Pascal 及更新的架构，但 CUDA 13 要求计算能力 7.5 或更高。GeForce GTX 1080 的计算能力是 6.1，6.1 低于 7.5，所以 CUDA 13 不能为它编译代码。GeForce RTX 2060 的计算能力是 7.5，所以可以用。
