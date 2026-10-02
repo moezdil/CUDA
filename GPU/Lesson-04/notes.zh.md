@@ -96,10 +96,22 @@ GPU = 整台机器
 ## 术语表
 
 - GPU 芯片（GPU chip）：真正的那块硅片，所有计算都在这里发生，没有散热也没有接口。
+- 硅片（silicon）：芯片的材料；GA100 就是一块大约有 540 亿个晶体管的硅片。
+- 架构（architecture）：芯片的设计，也就是它的各种单元、显存通路和控制器是怎样组织的。
+- 前缀（chip name prefix）：芯片名称开头的几个字母，表示它的架构，比如 GA 代表 Ampere。
+- Fermi：Nvidia 的一种架构，它的芯片名称类似 GF100。
+- Ampere：Nvidia 的一种架构，它的芯片名称以 GA 开头，比如 A100 里的 GA100。
+- GA100：A100 里的芯片；G 代表 GPU，A 代表 Ampere。
 - GPU：围绕芯片搭建的完整产品，带有显存、供电部件、输出接口和散热。
 - VRAM：连在 GPU 芯片上的显存。
-- 芯片名称前缀（chip name prefix）：芯片名称开头的几个字母，表示它的架构，比如 GA 代表 Ampere。
-- Fermi：Nvidia 的一种架构，它的芯片名称类似 GF100。
+- 供电部件（power delivery）：显卡上把电源送来的电变成芯片所需稳定电压的部件。
 - 输出接口（output interfaces）：GPU 上的端口，比如 HDMI 或 DisplayPort。
+- 散热（cooling）：把芯片产生的热量带走，要么靠显卡上的风扇，要么靠服务器里的气流。
+- GeForce：Nvidia 的消费级 GPU，自带散热片和风扇。
 - 散热片（heatsink）：消费级 GPU 用来自己处理热量的散热部件。
+- 电脑机箱（PC case）：装台式电脑各个部件的箱子；消费级 GPU 必须在里面给自己散热。
+- A100：Nvidia 的数据中心 GPU，使用 GA100 芯片，自己没有风扇。
 - 服务器机架（server rack）：数据中心 GPU 安装的地方，散热在机架层面处理，而不是在 GPU 上。
+- 气流（airflow）：服务器自己的风扇吹过机身的空气，用来给里面没有风扇的 GPU 散热。
+- 规格（spec）：GPU 公开的技术参数，比如芯片名称、核心数量或显存大小。
+- TechPowerUp：列出 GPU 规格的网站，并把每个 GPU 链接到它使用的芯片。

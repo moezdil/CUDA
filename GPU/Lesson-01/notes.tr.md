@@ -46,7 +46,7 @@ Kısa süre sonra Nvidia GeForce serisini tanıttı. GPU'lar ilk kez geniş kitl
 
 ## İstikrarlı Büyüme
 
-Bundan sonra ilerleme hızlandı. Her nesil performansı, verimliliği ya da özellikleri geliştirdi. Bu kazanımlar zamanla birikti. Modern GPU'lar tek bir büyük sıçrama sayesinde değil, yıllar boyunca atılan birçok adım sayesinde güçlü.
+Bundan sonra ilerleme hızlandı. Her nesil performansta, verimlilikte ya da özelliklerde ilerleme getirdi. Bu kazanımlar zamanla birikti. Modern GPU'lar tek bir büyük sıçrama sayesinde değil, yıllar boyunca atılan birçok adım sayesinde güçlü.
 
 ## Bugün Neredeyiz
 
@@ -73,11 +73,20 @@ Bu da CUDA'ya geçişi kolaylaştırır.
 
 ## Sözlük
 
+- GPU (Graphics Processing Unit): binlerce basit çekirdeği olan, çok sayıda işi paralel çalıştırmak için üretilmiş işlemci.
+- Nvidia: 1993'te kurulan, GeForce ve veri merkezi GPU'larını üreten ve CUDA'yı yaratan şirket.
 - veri bant genişliği (data bandwidth): bir GPU'nun ne kadar veri taşıyabildiği, ilk donanımlarda çok sınırlıydı.
 - paralellik (parallelism): birçok işi aynı anda yapmak, ilk GPU'larda neredeyse yoktu.
 - çekirdek (core): işi yapan birim, modern GPU'larda binlercesi var.
 - frekans (frequency): bir GPU'nun ne kadar hızlı çalıştığı, modern GPU'lar çok daha yüksek frekanslarda çalışır.
+- görüntü oluşturma (render): bir sahnenin tarifini (şekiller, renkler, ışık) ekranda gördüğün piksellere dönüştürmek.
+- yapay zekâ (AI): veriden öğrenen yazılım, örneğin görüntü tanıma ya da sohbet botları; eğitimi büyük ölçüde dev matris hesaplarıdır, bu da GPU'lara çok uyar.
+- hesaplama platformu (compute platform): sadece grafik için değil, genel hesaplama için kullanılan bir cihaz.
 - 3D hızlandırma (3D acceleration): GPU'ların 3D grafik desteği, GPU'ları çok daha fazla insan için kullanışlı yaptı.
 - GeForce: GPU'ları ilk kez geniş kitlelere ulaştıran Nvidia GPU serisi.
 - nesil (generation): GPU sürümlerindeki bir adım, her biri performansı, verimliliği ya da özellikleri geliştirir.
-- hesaplama platformu (compute platform): sadece grafik için değil, genel hesaplama için kullanılan bir cihaz.
+- verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
+- bulut bilişim (cloud computing): donanımı satın almak yerine GPU'lar dahil bilgisayarları bir sağlayıcının veri merkezlerinden internet üzerinden kiralamak.
+- yüksek performanslı hesaplama (HPC): hava tahmini ya da fizik simülasyonları gibi büyük problemler üzerinde birlikte çalışan çok sayıda güçlü işlemci.
+- mimari (architecture): bir GPU'nun genel tasarımı, yani çekirdeklerinin, belleğinin ve birimlerinin nasıl düzenlendiği.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan genel programlar yazmak için sunduğu platform, ilk kez 2007'de çıktı.

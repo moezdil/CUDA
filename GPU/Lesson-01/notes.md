@@ -21,7 +21,7 @@ Today's GPUs are on a completely different scale. They:
 
 - have thousands, or even tens of thousands, of cores  
 - have large amounts of memory  
-- run at much higher frequencies  
+- run at a much higher frequency  
 
 Their role has also changed.
 
@@ -73,11 +73,20 @@ This makes it easier to move on to CUDA.
 
 ## Glossary
 
+- GPU (Graphics Processing Unit): a processor with thousands of simple cores, built to run many tasks in parallel.
+- Nvidia: the company founded in 1993 that makes GeForce and data center GPUs and created CUDA.
 - data bandwidth: how much data a GPU can move, which was very limited in early hardware.
 - parallelism: doing many things at the same time, which early GPUs almost lacked.
 - core: a unit that does the work, and modern GPUs have thousands of them.
-- frequency: how fast a GPU runs, and modern GPUs run at much higher frequencies.
+- frequency: how fast a GPU runs, and modern GPUs run at a much higher frequency.
+- render: turn a description of a scene (shapes, colors, light) into the pixels you see on screen.
+- AI (artificial intelligence): software that learns from data, such as image recognition or chatbots; training it is mostly huge matrix math, which suits GPUs.
+- compute platform: a device used for general computation, not just graphics.
 - 3D acceleration: GPU support for 3D graphics that made GPUs useful for many more people.
 - GeForce: the Nvidia GPU series that first made GPUs widely available.
 - generation: one step in GPU releases, each improving performance, efficiency or features.
-- compute platform: a device used for general computation, not just graphics.
+- efficiency: how much work a GPU gets done for each watt of power it uses.
+- cloud computing: renting computers, including GPUs, from a provider's data centers over the internet instead of buying the hardware.
+- HPC (high-performance computing): many powerful processors working together on big problems, such as weather or physics simulations.
+- architecture: the overall design of a GPU, meaning how its cores, memory and units are organized.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing general programs that run on its GPUs, first released in 2007.

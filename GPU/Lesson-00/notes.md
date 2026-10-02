@@ -4,7 +4,7 @@ This lesson explains how a GPU differs from a CPU. It also shows what is inside 
 
 ## Moving Code to the GPU Is Not Enough
 
-Running code on a GPU does not make it fast by itself. You get good performance only when you understand how the GPU works.
+Running code on a GPU instead of a CPU does not make it fast by itself. You get good performance only when you understand how the GPU works.
 
 ## Different Goals
 
@@ -109,11 +109,26 @@ GPU programming means thinking in parallel. This idea is the base for everything
 
 ## Glossary
 
+- GPU (Graphics Processing Unit): a processor with thousands of simple cores, built to run many tasks in parallel.
+- CPU (Central Processing Unit): the main processor of a computer, built for fast response, complex logic and sequential work.
+- sequential execution: running steps one after another, where each step waits for the one before it.
+- parallel: many tasks running at the same time instead of one after another.
+- system RAM: the computer's main memory on the motherboard, used by the CPU.
 - VRAM: the GPU's own memory, separate from the system RAM the CPU uses.
+- bottleneck: the slowest step in a chain, which limits the speed of the whole chain.
 - cache: a small, very fast memory close to the processor.
+- L1 cache (L1): the smallest and fastest cache level, right next to a core (on a GPU, inside each SM).
 - shared memory: GPU memory that threads use to work together and share data.
+- thread: one stream of instructions; a GPU runs thousands of threads at the same time.
+- core: one processing unit that runs instructions; a CPU has a few strong ones, a GPU thousands of simple ones.
 - clock speed: how fast a single core runs, often several GHz on a CPU.
-- PCIe: a connection the CPU and GPU use to send data to each other.
+- GHz (gigahertz): one billion clock cycles per second, so a 3 GHz core ticks 3 billion times a second.
+- PCIe (PCI Express): a connection the CPU and GPU use to send data to each other.
 - SM (Streaming Multiprocessor): the most important processing unit inside a GPU, and a GPU is many SMs.
+- register: the fastest storage in an SM; each thread keeps its own variables in registers.
+- floating-point unit: a unit that does math on numbers with a decimal point, such as 3.14.
 - Tensor Core: a compute unit inside an SM built for matrix math, which is critical for AI.
+- special function unit (SFU): a unit that computes sine, cosine, square root and similar functions in hardware.
+- load/store unit: a unit that moves data between memory and the compute units.
 - L2 cache: a larger but slower cache for the whole GPU, not tied to one SM.
+- CUDA (Compute Unified Device Architecture): NVIDIA's platform for writing general programs that run on its GPUs.

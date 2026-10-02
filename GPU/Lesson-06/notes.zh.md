@@ -115,10 +115,26 @@ GPU 架构反映了计算本身是如何变化的。这条路从图形走到计�
 ## 术语表
 
 - 架构（architecture）：GPU 的蓝图，规定了芯片里的一切是怎么构建的。
-- Volta：Nvidia 从这个架构开始大力推进 AI 专用硬件。
+- Fermi：Nvidia 2010 年的架构，第一个为通用 GPU 计算而设计的架构，加入了真正的 L1/L2 缓存层次。
+- Ampere：Nvidia 2020 年的架构（A100、RTX 30 系列），大幅扩大了用于 AI 的 Tensor Core。
+- Hopper：Nvidia 2022 年为 AI 打造的架构（H100），带有可以使用 8 位数字的 Transformer Engine。
+- 核心（core）：做算术运算的单元；核心数量只是架构的一部分。
+- 能效（efficiency）：GPU 每消耗一瓦电能完成多少工作。
+- Kepler / Maxwell / Pascal：Nvidia 2012、2014 和 2016 年的架构，让 GPU 稳步变得更快、更省电。
+- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练模型或渲染游戏。
+- AI（人工智能）：从数据中学习的软件；训练它主要是海量的矩阵运算，正适合 GPU。
+- Volta：2017 年的架构（V100），Nvidia 从这里开始大力推进 AI 专用硬件，第一次加入了 Tensor Core。
+- Transformer：现代语言模型背后的神经网络结构；它主要由大型矩阵乘法组成。
 - Blackwell：2024 到 2025 年的架构，围绕大规模 AI 工作负载设计。
+- 带宽（bandwidth）：每秒能在显存和芯片之间搬运多少字节。
+- 精度（precision）：每个数字用多少位来存，比如 FP32、FP16 或 FP8；位数越少，运算越快，但越不精确。
 - Rubin：2026 年的架构，正在进入真实系统，带有更新的 Tensor Core 设计。
+- Tensor Core：每个 SM 里一步就能完成小矩阵乘法的单元，是 AI 速度的核心。
 - HBM4：Rubin 支持的一种显存类型。
+- SM（流式多处理器）：Nvidia GPU 的基本构件，里面有核心、Tensor Core 和共享内存。
+- 云（cloud）：通过互联网从服务商的数据中心租用的计算机。
 - TFLOPS：一个简单的性能数字，说明不了全部情况。
 - 时钟频率（clock speed）：另一个简单的数字，单独拿来比较并不靠谱。
 - Tesla：Nvidia 数据中心 GPU 以前的标签，现在它们叫 Data Center GPU。
+- Data Center GPU（数据中心 GPU）：Nvidia 现在给服务器 GPU 用的名字，比如 A100、H100 和 Blackwell 系列产品。
+- CUDA：NVIDIA 的平台，用来编写在其 GPU 上运行的程序；它适用于上面所有这些架构。

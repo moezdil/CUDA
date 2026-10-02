@@ -115,10 +115,26 @@ GPU mimarileri, hesaplamanın kendisinin nasıl değiştiğini gösteriyor. Yol 
 ## Sözlük
 
 - mimari (architecture): çipin içindeki her şeyin nasıl kurulacağını belirleyen GPU planı.
-- Volta: Nvidia'nın yapay zekâya özel donanımı öne çıkarmaya başladığı mimari.
+- Fermi: Nvidia'nın 2010 mimarisi, genel GPU hesaplaması düşünülerek tasarlanan ilk mimari, gerçek bir L1/L2 önbellek hiyerarşisi ekledi.
+- Ampere: Nvidia'nın 2020 mimarisi (A100, RTX 30 serisi), yapay zekâ için Tensor Core'ları büyüttü.
+- Hopper: Nvidia'nın yapay zekâ için ürettiği 2022 mimarisi (H100), 8 bitlik sayılar kullanabilen bir Transformer Engine'i vardır.
+- çekirdek (core): aritmetik yapan birim; çekirdek sayısı mimarinin sadece bir parçasıdır.
+- verimli (efficient): harcadığı her watt güç başına çok iş çıkaran.
+- Kepler / Maxwell / Pascal: Nvidia'nın 2012, 2014 ve 2016 mimarileri, GPU'ları adım adım daha hızlı ve daha az güç harcayan hâle getirdiler.
+- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek ya da bir oyunu çizmek.
+- yapay zekâ (AI): veriden öğrenen yazılım; eğitimi büyük ölçüde dev matris hesaplarıdır, bu da GPU'lara çok uyar.
+- Volta: Nvidia'nın yapay zekâya özel donanımı öne çıkarmaya başladığı 2017 mimarisi (V100), ilk Tensor Core'lar bununla geldi.
+- transformer: modern dil modellerinin arkasındaki sinir ağı tasarımı; büyük ölçüde dev matris çarpımlarından oluşur.
 - Blackwell: büyük ölçekli yapay zekâ iş yükleri etrafında tasarlanmış, 2024 ile 2025 arasına ait bir mimari.
+- bant genişliği (bandwidth): bellek ile çip arasında saniyede kaç bayt taşınabildiği.
+- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32, FP16 ya da FP8; bit azaldıkça hesap hızlanır ama hassasiyet düşer.
 - Rubin: daha yeni Tensor Core tasarımlarıyla, şu an gerçek sistemlere giren 2026 mimarisi.
+- Tensor Core: her SM'nin içinde küçük matris çarpımlarını tek adımda yapan birim, yapay zekâ hızının kalbi.
 - HBM4: Rubin'in desteklediği bir bellek türü.
+- SM (Streaming Multiprocessor): Nvidia GPU'sunun yapı taşı, çekirdekleri, Tensor Core'ları ve paylaşımlı belleği içinde tutar.
+- bulut (cloud): bir sağlayıcının veri merkezlerinden internet üzerinden kiralanan bilgisayarlar.
 - TFLOPS: hikâyenin tamamını anlatmayan basit bir performans sayısı.
 - saat hızı (clock speed): tek başına kötü bir karşılaştırma sağlayan başka bir basit sayı.
 - Tesla: Nvidia veri merkezi GPU'larının eski etiketi, bunlara artık Data Center GPU deniyor.
+- Data Center GPU: Nvidia'nın sunucu GPU'ları için bugünkü adı, örneğin A100, H100 ve Blackwell ürünleri.
+- CUDA: NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform; bu mimarilerin hepsinde çalışır.

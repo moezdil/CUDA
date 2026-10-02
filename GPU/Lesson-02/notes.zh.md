@@ -94,9 +94,17 @@ GPU 是为不同的环境打造的：
 
 - GPU：一种能同时执行大量运算的处理器。
 - CUDA：Nvidia 提供的 GPU 编程方式，用于通用计算，而不只是图形。
+- AI（人工智能）：从数据中学习的软件；训练它主要是海量的矩阵运算，所以 GPU 对它如此重要。
 - 架构（architecture）：GPU 芯片的内部设计，就像发动机的设计。
+- 能效（efficiency）：GPU 每消耗一瓦电能完成多少工作。
+- 光线追踪（ray tracing）：通过追踪光线的反弹来绘制 3D 场景的方法，能得到逼真的阴影和反射；RTX GPU 有专门的硬件来做这件事。
 - 代（generation）：GPU 用在哪里，比如游戏或数据中心。
+- 数据中心（data center）：放满服务器的建筑，常常装有成千上万个 GPU，用来运行云服务和 AI 训练。
 - HPC：高性能计算（High Performance Computing），指云系统、数据中心、AI 训练和科学计算。
-- Ampere：Nvidia 的一种架构，RTX 3090 和 A100 都用它。
 - Tegra：Nvidia 用于移动设备和嵌入式系统的 GPU 产品名。
+- 嵌入式系统（embedded system）：装在设备里的小型计算机，比如机器人、汽车或无人机里的计算机。
+- GeForce：Nvidia 面向消费级 GPU 的品牌，用于游戏和个人电脑。
+- RTX：Nvidia 给带光线追踪硬件的 GPU 起的名字，既用于 GeForce 显卡（RTX 3090），也用于专业显卡。
 - Data Center GPU（数据中心 GPU）：Nvidia 用于服务器的 GPU，比如 A100 或 H100。
+- Ampere：Nvidia 的一种架构，RTX 3090 和 A100 都用它。
+- A100：Nvidia 2020 年推出的数据中心 GPU，基于 Ampere，专为 AI 训练和 HPC 打造。

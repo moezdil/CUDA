@@ -50,10 +50,25 @@ WSL pratik bir köprü. Windows'ta kalırsın ve Linux tabanlı GPU araçların�
 
 ## Sözlük
 
+- Linux: ücretsiz, açık kaynaklı bir işletim sistemi; GPU sunucularının ve CUDA araçlarının çoğu onun etrafında kurulur.
+- ekosistem (ecosystem): bir platformun, örneğin GPU'nun, etrafında gelişen tüm araçlar, kütüphaneler, belgeler ve driver'lar.
+- yüksek performanslı hesaplama (HPC): hava tahmini ya da fizik simülasyonları gibi büyük problemler üzerinde birlikte çalışan çok sayıda güçlü işlemci.
 - WSL: Windows Subsystem for Linux. Windows'un içinde gerçek bir Linux ortamı çalıştırır.
+- emülasyon (emulation): başka bir sistemi gerçekten çalıştırmak yerine yazılımla taklit etmek, genelde daha yavaş ve daha az uyumludur.
 - WSL2: gerçek bir Linux çekirdeği çalıştıran WSL sürümü. Windows'ta CUDA'nın temeli.
-- WSL1: uyumluluğu daha düşük ve işe yarar GPU hızlandırması olmayan eski WSL sürümü.
+- Linux çekirdeği (Linux kernel): belleği, süreçleri ve donanımı yöneten Linux işletim sisteminin kalbi; CUDA kernel'ı ile aynı şey değildir.
+- terminal: komut yazdığın metin penceresi, örneğin PowerShell ya da Windows Terminal.
 - `wsl --install`: WSL'i kurmak için Windows terminalinde çalıştırdığın tek komut.
-- Linux dağıtımı (Linux distribution): kendi kullanıcıları, dosya sistemi ve paket yöneticisi olan ayrı bir Linux ortamı.
-- ana sistem driver'ı (host driver): Windows tarafındaki GPU driver'ı. WSL onu kullanır ve kendine ait bir NVIDIA driver'ına ihtiyaç duymaz.
-- WSL CUDA paketleri (WSL CUDA packages): ortak driver ile çalışan ve ana sistemle çakışmayı önleyen özel Linux CUDA paketleri.
+- WSL1: uyumluluğu daha düşük ve işe yarar GPU hızlandırması olmayan eski WSL sürümü.
+- GPU hızlandırması (GPU acceleration): işi GPU'da çalıştırıp sadece CPU'dakinden daha hızlı bitirmek.
+- Linux dağıtımı (Linux distribution): kendi kullanıcıları, dosya sistemi ve paket yöneticisi olan ayrı bir Linux ortamı; CUDA için genelde Ubuntu seçilir.
+- dosya sistemi (file system): işletim sisteminin dosyaları saklama ve düzenleme şekli; bir WSL dağıtımının Windows disklerinden ayrı, kendi dosya sistemi vardır.
+- paket yöneticisi (package manager): yazılımları çevrim içi listelerden kuran ve güncelleyen araç, örneğin Ubuntu'daki apt.
+- driver (GPU driver): işletim sisteminin GPU ile konuşmasını sağlayan yazılım; WSL için sadece Windows tarafına kurulur.
+- doğrudan Linux (native Linux): başka bir sistemin içinde değil, doğrudan makineye kurulu Linux.
+- ana sistem (host): WSL'in üzerinde çalıştığı Windows sistemi. WSL onun GPU driver'ını kullanır, kendine ait bir NVIDIA driver'ına ihtiyaç duymaz.
+- CUDA Toolkit: NVIDIA'nın compiler'ı, kütüphaneleri ve araçları; WSL içinde WSL için hazırlanmış Linux sürümünü kurarsın.
+- özel paketler (special packages): ortak driver ile çalışan ve ana sistemle çakışmayı önleyen, WSL için hazırlanmış Linux CUDA paketleri.
+- Hopper / Blackwell: Nvidia'nın 2022 ve 2024 GPU mimarileri, WSL içinde CUDA 12.x ve 13.x tarafından tam olarak desteklenir.
+- container: bir uygulamanın tüm kütüphaneleriyle birlikte paketlenip sistemin geri kalanından yalıtılmış çalışan hâli, örneğin Docker ile.
+- canlı sistem (production): bitmiş yazılımın kullanıcıları için gerçekten çalıştığı sistemler.

@@ -93,10 +93,26 @@ CUDA 代码不会直接在 GPU 上运行。它会先被编译成 PTX。PTX 是�
 ## 术语表
 
 - 计算能力（compute capability，CC）：NVIDIA 的版本号，说明一个 GPU 架构能做什么、不能做什么。
-- 主版本号（major number）：小数点前面的数字，表示一次重大的架构变化。
-- 次版本号（minor number）：小数点后面的数字，表示小的改进或扩展。
+- 跑分（benchmark）：测量速度的测试程序；计算能力不是速度分数。
+- 架构（architecture）：一个 GPU 家族的硬件设计；每个架构都有自己的计算能力主版本号。
+- 小数点前面的数字（major number）：表示一次重大的架构变化，比如 Ampere 是 8，Hopper 是 9。
+- 小数点后面的数字（minor number）：表示小的改进或扩展，比如 8.x 家族里的 8.6 或 8.9。
 - Tensor Core：加速 AI 矩阵运算的特殊单元，从 CC 7.x 开始出现。
-- FP16：半精度运算。CC 5.0 的 GPU 不支持。
+- CUDA 核心（CUDA cores）：NVIDIA GPU 里通用的算术单元，也就是核心数量里统计的那些。
+- Toolkit（CUDA Toolkit）：NVIDIA 的软件包，包含 nvcc 编译器、库和工具；每个版本支持一定范围的计算能力。
+- Hopper：Nvidia 2022 年的数据中心架构（H100），CC 9.0。
+- Blackwell：Nvidia 当前的架构，B200 这样的数据中心芯片是 CC 10.0，RTX 50 系列显卡是 12.0。
 - NVFP4：Blackwell 的一种精度格式，在大模型推理中吞吐量是 FP8 的两倍。
+- FP8：8 位浮点格式；没有 FP16 精确，但在支持它的 Tensor Core 上快一倍。
+- 推理（inference）：用训练好的 AI 模型得出答案，而不是训练它。
+- FP16：半精度运算。CC 5.0 的 GPU 不支持。
+- 模拟（emulation）：用软件模仿缺少的硬件，通常慢得多，或者根本做不到。
+- Maxwell：Nvidia 2014 年的架构，CC 5.x。
+- cubin：为某一个计算能力编译好的 GPU 二进制文件；PTX 则不同，它还能再为更新的 GPU 编译。
+- 运行时（runtime）：程序正在运行的时候，和编译时相对。
 - PTX：一种底层的中间语言，类似 NVIDIA GPU 的汇编。CUDA 代码会先被编译成它。
+- 汇编语言（assembly language）：处理器执行的基本指令的可读形式，每行一条指令。
 - 线程束洗牌（warp shuffle）：一类函数，让同一个线程束里的线程无需借助共享内存或全局内存就能交换数据。
+- 线程束（warp）：32 个线程组成的一组，它们一起执行同一条指令。
+- 全局内存（global memory）：GPU 的主显存（VRAM），所有线程都能访问，但比共享内存慢得多。
+- 核函数（kernel）：在 GPU 上运行的函数，由 CPU 上的代码启动。

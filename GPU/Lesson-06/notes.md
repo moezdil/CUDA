@@ -115,10 +115,26 @@ GPU architectures show how computing itself is changing. The path goes from grap
 ## Glossary
 
 - architecture: the blueprint of the GPU that defines how everything inside the chip is built.
-- Volta: the architecture where Nvidia started to push AI-specific hardware.
+- Fermi: an Nvidia architecture from 2010, the first one designed with general GPU computing in mind, adding a real L1/L2 cache hierarchy.
+- Ampere: an Nvidia architecture from 2020 (A100, RTX 30 series) that scaled up Tensor Cores for AI.
+- Hopper: an Nvidia architecture from 2022 (H100) built for AI, with a Transformer Engine that can use 8-bit numbers.
+- core: a unit that does arithmetic; the core count is only one part of an architecture.
+- efficiency: how much work a GPU gets done for each watt of power it uses.
+- Kepler / Maxwell / Pascal: Nvidia architectures from 2012, 2014 and 2016 that made GPUs steadily faster and more power efficient.
+- workload: the kind of work a program gives the GPU, such as training a model or rendering a game.
+- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math, which suits GPUs.
+- Volta: the 2017 architecture (V100) where Nvidia started to push AI-specific hardware, with the first Tensor Cores.
+- transformer: the neural network design behind modern language models; it is built mostly from large matrix multiplications.
 - Blackwell: a 2024 to 2025 architecture designed around large-scale AI workloads.
+- bandwidth: how many bytes per second can move between memory and the chip.
+- precision: how many bits each number uses, such as FP32, FP16 or FP8; fewer bits means faster math but less accuracy.
 - Rubin: a 2026 architecture now entering real systems, with newer Tensor Core designs.
+- Tensor Core: a unit inside each SM that does small matrix multiplications in one step, the core of AI speed.
 - HBM4: a memory type that Rubin supports.
+- SM (Streaming Multiprocessor): the building block of an Nvidia GPU that holds its cores, Tensor Cores and shared memory.
+- cloud: computers rented over the internet from a provider's data centers.
 - TFLOPS: a simple performance number that does not tell the full story.
 - clock speed: another simple number that makes a poor comparison on its own.
 - Tesla: the old label for Nvidia data center GPUs, which are now called Data Center GPUs.
+- Data Center GPU: Nvidia's current name for its server GPUs, such as the A100, H100 and the Blackwell parts.
+- CUDA: NVIDIA's platform for writing programs that run on its GPUs; it works across all of these architectures.

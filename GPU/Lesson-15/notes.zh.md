@@ -115,11 +115,29 @@ https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&D
 
 ## 术语表
 
+- Linux：免费、开源的操作系统；这里它通过 WSL 运行在 Windows 里。
+- WSL（Windows Subsystem for Linux）：在 Windows 里运行一个真正的 Linux 系统，而 GPU 驱动程序留在 Windows 那一侧。
+- Ubuntu：常用的 Linux 发行版；NVIDIA 为运行在 WSL 里的 Ubuntu 准备了单独的 CUDA 软件源（wsl-ubuntu）。
+- 软件源（NVIDIA repository）：在线的软件包来源；NVIDIA 为 WSL 提供的软件源里是为共享驱动程序构建的最新 Toolkit。
+- 架构（architecture）：一个 GPU 家族的硬件设计，比如 Hopper 或 Blackwell；旧的 CUDA 版本不认识最新的架构。
 - `nvidia-smi`：NVIDIA 的命令行工具，向驱动程序查询 GPU 名称、驱动程序版本和显存使用情况。
-- NVIDIA 软件源（NVIDIA repository）：NVIDIA 官方为 WSL 提供的软件包来源，里面是为共享驱动程序构建的最新 Toolkit。
+- 驱动程序（GPU driver）：让系统和 GPU 通信的软件；在 WSL 里它来自 Windows，所以永远不要在 Linux 里另装一个。
+- apt（包管理器）：Ubuntu 的工具，从软件源下载软件包并安装，连同它们依赖的东西一起装好。
 - `cuda-keyring_1.1-1_all.deb`：一个很小的软件包，包含 NVIDIA 的签名密钥和软件源地址，让你的系统信任 NVIDIA 的软件包。
 - `sudo`：以管理员权限运行命令。安装软件包需要管理员权限。
 - `apt-get update`：刷新软件包列表，让 apt 知道新软件源里有哪些软件包。
+- CUDA Toolkit：NVIDIA 用来构建 CUDA 程序的编译器、运行时和核心库，本页安装的是 13.2 版。
+- 编译器（compiler）：把源代码变成处理器能运行的代码的程序。
 - `nvcc`：CUDA 编译器。`nvcc --version` 会打印它的版本号，不会编译任何东西。
+- shell：读取你在终端里输入的命令的程序，比如 bash 或 zsh。
 - PATH：shell 查找程序的文件夹列表。
 - `export`：为当前 shell 以及它启动的程序设置一个变量。
+- `.bashrc`：每打开一个新终端，shell 都会运行的启动文件，所以写在里面的 export 每次都会生效。
+- Hopper / Blackwell：Nvidia 2022 年和 2024 年的 GPU 架构；要用上它们的新功能，需要较新的 CUDA 版本。
+- FP8 / FP4：8 位和 4 位浮点格式；Hopper 的 Tensor Core 加入了 FP8，Blackwell 的加入了 FP4。
+- 调度（scheduling）：GPU 决定下一步由哪组线程使用执行单元的方式。
+- CUDA 版本（CUDA version）：Toolkit 的版本号，比如 13.2，它决定了你的代码能用哪些 GPU 和功能。
+- PyTorch：很流行的深度学习 Python 库，通过 CUDA 在 GPU 上做运算。
+- TensorFlow：Google 的深度学习库，在 NVIDIA GPU 上同样使用 CUDA。
+- Triton：OpenAI 推出的基于 Python 的语言，不用手写 CUDA C++ 就能写出快速的 GPU 核函数。
+- 核函数（kernel）：在 GPU 上运行的函数；自定义核函数就是你自己写的那些。

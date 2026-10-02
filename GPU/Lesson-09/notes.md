@@ -93,10 +93,26 @@ Know your CC number. Check it against the CUDA documentation. Choose the right t
 ## Glossary
 
 - compute capability (CC): NVIDIA's version number that says what a GPU architecture can and cannot do.
-- major number: the number before the dot. It signals a major architectural change.
-- minor number: the number after the dot. It stands for minor improvements or extensions.
+- benchmark: a test program that measures speed; compute capability is not a speed score.
+- architecture: the hardware design of a GPU family; each architecture gets its own major CC number.
+- number before the dot (major number): it signals a major architectural change, such as 8 for Ampere and 9 for Hopper.
+- number after the dot (minor number): it stands for minor improvements or extensions, such as 8.6 or 8.9 within the 8.x family.
 - Tensor Cores: special units that speed up matrix operations for AI. They appear from CC 7.x onward.
-- FP16: half-precision operations. GPUs at CC 5.0 do not support them.
+- CUDA cores: the general-purpose arithmetic units of an NVIDIA GPU, the ones counted in its core count.
+- toolkit (CUDA Toolkit): NVIDIA's package with the nvcc compiler, libraries and tools; each version supports a range of compute capabilities.
+- Hopper: Nvidia's 2022 data center architecture (H100), CC 9.0.
+- Blackwell: Nvidia's current architecture, CC 10.0 for data center chips like the B200 and 12.0 for RTX 50 series cards.
 - NVFP4: a Blackwell precision format that doubles throughput compared to FP8 for large model inference.
+- FP8: an 8-bit floating-point format; less exact than FP16, but twice as fast on Tensor Cores that support it.
+- inference: running a trained AI model to get answers, as opposed to training it.
+- FP16: half-precision operations. GPUs at CC 5.0 do not support them.
+- emulation: imitating missing hardware in software, which is usually far slower or not possible at all.
+- Maxwell: Nvidia's 2014 architecture, CC 5.x.
+- cubin: a compiled GPU binary for one specific compute capability, unlike PTX, which can still be compiled for newer GPUs.
+- runtime: the time when the program is running, as opposed to compile time.
 - PTX: a low-level intermediate language, like assembly for NVIDIA GPUs. CUDA code compiles to it first.
+- assembly language: a human-readable form of the basic instructions a processor runs, one line per instruction.
 - warp shuffle: functions that let threads in a warp share data without using shared or global memory.
+- warp: a group of 32 threads that run the same instruction together.
+- global memory: the GPU's main memory (VRAM), visible to every thread but much slower than shared memory.
+- kernel: a function that runs on the GPU, started from code on the CPU.

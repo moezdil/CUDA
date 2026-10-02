@@ -94,9 +94,17 @@ Bu kural GPU adlarını okumayı kolaylaştırır. Ayrıca yaygın bir hatayı d
 
 - GPU: aynı anda çok sayıda işlem çalıştırmak için üretilmiş bir işlemci.
 - CUDA: Nvidia'nın GPU'ları sadece grafik için değil, genel hesaplama için programlama yolu.
+- yapay zekâ (AI): veriden öğrenen yazılım; eğitimi büyük ölçüde dev matris hesaplarıdır, GPU'ların bu alanda bu kadar önemli olmasının nedeni de budur.
 - mimari (architecture): GPU çipinin iç tasarımı, bir motorun tasarımı gibi.
+- verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
+- ray tracing: 3D sahneleri ışık ışınlarının sekişini takip ederek çizme yöntemi, gerçekçi gölge ve yansımalar verir; RTX GPU'larda bunun için özel donanım vardır.
 - nesil (generation): bir GPU'nun nerede kullanıldığı, örneğin oyun ya da veri merkezleri.
+- veri merkezleri (data centers): çoğu zaman binlerce GPU barındıran, bulut servislerini ve yapay zekâ eğitimini çalıştıran, sunucularla dolu binalar.
 - HPC: High Performance Computing (yüksek performanslı hesaplama), yani bulut sistemleri, veri merkezleri, yapay zekâ eğitimi ve bilimsel hesaplama.
-- Ampere: hem RTX 3090'da hem A100'de kullanılan bir Nvidia mimarisi.
 - Tegra: Nvidia'nın mobil ve gömülü sistemlerdeki GPU'lar için kullandığı ürün adı.
+- gömülü sistem (embedded system): bir cihazın içine yerleştirilmiş küçük bilgisayar, örneğin bir robotta, arabada ya da drone'da.
+- GeForce: Nvidia'nın oyun ve kişisel bilgisayarlar için tüketici GPU markası.
+- RTX: Nvidia'nın ray tracing donanımı olan GPU'lara verdiği ad, hem GeForce kartlarında (RTX 3090) hem profesyonel kartlarda kullanılır.
 - Data Center GPU: sunucular için üretilen bir Nvidia GPU'su, örneğin A100 ya da H100.
+- Ampere: hem RTX 3090'da hem A100'de kullanılan bir Nvidia mimarisi.
+- A100: Nvidia'nın 2020'de çıkardığı, Ampere tabanlı, yapay zekâ eğitimi ve HPC için üretilmiş veri merkezi GPU'su.

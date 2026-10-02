@@ -82,11 +82,28 @@ Volta 同时增加了链路的数量和速度。这让多 GPU 系统的效率大
 
 ## 术语表
 
+- 白皮书（white paper）：官方技术文档，不做简化，直接展示一个 GPU 架构是怎么构建的。
+- Volta：Nvidia 2017 年的架构（V100，CC 7.0），第一个拥有 Tensor Core 的架构。
 - V100：Volta 架构的 GPU，这一课读的就是它的白皮书。
 - Key Features（关键特性）：白皮书里很短的一部分，告诉你这个架构想做什么。
+- 架构（architecture）：一个 GPU 家族的硬件设计；Volta、Ampere 和 Hopper 都是架构。
+- AI（人工智能）：从数据中学习的软件；训练它主要是海量的矩阵运算。
+- 代（generation）：GPU 发布中的一步；Volta 的上一代是 Pascal。
 - Tensor Core：做矩阵运算的专用硬件。Volta 是第一个拥有它的架构。
-- 流式多处理器（Streaming Multiprocessor，SM）：GPU 的核心组成单元。Volta 重新设计了 SM。
+- 矩阵运算（matrix operations）：对整块数字网格做的运算，主要是矩阵乘法，它占了 AI 的大部分工作。
+- CUDA 核心（CUDA cores）：GPU 里通用的算术单元，在有 Tensor Core 之前，矩阵运算就跑在它们上面。
+- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练神经网络。
+- SM（流式多处理器）：GPU 的核心组成单元。Volta 重新设计了 SM。
+- Pascal：Nvidia 2016 年的架构（P100），是 Volta 的上一代。
+- 整数（integer）：像 7 或 -3 这样的整数；GPU 代码经常用整数运算来算下标和地址。
+- 浮点（floating point）：带小数点的数，比如 3.14；图形和 AI 的大部分运算都用它。
+- 并行（parallel）：同时运行，这里指整数运算和浮点运算并排进行。
+- 指令（instruction）：GPU 执行的一条基本命令，比如一次加法或乘法。
+- 周期（cycle）：GPU 时钟的一次跳动；在 1.5 GHz 下，每秒有 15 亿个周期。
+- 效率（efficiency）：用同样的硬件、时间或功耗完成更多工作。
+- Ampere / Hopper / Blackwell：Volta 之后的 Nvidia 架构（2020、2022、2024），都在它的 Tensor Core 基础上继续发展。
 - HBM2：Volta 使用的显存，显存带宽比前几代更高。
 - 显存带宽（memory bandwidth）：数据送到计算单元的速度。带宽越高，等待越少。
 - NVLink：让 GPU 之间互联的高速链路。Volta 用的是第二代。
+- 多 GPU（multi-GPU）：一台机器里的几个 GPU 一起处理同一个任务，并不断交换数据。
 - 晶体管数量（transistor count）：一个 GPU 里有多少硬件。V100 大约有 210 亿个晶体管。

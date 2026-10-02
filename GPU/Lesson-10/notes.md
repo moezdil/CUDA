@@ -4,7 +4,7 @@ This lesson explains what GPU white papers are, how to find them, and how to rea
 
 ## What a White Paper Is
 
-A white paper is an official technical document about a GPU. It can feel heavy and too detailed at first. It is the most accurate source about a GPU. It has no marketing and no simplification. It shows how the hardware is actually built.
+A white paper is an official technical document about a GPU architecture. It can feel heavy and too detailed at first. It is the most accurate source about a GPU. It has no marketing and no simplification. It shows how the hardware is actually built.
 
 ## Finding a White Paper
 
@@ -72,9 +72,19 @@ Reading white papers is not about memorizing numbers. It is about understanding 
 ## Glossary
 
 - white paper: an official technical document that shows how a GPU is actually built, without marketing.
-- Streaming Multiprocessor (SM): the core of the GPU. It brings together CUDA cores, Tensor Cores, scheduling and memory access.
-- Tensor Cores: hardware units that Volta introduced. They made GPUs explicitly optimized for AI workloads.
+- architecture: the hardware design of a GPU family, such as Ampere or Hopper; each one gets its own white paper.
+- chip name: the name of the silicon inside a GPU, which is what you search for, such as GA100.
+- GA100: the Ampere chip inside the A100.
+- H100: Nvidia's Hopper data center GPU from 2022.
 - Pascal: a mostly general-purpose compute architecture. It has no Tensor Cores.
-- sparsity support: a feature Ampere added, along with more throughput and better efficiency.
-- FP8: a format Hopper added for large-scale AI systems.
+- Tensor Cores: hardware units that Volta introduced. They made GPUs explicitly optimized for AI workloads.
+- throughput: how much work the GPU can finish in a given time.
+- sparsity support: an Ampere feature that skips zeros in a fixed 2-out-of-4 pattern, doubling Tensor Core throughput for such data.
+- FP8: an 8-bit floating-point format Hopper added for large-scale AI systems.
 - NVFP4: a Blackwell format that brings ultra-low precision directly into hardware.
+- precision: how many bits each number uses; fewer bits means faster math and less memory, but less accuracy.
+- Streaming Multiprocessor (SM): the core of the GPU. It brings together CUDA cores, Tensor Cores, scheduling and memory access.
+- CUDA cores: the general-purpose arithmetic units inside each SM.
+- scheduling: deciding which group of threads runs next on the SM's units; each SM has several schedulers doing this every cycle.
+- transformer: the neural network design behind modern language models, built mostly from large matrix multiplications.
+- generation: one release step of GPUs; a white paper compares each new architecture with the previous generation.

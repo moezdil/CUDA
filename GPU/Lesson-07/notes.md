@@ -4,7 +4,7 @@ This lesson explains what makes a GPU fast. It covers memory bandwidth, core cou
 
 ## Memory Bandwidth
 
-A GPU needs data to work on, and that data comes from memory. Memory bandwidth is how much data can move between memory and the GPU every second.
+A GPU needs data to work on, and that data comes from memory. Memory bandwidth is how much data can move between memory and the GPU every second, usually given in GB/s.
 
 ## A Small Example
 
@@ -113,10 +113,26 @@ GPU performance is not a single number. It is a system where memory, compute pow
 ## Glossary
 
 - memory bandwidth: how much data can move between memory and the GPU every second.
+- GB/s (gigabytes per second): a billion bytes moving every second; an RTX 4090 reaches about 1,000 GB/s, an H100 up to about 3,350 GB/s.
+- core: a unit that executes instructions; like a worker, it needs data before it can start.
+- parallel: many cores working at the same time instead of one after another.
 - memory bottleneck: when GPU cores wait because memory cannot send data fast enough.
-- HBM: extremely fast memory that sits very close to the GPU chip in data center GPUs.
-- GDDR6: fast memory used in consumer GPUs, but not as fast as HBM.
+- RTX: Nvidia's consumer GPU line for gaming and general use, such as the RTX 4090.
+- H100: Nvidia's Hopper data center GPU from 2022, with 80 GB of HBM3 memory.
+- Blackwell: Nvidia's data center architecture after Hopper, built for large-scale AI.
+- AI (artificial intelligence): software that learns from data; training it moves huge amounts of data, so memory bandwidth matters a lot.
+- HBM (High Bandwidth Memory): extremely fast memory that sits very close to the GPU chip in data center GPUs.
+- GDDR / GDDR6 / GDDR6X: the memory family used in consumer GPUs; fast, but not as fast as HBM.
+- workload: the kind of work a program gives the GPU, such as training a model or running a game.
 - bus width: how much data memory can move at the same time, like the width of a road.
+- memory speed: how fast each memory pin sends data; for example, a 384-bit bus at 21 Gbps gives 384 × 21 / 8 = 1008 GB/s.
+- instruction: one basic command a core runs, such as an add or a multiply.
 - clock speed: how quickly each core executes instructions.
+- efficiency: how much work a GPU gets done for each watt of power it uses.
+- trade-off: giving up some of one thing to get more of another, such as speed for lower power use.
 - Tensor Cores: specialized hardware built for specific computations, especially in AI.
+- TFLOPS: trillions of floating-point operations per second, a peak number that real programs rarely reach.
 - throughput: how much work the GPU can finish in a given time.
+- precision: how many bits each number uses, such as FP32 or FP16; fewer bits give more throughput but less accuracy.
+- architecture: the overall design of a GPU, which decides how cores, memory and special units work together.
+- CUDA: NVIDIA's platform for writing programs that run on its GPUs.

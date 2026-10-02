@@ -57,8 +57,20 @@ Bu cevaplarla özelliklerin geri kalanı daha anlamlı gelir. CUDA ve GPU çalı
 ## Sözlük
 
 - TechPowerUp: GPU özelliklerinin bulunduğu bir web sitesi. Sayfasını bulmak için GPU adını "TechPowerUp" ile ara.
+- özellik (spec): bir GPU'nun yayımlanan tek bir teknik değeri, örneğin çekirdek sayısı, bellek boyutu ya da saat hızı.
+- RTX 3090: 2020'den, Ampere tabanlı, 10.496 çekirdekli ve 24 GB GDDR6X bellekli bir GeForce GPU'su.
+- A100: 2020'den, Ampere tabanlı, 6.912 tek duyarlıklı çekirdekli ve 40 ya da 80 GB HBM bellekli bir veri merkezi GPU'su.
 - mimari (architecture): GPU'nun nasıl üretildiği. RTX 3090 da A100 de Ampere kullanır.
+- Ampere: Nvidia'nın 2020 mimarisi, hem RTX 30 serisinde hem A100'de kullanılır.
 - kategori (category): GPU'nun nerede kullanıldığı, örneğin tüketici kullanımı ya da veri merkezi.
 - GeForce: oyun ya da kişisel iş istasyonları gibi tüketici kullanımı için üretilen NVIDIA GPU ailesi.
-- veri merkezi GPU'su (data center GPU): yapay zekâ, bulut ve büyük sistemler için üretilmiş bir GPU. Eski kaynaklar bu kategoriye "Tesla" der.
+- iş istasyonları (workstations): 3D tasarım ya da mühendislik gibi profesyonel işler için güçlü masaüstü bilgisayarlar.
+- veri merkezi GPU (data center GPU): yapay zekâ, bulut ve büyük sistemler için üretilmiş bir GPU. Eski kaynaklar bu kategoriye "Tesla" der.
+- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir yapay zekâ modeli eğitmek.
 - çekirdek sayısı (core count): çekirdeklerin sayısı, çoğu zaman sadece tek bir türün. Hikâyenin tamamını anlatmaz.
+- tek duyarlıklı (single-precision): 32 bitlik kayan noktalı sayı hesabı (FP32), çekirdek sayısının genelde saydığı birim türü.
+- Hopper / Blackwell: Nvidia'nın 2022 ve 2024 veri merkezi mimarileri, çekirdek sayısının dışarıda bıraktığı çok sayıda Tensor Core içerir.
+- H100: 2022'den, yapay zekâ ve HPC için üretilmiş, Hopper tabanlı bir veri merkezi GPU'su.
+- soğutma (cooling): GPU'nun ürettiği ısıyı kartın kendi fanlarıyla ya da sunucunun hava akışıyla uzaklaştırmak.
+- modül (module, SXM): sunucu kartına PCIe yuvası yerine düz oturan, sunucu tarafından soğutulan bir veri merkezi GPU biçimi.
+- CUDA: NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform, hem GeForce hem veri merkezi GPU'larında çalışır.

@@ -66,10 +66,27 @@ CUDA Toolkit 是 GPU 编程的完整环境。有了它，你可以编写代码�
 ## 术语表
 
 - CUDA：NVIDIA 的并行计算平台，把你的代码和 GPU 连接起来。
-- CUDA Toolkit（工具包）：用于编写、编译、运行、分析和改进 GPU 程序的完整环境。
+- 并行计算（parallel computing）：把工作拆成很多小块，让它们同时运行。
+- Toolkit（CUDA Toolkit）：用于编写、编译、运行、分析和改进 GPU 程序的完整环境。
+- 编译器（compiler）：把源代码变成处理器能运行的代码的程序。
 - `nvcc`：Toolkit 核心的编译器，把 CUDA 代码变成 GPU 能运行的代码。
 - PTX：`nvcc` 通常先生成的中间形式，之后才会变成针对某个 GPU 架构的机器码。
+- 机器码（machine code）：某个具体处理器直接执行的二进制指令；在 NVIDIA GPU 上它叫 SASS。
+- 架构（architecture）：一个 GPU 家族的硬件设计，CUDA 里用计算能力来标识，比如 sm_89。
+- Ampere / Hopper / Blackwell：Nvidia 2020、2022 和 2024 年的 GPU 架构，各有自己的指令和数据类型。
 - 编译目标（compile target）：你编译时针对的 GPU 架构。选错了会改变行为和速度。
+- 库（library）：现成的、经过测试的代码，可以在程序里直接调用，比如做线性代数的 cuBLAS 或做傅里叶变换的 cuFFT。
+- 线性代数（linear algebra）：关于向量和矩阵的数学，比如向量相加或矩阵相乘。
+- 傅里叶变换（Fourier transforms）：把信号拆分成各个频率的方法，用于音频、图像和物理计算。
+- 深度学习（deep learning）：由多层神经网络构成的 AI；cuDNN 是 NVIDIA 为它准备的库。
+- FP8 / FP4：低精度数据格式，现代 AI 工作负载在 Hopper 和 Blackwell 上会用到它们。
+- 精度（precision）：每个数字用多少位来存；FP32 用 32 位，FP8 只用 8 位，更快但没那么精确。
+- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练模型。
 - 运行时 API（runtime API）：程序用来分配 GPU 显存、搬运数据和启动核函数的调用。
-- 性能分析工具（profiling tools）：Toolkit 里的工具，用来测量性能、找出瓶颈、发现显存问题。
-- FP8 和 FP4：低精度数据格式，现代 AI 工作负载在 Hopper 和 Blackwell 上会用到它们。
+- CPU：主处理器；在 CUDA 程序里，它运行主代码，并把工作交给 GPU。
+- 核函数（kernel）：在 GPU 上运行的函数，由 CPU 上的代码启动。
+- 瓶颈（bottleneck）：最慢的那一步，它限制了整个程序的速度；常常是 CPU 和 GPU 之间的复制。
+- 性能分析（profiling）：测量程序把时间花在了哪里；Nsight Systems 和 Nsight Compute 是 Toolkit 里的性能分析工具。
+- 调试（debugging）：找出并修复错误；Toolkit 里有逐步调试 GPU 代码的 cuda-gdb，以及检查显存错误的 Compute Sanitizer。
+- 示例程序（sample programs）：NVIDIA 提供的小型 CUDA 示例程序；从 CUDA 11.6 起，它们放在 GitHub 上的 cuda-samples 仓库里。
+- Maxwell / Pascal / Volta：较老的架构（2014、2016、2017）；CUDA 13 已经不能再为它们编译代码。

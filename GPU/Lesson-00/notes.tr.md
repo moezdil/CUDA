@@ -4,7 +4,7 @@ Bu derste GPU'nun CPU'dan nasıl ayrıldığını anlatıyoruz. GPU'nun içinde 
 
 ## Kodu GPU'ya Taşımak Yetmez
 
-Kodu GPU'da çalıştırmak, onu tek başına hızlandırmaz. İyi performansı ancak GPU'nun nasıl çalıştığını anladığında alırsın.
+Kodu CPU yerine GPU'da çalıştırmak, onu tek başına hızlandırmaz. İyi performansı ancak GPU'nun nasıl çalıştığını anladığında alırsın.
 
 ## Farklı Hedefler
 
@@ -109,11 +109,26 @@ GPU programlamak paralel düşünmek demektir. Bu fikir, CUDA'da bundan sonra ge
 
 ## Sözlük
 
+- GPU (Graphics Processing Unit): binlerce basit çekirdeği olan, çok sayıda işi paralel çalıştırmak için üretilmiş işlemci.
+- CPU (Central Processing Unit): bilgisayarın ana işlemcisi, hızlı yanıt, karmaşık mantık ve sıralı iş için üretilmiştir.
+- sıralı çalışma (sequential execution): adımların birbiri ardına çalışması, her adım bir öncekini bekler.
+- paralel (parallel): birçok işin birbiri ardına değil, aynı anda çalışması.
+- sistem RAM (system RAM): bilgisayarın anakart üzerindeki ana belleği, CPU bunu kullanır.
 - VRAM: GPU'nun kendi belleği, CPU'nun kullandığı sistem RAM'inden ayrıdır.
+- darboğaz (bottleneck): bir zincirdeki en yavaş adım, tüm zincirin hızını o sınırlar.
 - önbellek (cache): işlemciye yakın, küçük ve çok hızlı bir bellek.
+- L1 önbellek (L1): en küçük ve en hızlı önbellek seviyesi, çekirdeğin hemen yanındadır (GPU'da her SM'nin içinde).
 - paylaşımlı bellek (shared memory): thread'lerin birlikte çalışmak ve veri paylaşmak için kullandığı GPU belleği.
+- thread: tek bir komut akışı; GPU aynı anda binlerce thread çalıştırır.
+- çekirdek (core): komut çalıştıran tek bir işlem birimi; CPU'da birkaç güçlü, GPU'da binlerce basit çekirdek vardır.
 - saat hızı (clock speed): tek bir çekirdeğin ne kadar hızlı çalıştığı, CPU'da çoğu zaman birkaç GHz.
-- PCIe: CPU ile GPU'nun birbirine veri göndermek için kullandığı bağlantı.
+- GHz (gigahertz): saniyede bir milyar saat döngüsü, yani 3 GHz'lik bir çekirdek saniyede 3 milyar kez tik atar.
+- PCIe (PCI Express): CPU ile GPU'nun birbirine veri göndermek için kullandığı bağlantı.
 - SM (Streaming Multiprocessor): GPU'nun içindeki en önemli işlem birimi, GPU çok sayıda SM'den oluşur.
+- register (yazmaç): SM'deki en hızlı depolama alanı; her thread kendi değişkenlerini register'larda tutar.
+- kayan noktalı sayı birimleri (floating-point units): 3.14 gibi ondalıklı sayılarla hesap yapan birimler.
 - Tensor Core: SM'nin içinde matris hesapları için üretilmiş bir hesaplama birimi, yapay zekâ için kritiktir.
+- özel fonksiyon birimleri (special function units, SFU): sinüs, kosinüs, karekök gibi fonksiyonları donanımda hesaplayan birimler.
+- load/store birimleri (load/store units): veriyi bellek ile hesaplama birimleri arasında taşıyan birimler.
 - L2 önbellek: tüm GPU için ortak, daha büyük ama daha yavaş bir önbellek, tek bir SM'ye bağlı değildir.
+- CUDA (Compute Unified Device Architecture): NVIDIA'nın, GPU'larında çalışan genel programlar yazmak için sunduğu platform.

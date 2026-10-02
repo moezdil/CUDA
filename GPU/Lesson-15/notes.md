@@ -115,11 +115,29 @@ https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&D
 
 ## Glossary
 
+- Linux: a free, open-source operating system; here it runs inside Windows through WSL.
+- WSL (Windows Subsystem for Linux): runs a real Linux system inside Windows, while the GPU driver stays on the Windows side.
+- Ubuntu: a popular Linux distribution; NVIDIA has a separate CUDA repository for Ubuntu running in WSL (wsl-ubuntu).
+- repository (NVIDIA repository): an online source of packages; NVIDIA's one for WSL has the current toolkit, built for the shared driver.
+- architecture: the hardware design of a GPU family, such as Hopper or Blackwell; old CUDA versions do not know the newest ones.
 - `nvidia-smi`: NVIDIA's command line tool that asks the driver for the GPU name, driver version and memory use.
-- NVIDIA repository: NVIDIA's official package source for WSL, with the current toolkit built for the shared driver.
+- driver (GPU driver): the software that lets the system talk to the GPU; in WSL it comes from Windows, so you never install one inside Linux.
+- apt (package manager): Ubuntu's tool that downloads packages from repositories and installs them, together with what they depend on.
 - `cuda-keyring_1.1-1_all.deb`: a small package with NVIDIA's signing key and repository address, so your system trusts NVIDIA's packages.
 - `sudo`: runs a command with admin rights. Installing packages needs them.
 - `apt-get update`: refreshes the package lists so apt knows about the packages in the new repository.
+- CUDA Toolkit: NVIDIA's compiler, runtime and core libraries for building CUDA programs, version 13.2 on this page.
+- compiler: a program that turns source code into code a processor can run.
 - `nvcc`: the CUDA compiler. `nvcc --version` prints its version without compiling anything.
+- shell: the program that reads the commands you type in a terminal, such as bash or zsh.
 - PATH: the list of folders where the shell looks for programs.
 - `export`: sets a variable for this shell and for the programs it starts.
+- `.bashrc`: a startup file the shell runs in every new terminal, so an export line placed there is set every time.
+- Hopper / Blackwell: Nvidia's GPU architectures from 2022 and 2024; using their new features needs a recent CUDA version.
+- FP8 / FP4: 8-bit and 4-bit floating-point formats; Hopper's Tensor Cores added FP8, Blackwell's added FP4.
+- scheduling: how the GPU decides which group of threads runs next on its units.
+- CUDA version: the toolkit release number, such as 13.2, which decides which GPUs and features your code can use.
+- PyTorch: a popular Python library for deep learning that runs its math on the GPU through CUDA.
+- TensorFlow: Google's deep learning library, which also uses CUDA on NVIDIA GPUs.
+- Triton: a Python-based language from OpenAI for writing fast GPU kernels without writing CUDA C++ by hand.
+- kernel: a function that runs on the GPU; custom kernels are the ones you write yourself.

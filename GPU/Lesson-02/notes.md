@@ -92,11 +92,19 @@ This rule makes GPU names easier to read. It also prevents a common mistake, whi
 
 ## Glossary
 
-- GPU: a processor built to run many operations at the same time.
+- GPU (Graphics Processing Unit): a processor built to run many operations at the same time.
 - CUDA: Nvidia's way of programming GPUs for general computation, not just graphics.
+- AI (artificial intelligence): software that learns from data; training it is mostly huge matrix math, which is why GPUs matter so much for it.
 - architecture: the internal design of the GPU chip, like the design of an engine.
+- efficiency: how much work a GPU gets done for each watt of power it uses.
+- ray tracing: a way to draw 3D scenes by following rays of light as they bounce, giving realistic shadows and reflections; RTX GPUs have dedicated hardware for it.
 - generation: where a GPU is used, such as gaming or data centers.
+- data center: a building full of servers, often with thousands of GPUs, that runs cloud services and AI training.
 - HPC: High Performance Computing, meaning cloud systems, data centers, AI training and scientific computing.
-- Ampere: an Nvidia architecture used in both the RTX 3090 and the A100.
 - Tegra: Nvidia's product name for GPUs in mobile and embedded systems.
+- embedded system: a small computer built into a device, such as a robot, a car or a drone.
+- GeForce: Nvidia's brand for consumer GPUs, used for gaming and personal computers.
+- RTX: Nvidia's name for GPUs with ray tracing hardware, used for both GeForce cards (RTX 3090) and professional cards.
 - Data Center GPU: an Nvidia GPU for servers, such as the A100 or H100.
+- Ampere: an Nvidia architecture used in both the RTX 3090 and the A100.
+- A100: an Nvidia data center GPU from 2020, based on Ampere and built for AI training and HPC.

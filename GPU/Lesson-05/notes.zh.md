@@ -75,7 +75,19 @@ Nvidia 并不会自己生产每一张最终的 GPU。像 ASUS、MSI 或 Gigabyte
 - 架构（architecture）：一组芯片家族共享的基础设计。
 - 前缀（prefix）：芯片名称开头的几个字母，比如 AD，它把芯片和架构联系起来。
 - Ada Lovelace：Nvidia 的一种架构，主要用于消费级 GPU，芯片有 AD102 等。
+- AD102：Ada Lovelace 中最大的芯片，用在 GeForce RTX 4090 这样的顶级显卡上。
+- AD104：Ada Lovelace 中较小的芯片，用在 RTX 4070 这样的显卡上。
 - Hopper：Nvidia 的一种架构，用于数据中心、AI 训练和大规模计算。
+- 数据中心（data center）：放满服务器的建筑，GPU 靠整个系统的气流散热。
+- 性能（performance）：GPU 完成实际工作有多快；它取决于芯片、频率、功耗和散热，而不只是架构。
+- 散热（cooling）：把 GPU 产生的热量带走，靠显卡自己的风扇，或者靠服务器里的气流。
+- 气流（airflow）：服务器自己的风扇吹过机身的空气，用来给里面没有风扇的 GPU 散热。
+- 机架（rack）：数据中心里把很多台服务器上下叠放在一起的高架子。
+- 电脑机箱（PC case）：装台式电脑各个部件的箱子；消费级 GPU 必须在里面给自己散热。
+- 核心（core）：芯片上的一个计算单元；厂商可以关闭其中一部分，比如把有几个坏核心的芯片也拿来出售。
+- 功耗上限（power limit）：GPU 最多可以消耗多少瓦的功率；上限越低，发热越少，速度也越慢。
 - 时钟频率（clock speed）：厂商可以调整的一项设置，所以用同一颗芯片的 GPU 表现可能不同。
 - 板卡合作伙伴（board partner）：像 ASUS、MSI 或 Gigabyte 这样的公司，用 Nvidia 的芯片做出自己的 GPU。
+- 加速频率（boost）：只要功耗和温度允许，GPU 会自动提升到的更高时钟频率。
 - 厂商自己的实现（vendor-specific implementation）：某个厂商围绕一颗芯片做出的自己版本的 GPU。
+- CUDA：NVIDIA 的平台，用来编写在其 GPU 上运行的程序；同一份 CUDA 代码可以在各个较新架构的芯片上运行。

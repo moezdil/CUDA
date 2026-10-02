@@ -53,9 +53,24 @@ CUDA development is not about choosing an editor. It is about understanding the 
 
 ## Glossary
 
+- JetBrains: the company behind CLion, PyCharm, IntelliJ IDEA and other development tools.
 - CLion: a JetBrains tool for writing code and organizing projects. It sits on top of the CUDA Toolkit.
+- IDE (Integrated Development Environment): one app that combines an editor, build tools and a debugger.
+- architecture: the hardware design of a GPU family, such as Hopper or Blackwell; newer ones need newer toolkits and drivers.
+- Linux: the operating system that most GPU servers run, and the best supported platform for CUDA.
+- remote GPU: a GPU in another machine, such as a cloud server, that you use over the network.
 - CMake: a tool that describes how to build a project. It is not tied to one environment.
-- CUDA Toolkit: the base layer with the compiler, the runtime and the libraries that talk to the GPU.
+- build: turning source files into a program you can run, by compiling and linking them.
+- compiler: a program that turns source code into code a processor can run; for CUDA it is nvcc.
+- toolkit (CUDA Toolkit): the base layer with the compiler, the runtime and the libraries that talk to the GPU.
+- runtime: the CUDA library your program calls while it runs, to manage GPU memory and launch work on the GPU.
+- libraries: ready-made, tested code that ships with the toolkit, such as cuBLAS for matrix math.
+- Hopper / Blackwell: Nvidia's architectures from 2022 and 2024, which need recent CUDA versions for their new features.
+- precision: how many bits each number uses, such as FP32, FP16 or FP8.
+- CUDA version: the release number of the toolkit, such as 13.0; it decides which GPUs and features you can target.
 - toolchain: the chain of tools that builds your code. CLion calls CMake, and CMake calls the CUDA compiler.
 - Visual Studio: a Windows dependency, because the CUDA toolchain uses the Microsoft compiler in the background.
-- GPU driver: CUDA depends on it. If it is too old, code may compile but not run correctly.
+- MSVC (Microsoft compiler): the C++ compiler from Visual Studio; on Windows, nvcc hands the CPU part of your code to it.
+- dependency: something another program needs to have installed in order to work.
+- driver (GPU driver): CUDA depends on it. If it is too old, code may compile but not run correctly.
+- production: the real environment where finished software runs for its users.

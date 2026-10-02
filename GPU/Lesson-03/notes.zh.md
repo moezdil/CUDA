@@ -126,11 +126,25 @@ GeForce GPU 面向普通用户，用在：
 
 ## 术语表
 
+- 规格（specs）：GPU 公开的技术参数，比如核心数量、显存大小和时钟频率。
 - TechPowerUp：一个收集了很多厂商详细 GPU 规格的网站。
+- RTX 3090：2020 年的 GeForce GPU，有 10,496 个核心和 24 GB 显存，基于 Ampere。
+- A100：Nvidia 2020 年的数据中心 GPU，有 6,912 个单精度核心，基于 Ampere。
 - 芯片名称（chip name）：GPU 里芯片的名字，比如 A100 的芯片叫 GA100。
 - 核心数量（core count）：规格里列出的核心数，它并没有把所有种类的核心都算进去。
 - 单精度核心（single-precision cores）：负责标准浮点运算的核心，核心数量通常只统计它们。
+- 浮点（floating-point）：带小数点的数，比如 3.14；单精度用 32 位存一个数，双精度用 64 位。
+- 双精度（double-precision）：64 位浮点运算，用于科学计算；A100 在这方面比 RTX 3090 快得多。
 - Tensor Core：现代 GPU 里专门为 AI 打造的特殊核心。
 - 架构（architecture）：GPU 的技术设计。
 - 代（generation）：GPU 的使用类别，比如 GeForce 或 Data Center GPU。
 - Ampere：RTX 3090 和 A100 共用的架构。
+- GeForce：Nvidia 面向台式机、笔记本电脑和工作站的消费级 GPU，自带风扇。
+- 工作站（workstation）：用于专业工作（比如 3D 设计或工程计算）的高性能台式电脑。
+- Tesla：Nvidia 数据中心 GPU 以前的名字，现在叫 Data Center GPU。
+- Data Center GPU（数据中心 GPU）：Nvidia 用于服务器的 GPU，比如 A100，通常没有自己的风扇。
+- 数据中心（data center）：放满服务器的建筑，靠强力风扇和空调散热。
+- 超级计算机（supercomputer）：成千上万台互相连接的服务器，像一台机器一样一起处理巨大的问题。
+- V100 / P100：较早的 Nvidia 数据中心 GPU，分别基于 Volta（2017）和 Pascal（2016）。
+- 无风扇（fanless）：显卡上只有散热片，没有风扇；由服务器自己的风扇把空气吹过它。
+- 散热（cooling）：把 GPU 产生的热量带走；GeForce 显卡用自己的风扇，数据中心显卡依靠服务器。

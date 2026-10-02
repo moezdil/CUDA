@@ -96,10 +96,22 @@ Bu da ileri CUDA konularını takip etmeyi kolaylaştırır.
 ## Sözlük
 
 - GPU çipi (GPU chip): tüm hesaplamanın yapıldığı asıl silikon, soğutması ya da konnektörü yoktur.
+- silikon (silicon): çiplerin yapıldığı malzeme; GA100 yaklaşık 54 milyar transistörlü tek bir silikon parçasıdır.
+- mimari (architecture): çipin tasarımı, yani birimlerinin, bellek yollarının ve denetleyicilerinin nasıl düzenlendiği.
+- ön ek (chip name prefix): çip adının ilk harfleri, mimariyi gösterir, örneğin Ampere için GA.
+- Fermi: çiplerinin adı GF100 gibi olan bir Nvidia mimarisi.
+- Ampere: çip adları GA ile başlayan bir Nvidia mimarisi, örneğin A100'deki GA100.
+- GA100: A100'ün içindeki çip; G, GPU'yu, A ise Ampere'i gösterir.
 - GPU: çipin etrafına kurulmuş ürünün tamamı, belleği, güç parçaları, çıkışları ve soğutmasıyla birlikte.
 - VRAM: GPU çipine bağlı bellek.
-- çip adı ön eki (chip name prefix): çip adının ilk harfleri, mimariyi gösterir, örneğin Ampere için GA.
-- Fermi: çiplerinin adı GF100 gibi olan bir Nvidia mimarisi.
+- güç dağıtım bileşenleri (power delivery): karttaki, güç kaynağından gelen elektriği çipin ihtiyaç duyduğu sabit gerilimlere çeviren parçalar.
 - çıkış arayüzleri (output interfaces): GPU üzerindeki HDMI ya da DisplayPort gibi portlar.
+- soğutma (cooling): çipin ürettiği ısıyı uzaklaştırmak, ya karttaki fanlarla ya da sunucudan gelen hava akışıyla.
+- GeForce: Nvidia'nın kendi soğutucusu ve fanları olan tüketici GPU'ları.
 - soğutucu (heatsink): tüketici GPU'larının kendi ısılarıyla başa çıkmak için kullandığı soğutma parçası.
+- PC kasası (PC case): masaüstü bilgisayarın parçalarını tutan kutu; tüketici GPU'su içinde kendini soğutmak zorundadır.
+- A100: GA100 çipini kullanan, kendi fanı olmayan bir Nvidia veri merkezi GPU'su.
 - sunucu kabini (server rack): veri merkezi GPU'larının durduğu yer, soğutma GPU'da değil kabin seviyesinde yapılır.
+- hava akışı (airflow): sunucunun kendi fanlarının içinden geçirdiği hava, içerideki fansız GPU'ları soğutur.
+- özellik (spec): bir GPU'nun yayımlanan teknik değeri, örneğin çip adı, çekirdek sayısı ya da bellek boyutu.
+- TechPowerUp: GPU özelliklerini listeleyen ve her GPU'yu kullandığı çipe bağlayan bir web sitesi.

@@ -1082,39 +1082,25 @@ footer{padding:13px 0 16px}
 
 .rail li.again{border-left-color:var(--border);opacity:.82}
 
-/* Home: the learning map. Each track is a line, each lesson a station. Names show on hover and focus. */
-.metro{display:grid;gap:34px;margin-top:44px;padding:28px 28px 34px;border:1px solid var(--border);border-radius:16px;background:var(--card)}
-.m-line{--c:var(--accent);display:grid;grid-template-columns:190px minmax(0,1fr);align-items:center;gap:20px}
-.m-line.m2{--c:var(--cool)}
-.m-name{display:flex;flex-direction:column;gap:2px;color:var(--text);text-decoration:none;font-weight:700;font-size:.95rem}
-.m-name small{font-weight:400;font-size:.72rem;color:var(--dim)}
-.m-name small::after{content:" lessons"}
-html[lang="tr"] .m-name small::after{content:" ders"}
-html[lang="zh-CN"] .m-name small::after{content:" 课"}
-.m-line ol{position:relative;display:flex;justify-content:space-between;list-style:none;margin:0;padding:0}
-.m-line ol::before{content:"";position:absolute;left:8px;right:8px;top:8px;height:4px;border-radius:2px;background:var(--c);opacity:.55;box-shadow:0 0 12px -2px var(--c)}
-.m-line li{position:relative;margin:0}
-.m-line li a{display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:var(--dim);outline:none}
-.m-line li a::before{content:"";width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:4px solid var(--c);background:var(--bg);
-  transition:transform .15s ease,background .15s ease;position:relative;z-index:1}
-.m-line li b{font-family:var(--mono);font-size:.74rem;font-weight:500}
-.m-line li span{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:6px 10px;border-radius:8px;
-  background:var(--panel2);border:1px solid var(--c);color:var(--text);font-size:.8rem;opacity:0;pointer-events:none;transition:opacity .15s ease;z-index:3}
-.m-line li:first-child span{left:0;transform:none}
-.m-line li:last-child span{left:auto;right:0;transform:none}
-.m-line li a:hover::before,.m-line li a:focus-visible::before{transform:scale(1.35);background:var(--c)}
-.m-line li a:hover b,.m-line li a:focus-visible b{color:var(--text)}
-.m-line li a:hover span,.m-line li a:focus-visible span{opacity:1}
-@media (max-width:900px){
-  .metro{padding:20px 18px}
-  .m-line{grid-template-columns:1fr;gap:14px}
+
+/* Home: 16 CPU cores next to the 142 SMs of the L40S (128 CUDA cores each, 18,176 in total). */
+.cores-fig{display:grid;grid-template-columns:minmax(150px,220px) auto minmax(0,1fr);align-items:center;gap:28px;margin:40px 0 0;
+  padding:28px;border:1px solid var(--border);border-radius:16px;background:var(--panel)}
+.cf{display:grid;gap:12px}
+.cf-t{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.cf-cpu .cf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cf-cpu .cf-grid i{aspect-ratio:1;border-radius:6px;border:1px solid var(--cool-line);background:color-mix(in srgb,var(--cool) 22%,transparent)}
+.cf-gpu .cf-grid{display:grid;grid-template-columns:repeat(18,1fr);gap:3px}
+.cf-gpu .cf-grid i{aspect-ratio:2/1;border-radius:2px;border:1px solid var(--accent-line);
+  background:color-mix(in srgb,var(--accent) 38%,transparent);box-shadow:0 0 6px -2px var(--accent)}
+.cf-n{margin:0;font-size:.82rem;color:var(--dim)}
+.cf-n b{font-size:1.5rem;color:var(--text);margin-right:6px}
+.cf-cpu .cf-n b{color:var(--cool)}.cf-gpu .cf-n b{color:var(--accent)}
+.cf-vs{font-size:.8rem;color:var(--dimmer)}
+.cores-fig figcaption{grid-column:1/-1;font-size:.95rem;color:var(--text);border-top:1px solid var(--divider);padding-top:16px}
+@media (max-width:760px){
+  .cores-fig{grid-template-columns:1fr;gap:18px;padding:20px}
+  .cf-cpu{max-width:220px}
+  .cf-vs{display:none}
+  .cf-gpu .cf-grid{grid-template-columns:repeat(12,1fr);gap:2px}
 }
-@media (max-width:700px){
-  .m-line ol{flex-direction:column;gap:12px;padding-left:2px}
-  .m-line ol::before{left:8px;right:auto;top:8px;bottom:8px;width:4px;height:auto}
-  .m-line li a{flex-direction:row;gap:12px}
-  .m-line li span{position:static;transform:none;opacity:1;background:none;border:0;padding:0;color:var(--dim);white-space:normal}
-}
-@media (prefers-reduced-motion: reduce){.m-line li a::before,.m-line li span{transition:none}}
-html[lang="zh-CN"] .m-name small::before{content:"共 "}
-html[data-mode="light"] .metro{background:var(--panel)}

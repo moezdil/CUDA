@@ -78,7 +78,7 @@ CUDA kodu doğrudan GPU üzerinde çalışmaz. Önce PTX'e derlenir. PTX, alt se
 Bazı PTX komutları, ancak belirli bir compute capability ve sonrasında bulunan donanım birimlerine ihtiyaç duyar. Warp shuffle fonksiyonları buna bir örnek.
 
 > [!NOTE]
-> Warp shuffle fonksiyonları, bir warp'taki thread'lerin paylaşımlı belleği ya da global belleği kullanmadan veri paylaşmasını sağlar. Warp shuffle, CC 3.0'dan (Kepler) beri var.
+> Warp shuffle fonksiyonları, bir warp'taki thread'lerin paylaşımlı ya da global bellek kullanmadan veri paylaşmasını sağlar. Warp shuffle, CC 3.0'dan (Kepler) beri var.
 
 GPU'n gereken en düşük seviyenin altındaysa bu komutlar çalışamaz. Onlar için gereken donanım çipte yoktur.
 
@@ -93,10 +93,26 @@ CC numaranı bil. Onu CUDA belgeleriyle karşılaştır. Doğru toolkit sürüm�
 ## Sözlük
 
 - compute capability (CC): NVIDIA'nın, bir GPU mimarisinin neyi yapıp neyi yapamadığını söyleyen sürüm numarası.
-- büyük sayı (major number): noktadan önceki sayı. Büyük bir mimari değişikliği gösterir.
-- küçük sayı (minor number): noktadan sonraki sayı. Küçük iyileştirmeleri ya da eklemeleri temsil eder.
-- Tensor Core'lar: yapay zekâ için matris işlemlerini hızlandıran özel birimler. CC 7.x ve sonrasında ortaya çıkarlar.
-- FP16: yarım duyarlıklı işlemler. CC 5.0'daki GPU'lar bunları desteklemez.
+- benchmark: hızı ölçen bir test programı; compute capability bir hız puanı değildir.
+- mimari (architecture): bir GPU ailesinin donanım tasarımı; her mimarinin kendi büyük CC numarası vardır.
+- noktadan önceki sayı (major number): büyük bir mimari değişikliği gösterir, örneğin Ampere için 8, Hopper için 9.
+- noktadan sonraki sayı (minor number): küçük iyileştirmeleri ya da eklemeleri temsil eder, örneğin 8.x ailesinde 8.6 ya da 8.9.
+- Tensor Core'lar: yapay zekâ için matris işlemlerini hızlandıran özel birimler. CC 7.x ve sonrasında ortaya çıkar.
+- CUDA core: bir NVIDIA GPU'sundaki genel amaçlı aritmetik birimler, çekirdek sayısında sayılanlar bunlardır.
+- toolkit (CUDA Toolkit): NVIDIA'nın nvcc derleyicisini, kütüphaneleri ve araçları içeren paketi; her sürüm belli bir compute capability aralığını destekler.
+- Hopper: Nvidia'nın 2022 veri merkezi mimarisi (H100), CC 9.0.
+- Blackwell: Nvidia'nın güncel mimarisi, B200 gibi veri merkezi çiplerinde CC 10.0, RTX 50 serisi kartlarda 12.0.
 - NVFP4: büyük model çıkarımında FP8'e göre throughput'u iki katına çıkaran bir Blackwell duyarlılık formatı.
-- PTX: NVIDIA GPU'ları için assembly gibi, alt seviye bir ara dil. CUDA kodu önce buna derlenir.
-- warp shuffle: bir warp'taki thread'lerin paylaşımlı belleği ya da global belleği kullanmadan veri paylaşmasını sağlayan fonksiyonlar.
+- FP8: 8 bitlik kayan noktalı sayı formatı; FP16'dan daha az hassas ama onu destekleyen Tensor Core'larda iki kat hızlı.
+- çıkarım (inference): eğitilmiş bir yapay zekâ modelini eğitmek yerine ondan cevap almak için çalıştırmak.
+- FP16: yarım duyarlıklı işlemler. CC 5.0'daki GPU'lar bunları desteklemez.
+- emülasyon (emulation): eksik donanımı yazılımla taklit etmek, genelde çok daha yavaştır ya da hiç mümkün değildir.
+- Maxwell: Nvidia'nın 2014 mimarisi, CC 5.x.
+- cubin: belirli bir compute capability için derlenmiş GPU ikili dosyası; PTX ise daha yeni GPU'lar için yeniden derlenebilir.
+- çalışırken (runtime): programın çalıştığı an, derleme zamanının karşıtı.
+- PTX: alt seviye bir ara dil, NVIDIA GPU'ları için assembly gibi. CUDA kodu önce buna derlenir.
+- assembly dili (assembly language): işlemcinin çalıştırdığı temel komutların okunabilir hâli, her satırda bir komut.
+- warp shuffle: bir warp'taki thread'lerin paylaşımlı ya da global belleği kullanmadan veri paylaşmasını sağlayan fonksiyonlar.
+- warp: aynı komutu birlikte çalıştıran 32 thread'lik grup.
+- global bellek (global memory): GPU'nun ana belleği (VRAM), her thread erişebilir ama paylaşımlı bellekten çok daha yavaştır.
+- kernel: GPU üzerinde çalışan, CPU'daki koddan başlatılan fonksiyon.

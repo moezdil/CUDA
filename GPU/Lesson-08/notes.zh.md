@@ -57,8 +57,20 @@ RTX GPU 有很大的风扇和散热系统。它们是为台式机和工作站打
 ## 术语表
 
 - TechPowerUp：一个提供 GPU 规格的网站。把 GPU 名字和 “TechPowerUp” 一起搜索，就能找到它的页面。
+- 规格（spec）：GPU 公开的某一项技术参数，比如核心数量、显存大小或时钟频率。
+- RTX 3090：2020 年基于 Ampere 的 GeForce GPU，有 10,496 个核心和 24 GB GDDR6X 显存。
+- A100：2020 年基于 Ampere 的数据中心 GPU，有 6,912 个单精度核心和 40 GB 或 80 GB HBM 显存。
 - 架构（architecture）：GPU 是怎么造的。RTX 3090 和 A100 都使用 Ampere。
+- Ampere：Nvidia 2020 年的架构，RTX 30 系列和 A100 都用它。
 - 类别（category）：GPU 用在哪里，比如消费级用途或数据中心。
 - GeForce：NVIDIA 面向消费级用途的 GPU 家族，比如游戏或个人工作站。
+- 工作站（workstation）：用于专业工作（比如 3D 设计或工程计算）的高性能台式电脑。
 - 数据中心 GPU（data center GPU）：为 AI、云和大型系统打造的 GPU。较老的资料把这个类别叫作 “Tesla”。
+- 工作负载（workload）：程序交给 GPU 的那类工作，比如训练 AI 模型。
 - 核心数量（core count）：核心的数量，往往只统计一种核心。它说明不了全部情况。
+- 单精度（single-precision）：32 位浮点运算（FP32），核心数量通常统计的就是这种单元。
+- Hopper / Blackwell：Nvidia 2022 年和 2024 年的数据中心架构，里面有大量 Tensor Core，而核心数量并不包括它们。
+- H100：2022 年基于 Hopper 的数据中心 GPU，为 AI 和 HPC 打造。
+- 散热（cooling）：把 GPU 产生的热量带走，靠显卡自己的风扇，或者靠服务器里的气流。
+- 模块（module，SXM）：一种数据中心 GPU 形态，平放在服务器主板上，而不是插在 PCIe 插槽里，由服务器负责散热。
+- CUDA：NVIDIA 的平台，用来编写在其 GPU 上运行的程序，GeForce 和数据中心 GPU 都适用。

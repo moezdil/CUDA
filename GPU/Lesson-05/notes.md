@@ -75,7 +75,19 @@ This makes GPU names easier to read. It helps you see why two GPUs behave differ
 - architecture: a base design shared by a family of chips.
 - prefix: the first letters of a chip name, like AD, which link the chip to its architecture.
 - Ada Lovelace: an Nvidia architecture mostly for consumer GPUs, with chips like AD102.
+- AD102: the largest Ada Lovelace chip, used in top cards such as the GeForce RTX 4090.
+- AD104: a smaller Ada Lovelace chip, used in cards such as the RTX 4070.
 - Hopper: an Nvidia architecture for data centers, AI training and large-scale computation.
+- data center: a building full of servers, where GPUs are cooled by the airflow of the whole system.
+- performance: how fast a GPU finishes real work; it depends on the chip, clocks, power and cooling, not only the architecture.
+- cooling: removing the heat a GPU makes, with the card's own fans or with the server's airflow.
+- airflow: air pushed through a server by its own fans, which cools the fanless GPUs inside.
+- rack: a tall frame that holds many servers stacked on top of each other in a data center.
+- PC case: the box that holds a desktop computer's parts; a consumer GPU must cool itself inside it.
+- core: one compute unit on the chip; a manufacturer can turn some off, for example to sell chips that have a few faulty cores.
+- power limit: the most power, in watts, a GPU may draw; a lower limit means less heat but also less speed.
 - clock speed: a setting a manufacturer can tune, so GPUs with the same chip may behave differently.
 - board partner: a company like ASUS, MSI or Gigabyte that builds its own GPU from an Nvidia chip.
+- boost (boost clock): a higher clock speed the GPU reaches on its own while power and temperature allow it.
 - vendor-specific implementation: one manufacturer's own version of a GPU built around a chip.
+- CUDA: NVIDIA's platform for writing programs that run on its GPUs; the same CUDA code runs on chips of every recent architecture.

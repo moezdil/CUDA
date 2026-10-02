@@ -82,11 +82,28 @@ V100 white paper'ını okumak, GPU'ların bugün neden böyle göründüğünü 
 
 ## Sözlük
 
+- white paper: bir GPU mimarisinin nasıl kurulduğunu basitleştirmeden gösteren resmî teknik belge.
+- Volta: Nvidia'nın 2017 mimarisi (V100, CC 7.0), Tensor Core'ları olan ilk mimari.
 - V100: bu derste white paper'ı incelenen Volta GPU'su.
 - Key Features: mimarinin ne yapmaya çalıştığını gösteren kısa bir white paper bölümü.
+- mimari (architecture): bir GPU ailesinin donanım tasarımı; Volta, Ampere ve Hopper birer mimaridir.
+- yapay zekâ (AI): veriden öğrenen yazılım; eğitimi büyük ölçüde dev matris hesaplarıdır.
+- nesil (generation): GPU sürümlerindeki bir adım; Volta, Pascal neslinin ardından geldi.
 - Tensor Core'lar: matris işlemleri için ayrılmış donanım. İlk kez Volta'da vardı.
+- matris işlemleri (matrix operations): bütün bir sayı tablosu üzerinde yapılan hesaplar, özellikle matris çarpımı; yapay zekâdaki işin çoğu budur.
+- CUDA core: GPU'nun genel amaçlı aritmetik birimleri, Tensor Core'lardan önce matris hesapları bunlarda çalışıyordu.
+- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir sinir ağı eğitmek.
 - Streaming Multiprocessor (SM): GPU'nun temel yapı taşı. Volta'da SM yeniden tasarlandı.
+- Pascal: Nvidia'nın 2016 mimarisi (P100), Volta'dan önceki nesil.
+- tam sayı (integer): 7 ya da -3 gibi ondalıksız bir sayı; GPU kodu indeksler ve adresler için sürekli tam sayı hesabı yapar.
+- kayan noktalı sayı (floating point): 3.14 gibi ondalıklı bir sayı; grafik ve yapay zekâ hesaplarının çoğu bununla yapılır.
+- paralel (parallel): aynı anda çalışmak, burada tam sayı ve kayan noktalı sayı işlemlerinin yan yana çalışması.
+- komut (instruction): GPU'nun çalıştırdığı temel bir emir, örneğin bir toplama ya da bir çarpma.
+- döngü (cycle): GPU saatinin bir tiki; 1.5 GHz'de saniyede 1.5 milyar döngü olur.
+- verimli (efficient): aynı donanımla, aynı sürede ya da aynı güçle daha fazla iş çıkaran.
+- Ampere / Hopper / Blackwell: Volta'dan sonra gelen Nvidia mimarileri (2020, 2022, 2024), hepsi onun Tensor Core'ları üzerine kurulur.
 - HBM2: Volta'nın kullandığı bellek. Bellek bant genişliği önceki nesillerden daha yüksektir.
 - bellek bant genişliği (memory bandwidth): verinin hesaplama birimlerine ne kadar hızlı taşındığı. Daha yüksek bant genişliği daha az bekleme demektir.
 - NVLink: GPU'ları birbirine bağlayan yüksek hızlı bir bağlantı. Volta'da ikinci nesli var.
+- çoklu GPU (multi-GPU): aynı makinede tek bir iş üzerinde çalışan ve sürekli veri alışverişi yapan birkaç GPU.
 - transistör sayısı (transistor count): bir GPU'nun içinde ne kadar donanım olduğu. V100'de yaklaşık 21 milyar transistör var.

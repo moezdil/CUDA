@@ -4,7 +4,7 @@
 
 ## 什么是白皮书
 
-白皮书是关于 GPU 的官方技术文档。刚开始读，你可能会觉得它很厚重、细节太多。但它是关于 GPU 最准确的资料。里面没有营销，也没有简化。它展示的是硬件实际上是怎么构建的。
+白皮书是关于 GPU 架构的官方技术文档。刚开始读，你可能会觉得它很厚重、细节太多。但它是关于 GPU 最准确的资料。里面没有营销，也没有简化。它展示的是硬件实际上是怎么构建的。
 
 ## 找到白皮书
 
@@ -72,9 +72,19 @@ GPU 不再只是计算设备，它们是 AI 系统的基础设施。
 ## 术语表
 
 - 白皮书（white paper）：官方技术文档，展示 GPU 实际上是怎么构建的，没有营销内容。
-- 流式多处理器（Streaming Multiprocessor，SM）：GPU 的核心，把 CUDA 核心、Tensor Core、调度和显存访问集中在一起。
-- Tensor Core：Volta 引入的硬件单元，让 GPU 开始明确地针对 AI 工作负载做优化。
+- 架构（architecture）：一个 GPU 家族的硬件设计，比如 Ampere 或 Hopper；每个架构都有自己的白皮书。
+- 芯片名称（chip name）：GPU 里那块硅片的名字，也就是你要搜索的名字，比如 GA100。
+- GA100：A100 里的 Ampere 芯片。
+- H100：Nvidia 2022 年基于 Hopper 的数据中心 GPU。
 - Pascal：一个基本上属于通用计算的架构，没有 Tensor Core。
-- 稀疏性支持（sparsity support）：Ampere 加入的一项功能，同时还带来了更高的吞吐量和更好的能效。
-- FP8：Hopper 为大规模 AI 系统加入的一种格式。
+- Tensor Core：Volta 引入的硬件单元，让 GPU 开始明确地针对 AI 工作负载做优化。
+- 吞吐量（throughput）：GPU 在一定时间内能完成多少工作。
+- 稀疏性支持（sparsity support）：Ampere 的一项功能，按固定的 “4 个里 2 个” 模式跳过零值，让这类数据的 Tensor Core 吞吐量翻倍。
+- FP8：Hopper 为大规模 AI 系统加入的一种 8 位浮点格式。
 - NVFP4：Blackwell 的一种格式，把超低精度直接做进硬件。
+- 精度（precision）：每个数字用多少位来存；位数越少，运算越快、越省显存，但越不精确。
+- SM（流式多处理器）：GPU 的核心，把 CUDA 核心、Tensor Core、调度和显存访问集中在一起。
+- CUDA 核心（CUDA cores）：每个 SM 里通用的算术单元。
+- 调度（scheduling）：决定下一步由哪组线程使用 SM 的执行单元；每个 SM 有好几个调度器，每个周期都在做这件事。
+- Transformer：现代语言模型背后的神经网络结构，主要由大型矩阵乘法组成。
+- 代（generation）：GPU 发布中的一步；白皮书会把每个新架构和上一代作比较。

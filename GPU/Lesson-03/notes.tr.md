@@ -126,11 +126,25 @@ CUDA'da derine indikçe bu daha da önemli hâle gelir.
 
 ## Sözlük
 
+- özellikler (specs): bir GPU'nun yayımlanan teknik değerleri, örneğin çekirdek sayısı, bellek boyutu ve saat hızı.
 - TechPowerUp: birçok üreticinin ayrıntılı GPU özelliklerini bir araya getiren bir web sitesi.
+- RTX 3090: 2020'den, 10.496 çekirdekli ve 24 GB bellekli, Ampere tabanlı bir GeForce GPU'su.
+- A100: Nvidia'nın 2020'den, 6.912 tek duyarlıklı çekirdekli, Ampere tabanlı veri merkezi GPU'su.
 - çip adı (chip name): GPU'nun içindeki çipin adı, örneğin A100 için GA100.
 - çekirdek sayısı (core count): özelliklerdeki çekirdek sayısı, her türden çekirdeği göstermez.
-- tek duyarlıklı çekirdekler (single-precision cores): standart kayan noktalı sayı hesapları için çekirdekler, genelde çekirdek sayısında sadece bunlar yer alır.
+- tek duyarlıklı (single-precision): standart kayan noktalı sayı hesapları yapan çekirdekler, genelde çekirdek sayısında sadece bunlar yer alır.
+- kayan noktalı sayı (floating-point): 3.14 gibi ondalıklı sayılar; tek duyarlık bir sayıyı 32 bitte, çift duyarlık 64 bitte saklar.
+- çift duyarlıklı (double-precision): bilimsel işlerde kullanılan 64 bitlik kayan noktalı sayı hesapları; A100 bu konuda RTX 3090'dan çok daha hızlıdır.
 - tensor core'lar: modern GPU'larda yapay zekâ için üretilmiş özel çekirdekler.
 - mimari (architecture): bir GPU'nun teknik tasarımı.
 - nesil (generation): bir GPU'nun kullanım kategorisi, örneğin GeForce ya da Data Center GPU'lar.
 - Ampere: RTX 3090 ile A100'ün paylaştığı mimari.
+- GeForce: Nvidia'nın masaüstü, dizüstü bilgisayarlar ve iş istasyonları için dahili fanlı tüketici GPU'ları.
+- iş istasyonları (workstations): 3D tasarım ya da mühendislik gibi profesyonel işler için güçlü masaüstü bilgisayarlar.
+- Tesla: Nvidia'nın veri merkezi GPU'larının eski adı, artık Data Center GPU deniyor.
+- Data Center GPU: sunucular için üretilen bir Nvidia GPU'su, örneğin A100, genelde kendi fanı yoktur.
+- veri merkezleri (data centers): güçlü fanlar ve klimalarla soğutulan, sunucularla dolu binalar.
+- süper bilgisayar (supercomputer): dev problemler üzerinde tek bir makine gibi birlikte çalışan binlerce bağlı sunucu.
+- V100 / P100: Volta (2017) ve Pascal (2016) tabanlı, daha eski Nvidia veri merkezi GPU'ları.
+- fansız (fanless): sadece soğutucusu olan, fanı olmayan kart; havayı sunucunun kendi fanları içinden geçirir.
+- soğutma (cooling): GPU'nun ürettiği ısıyı uzaklaştırmak; GeForce kartı kendi fanlarını kullanır, veri merkezi kartı sunucuya güvenir.

@@ -2,9 +2,9 @@
 {%- set lang = config.extra.lang or "en" %}
 {%- set up = "" if lang == "en" else "../" %}
 {%- set S = {
-  "en": {"skip": "Skip to content", "h1": 'Learn <span class="accent">CUDA</span> step by step', "lede": "Learn how a GPU works, then write CUDA code.", "start": "Start learning →", "try": "NVIDIA L40S · how a kernel launch lands on the SMs · pick one", "lessons": "Lessons", "prev": "← previous", "next": "next →", "foot": "CUDA, step by step · by", "sup": "Supported by", "sponsor": "Sponsor", "src": "Source on GitHub", "mode": "Switch color mode", "lang": "Language"},
-  "tr": {"skip": "İçeriğe geç", "h1": '<span class="accent">CUDA</span> adım adım öğren', "lede": "Önce bir GPU'nun nasıl çalıştığını öğren, sonra CUDA kodu yaz.", "start": "Öğrenmeye başla →", "try": "NVIDIA L40S · bir kernel launch'ı SM'lere nasıl dağılır · birini seç", "lessons": "Dersler", "prev": "← önceki", "next": "sonraki →", "foot": "CUDA, adım adım · hazırlayan", "sup": "Destekleyenler", "sponsor": "Sponsor ol", "src": "GitHub'da kaynak kod", "mode": "Renk modunu değiştir", "lang": "Dil"},
-  "zh": {"skip": "跳到正文", "h1": '一步一步学 <span class="accent">CUDA</span>', "lede": "先弄懂 GPU 是怎么工作的，再动手写 CUDA 代码。", "start": "开始学习 →", "try": "NVIDIA L40S · 一次核函数启动如何分配到各个 SM · 选一个", "lessons": "课程", "prev": "← 上一课", "next": "下一课 →", "foot": "CUDA，一步一步学 · 作者", "sup": "支持方", "sponsor": "赞助", "src": "GitHub 源码", "mode": "切换颜色模式", "lang": "语言"}
+  "en": {"skip": "Skip to content", "h1": 'Learn <span class="accent">CUDA</span> step by step', "lede": "Learn how a GPU works, then write CUDA code.", "lessons": "Lessons", "prev": "← previous", "next": "next →", "foot": "CUDA, step by step · by", "sup": "Supported by", "sponsor": "Sponsor", "src": "Source on GitHub", "mode": "Switch color mode", "lang": "Language", "cf_cpu": "cores in a typical desktop CPU", "cf_gpu": "CUDA cores: 142 SMs × 128", "cf_cap": "CUDA lets your code use all of them at once.", "cf_num": "18,176"},
+  "tr": {"skip": "İçeriğe geç", "h1": '<span class="accent">CUDA</span> adım adım öğren', "lede": "Önce bir GPU'nun nasıl çalıştığını öğren, sonra CUDA kodu yaz.", "lessons": "Dersler", "prev": "← önceki", "next": "sonraki →", "foot": "CUDA, adım adım · hazırlayan", "sup": "Destekleyenler", "sponsor": "Sponsor ol", "src": "GitHub'da kaynak kod", "mode": "Renk modunu değiştir", "lang": "Dil", "cf_cpu": "çekirdek, tipik bir masaüstü CPU'da", "cf_gpu": "CUDA çekirdeği: 142 SM × 128", "cf_cap": "CUDA, kodunun hepsini aynı anda kullanmasını sağlar.", "cf_num": "18.176"},
+  "zh": {"skip": "跳到正文", "h1": '一步一步学 <span class="accent">CUDA</span>', "lede": "先弄懂 GPU 是怎么工作的，再动手写 CUDA 代码。", "lessons": "课程", "prev": "← 上一课", "next": "下一课 →", "foot": "CUDA，一步一步学 · 作者", "sup": "支持方", "sponsor": "赞助", "src": "GitHub 源码", "mode": "切换颜色模式", "lang": "语言", "cf_cpu": "个核心，一台普通台式机 CPU", "cf_gpu": "个 CUDA 核心：142 个 SM × 128", "cf_cap": "CUDA 让你的代码同时用上所有这些核心。", "cf_num": "18,176"}
 }[lang] %}
 <html lang="{{ "zh-CN" if lang == "zh" else lang }}">
 <head>
@@ -57,18 +57,20 @@
   <div class="wrap">
     <h1>{{ S.h1 }}</h1>
     <p class="lede">{{ S.lede }}</p>
-    <nav class="metro" aria-label="{{ S.lessons }}">
-      {%- for sec in nav if sec.children %}
-      <div class="m-line m{{ loop.index }}">
-        <a class="m-name" href="{{ sec.children[0].url|url }}">{{ sec.title }}<small>{{ sec.children|length }}</small></a>
-        <ol>
-          {%- for p in sec.children %}
-          <li><a href="{{ p.url|url }}"><b>{{ p.title[:2] }}</b><span>{{ p.title[3:] }}</span></a></li>
-          {%- endfor %}
-        </ol>
+    <figure class="cores-fig">
+      <div class="cf cf-cpu">
+        <span class="cf-t">CPU</span>
+        <div class="cf-grid">{% for i in range(16) %}<i></i>{% endfor %}</div>
+        <p class="cf-n"><b>16</b> {{ S.cf_cpu }}</p>
       </div>
-      {%- endfor %}
-    </nav>
+      <span class="cf-vs" aria-hidden="true">vs</span>
+      <div class="cf cf-gpu">
+        <span class="cf-t">GPU</span>
+        <div class="cf-grid">{% for i in range(142) %}<i></i>{% endfor %}</div>
+        <p class="cf-n"><b>{{ S.cf_num }}</b> {{ S.cf_gpu }}</p>
+      </div>
+      <figcaption>{{ S.cf_cap }}</figcaption>
+    </figure>
   </div>
 </section>
 

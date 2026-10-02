@@ -126,11 +126,25 @@ This becomes more important as you go deeper into CUDA.
 
 ## Glossary
 
+- specs (specifications): the published technical numbers of a GPU, such as core count, memory size and clock speed.
 - TechPowerUp: a website that collects detailed GPU specs from many manufacturers.
+- RTX 3090: a GeForce GPU from 2020 with 10,496 cores and 24 GB of memory, based on Ampere.
+- A100: an Nvidia data center GPU from 2020 with 6,912 single-precision cores, based on Ampere.
 - chip name: the name of the chip inside a GPU, such as GA100 for the A100.
 - core count: the number of cores in the specs, which does not show every kind of core.
 - single-precision cores: cores for standard floating-point math, usually the only ones in the core count.
+- floating-point: numbers with a decimal point, such as 3.14; single precision stores one in 32 bits, double precision in 64 bits.
+- double-precision: 64-bit floating-point math, used in scientific work; the A100 is far faster at it than the RTX 3090.
 - tensor cores: special cores in modern GPUs built for AI.
 - architecture: the technical design of a GPU.
 - generation: the usage category of a GPU, such as GeForce or Data Center GPUs.
 - Ampere: the architecture shared by the RTX 3090 and the A100.
+- GeForce: Nvidia's consumer GPUs for desktops, laptops and workstations, with built-in fans.
+- workstation: a powerful desktop computer for professional work such as 3D design or engineering.
+- Tesla: the old name of Nvidia's data center GPUs, now called Data Center GPUs.
+- Data Center GPU: an Nvidia GPU for servers, such as the A100, usually without a fan of its own.
+- data center: a building full of servers, cooled by strong fans and air conditioning.
+- supercomputer: thousands of connected servers that work together as one machine on huge problems.
+- V100 / P100: older Nvidia data center GPUs, based on Volta (2017) and Pascal (2016).
+- fanless: a card with only a heatsink and no fan; the server's own fans push air through it.
+- cooling: removing the heat a GPU makes; a GeForce card uses its own fans, a data center card relies on the server.

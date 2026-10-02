@@ -4,7 +4,7 @@ Bu ders, GPU white paper'larının (teknik raporlarının) ne olduğunu, onları
 
 ## White Paper Nedir
 
-White paper, bir GPU hakkındaki resmî teknik belgedir. İlk başta ağır ve fazla ayrıntılı gelebilir. Bir GPU hakkındaki en doğru kaynaktır. İçinde pazarlama da basitleştirme de yoktur. Donanımın gerçekte nasıl üretildiğini gösterir.
+White paper, bir GPU mimarisi hakkındaki resmî teknik belgedir. İlk başta ağır ve fazla ayrıntılı gelebilir. Bir GPU hakkındaki en doğru kaynaktır. İçinde pazarlama da basitleştirme de yoktur. Donanımın gerçekte nasıl üretildiğini gösterir.
 
 ## White Paper Bulmak
 
@@ -72,9 +72,19 @@ White paper okumak sayıları ezberlemek değildir. Değişimi anlamaktır. SM'y
 ## Sözlük
 
 - white paper: bir GPU'nun gerçekte nasıl üretildiğini pazarlama olmadan gösteren resmî teknik belge.
-- Streaming Multiprocessor (SM): GPU'nun çekirdeği. CUDA core'ları, Tensor Core'ları, zamanlamayı ve bellek erişimini bir araya getirir.
-- Tensor Core'lar: Volta'nın getirdiği donanım birimleri. GPU'ları açıkça yapay zekâ iş yükleri için optimize edilmiş hâle getirdiler.
+- mimari (architecture): bir GPU ailesinin donanım tasarımı, örneğin Ampere ya da Hopper; her birinin kendi white paper'ı vardır.
+- çip adı (chip name): GPU'nun içindeki silikonun adı, aradığın ad budur, örneğin GA100.
+- GA100: A100'ün içindeki Ampere çipi.
+- H100: Nvidia'nın 2022'den, Hopper tabanlı veri merkezi GPU'su.
 - Pascal: büyük ölçüde genel amaçlı bir hesaplama mimarisi. Tensor Core'u yok.
-- sparsity desteği (sparsity support): Ampere'in daha fazla throughput ve daha iyi verimlilikle birlikte eklediği bir özellik.
-- FP8: Hopper'ın büyük ölçekli yapay zekâ sistemleri için eklediği bir format.
+- Tensor Core'lar: Volta'nın getirdiği donanım birimleri. GPU'ları açıkça yapay zekâ iş yükleri için optimize edilmiş hâle getirdiler.
+- throughput: GPU'nun belirli bir sürede ne kadar iş bitirebildiği.
+- sparsity (seyreklik): sıfırları sabit bir "4'te 2" düzeniyle atlayan bir Ampere özelliği, böyle verilerde Tensor Core throughput'unu iki katına çıkarır.
+- FP8: Hopper'ın büyük ölçekli yapay zekâ sistemleri için eklediği 8 bitlik bir kayan noktalı sayı formatı.
 - NVFP4: çok düşük duyarlılığı doğrudan donanıma taşıyan bir Blackwell formatı.
+- duyarlılık (precision): her sayının kaç bit kullandığı; bit azaldıkça hesap hızlanır ve bellek azalır ama hassasiyet düşer.
+- Streaming Multiprocessor (SM): GPU'nun çekirdeği. CUDA core'ları, Tensor Core'ları, zamanlamayı ve bellek erişimini bir araya getirir.
+- CUDA core: her SM'nin içindeki genel amaçlı aritmetik birimler.
+- zamanlama (scheduling): SM'nin birimlerinde sırada hangi thread grubunun çalışacağına karar vermek; her SM'de bunu her döngüde yapan birkaç zamanlayıcı vardır.
+- transformer: modern dil modellerinin arkasındaki sinir ağı tasarımı, büyük ölçüde dev matris çarpımlarından oluşur.
+- nesil (generation): GPU sürümlerindeki bir adım; white paper her yeni mimariyi bir önceki nesille karşılaştırır.

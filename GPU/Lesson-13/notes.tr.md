@@ -53,9 +53,24 @@ CUDA geliştirme bir editör seçmekle ilgili değil. Toolchain'i anlamakla ilgi
 
 ## Sözlük
 
+- JetBrains: CLion, PyCharm, IntelliJ IDEA ve başka geliştirme araçlarını yapan şirket.
 - CLion: kod yazmak ve projeleri düzenlemek için bir JetBrains aracı. CUDA Toolkit'in üzerinde durur.
+- IDE (Integrated Development Environment): editörü, derleme araçlarını ve hata ayıklayıcıyı bir araya getiren tek bir uygulama.
+- mimari (architecture): bir GPU ailesinin donanım tasarımı, örneğin Hopper ya da Blackwell; yeni olanlar daha yeni toolkit ve driver ister.
+- Linux: GPU sunucularının çoğunun çalıştırdığı işletim sistemi, CUDA için en iyi desteklenen platform.
+- uzaktaki bir GPU (remote GPU): başka bir makinedeki, örneğin bir bulut sunucusundaki, ağ üzerinden kullandığın GPU.
 - CMake: bir projenin nasıl derleneceğini tarif eden bir araç. Tek bir ortama bağlı değildir.
-- CUDA Toolkit: compiler'ı, runtime'ı ve GPU ile konuşan kütüphaneleri içeren temel katman.
+- derleme (build): kaynak dosyaları derleyip bağlayarak çalıştırabileceğin bir programa dönüştürmek.
+- compiler (derleyici): kaynak kodu bir işlemcinin çalıştırabileceği koda çeviren program; CUDA'da bu nvcc'dir.
+- toolkit (CUDA Toolkit): compiler'ı, runtime'ı ve GPU ile konuşan kütüphaneleri içeren temel katman.
+- runtime: programının çalışırken çağırdığı, GPU belleğini yöneten ve GPU'da iş başlatan CUDA kütüphanesi.
+- kütüphane (libraries): toolkit ile gelen hazır ve test edilmiş kod, örneğin matris hesapları için cuBLAS.
+- Hopper / Blackwell: Nvidia'nın 2022 ve 2024 mimarileri, yeni özellikleri için güncel CUDA sürümleri gerekir.
+- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32, FP16 ya da FP8.
+- CUDA sürümü (CUDA version): toolkit'in sürüm numarası, örneğin 13.0; hangi GPU'ları ve özellikleri hedefleyebileceğini belirler.
 - toolchain: kodunu derleyen araçlar zinciri. CLion CMake'i çağırır, CMake de CUDA compiler'ını çağırır.
 - Visual Studio: bir Windows bağımlılığı, çünkü CUDA toolchain'i arka planda Microsoft compiler'ını kullanır.
-- GPU driver'ı: CUDA ona bağlıdır. Çok eskiyse kod derlenip doğru çalışmayabilir.
+- Microsoft compiler (MSVC): Visual Studio'nun C++ derleyicisi; Windows'ta nvcc, kodunun CPU kısmını ona verir.
+- bağımlılık (dependency): başka bir programın çalışabilmesi için kurulu olması gereken şey.
+- driver (GPU driver): CUDA ona bağlıdır. Çok eskiyse kod derlenip doğru çalışmayabilir.
+- canlı ortam (production): bitmiş yazılımın kullanıcıları için gerçekten çalıştığı ortam.

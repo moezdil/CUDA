@@ -4,7 +4,7 @@ Bu ders, bir GPU'yu neyin hızlı yaptığını anlatıyor. Bellek bant genişli
 
 ## Bellek Bant Genişliği
 
-GPU'nun üzerinde çalışacağı veriye ihtiyacı var ve bu veri bellekten gelir. Bellek bant genişliği (memory bandwidth), her saniye bellek ile GPU arasında ne kadar veri taşınabildiğidir.
+GPU'nun üzerinde çalışacağı veriye ihtiyacı var ve bu veri bellekten gelir. Bellek bant genişliği (memory bandwidth), her saniye bellek ile GPU arasında ne kadar veri taşınabildiğidir, genelde GB/s ile verilir.
 
 ## Küçük Bir Örnek
 
@@ -113,10 +113,26 @@ GPU performansı tek bir sayı değildir. Belleğin, hesaplama gücünün, verim
 ## Sözlük
 
 - bellek bant genişliği (memory bandwidth): her saniye bellek ile GPU arasında ne kadar veri taşınabildiği.
+- GB/s (gigabytes per second): saniyede bir milyar bayt; RTX 4090 yaklaşık 1.000 GB/s'ye, H100 ise yaklaşık 3.350 GB/s'ye kadar çıkar.
+- çekirdek (core): komut çalıştıran birim; bir işçi gibi, başlamadan önce veriye ihtiyacı vardır.
+- paralel (parallel): çok sayıda çekirdeğin birbiri ardına değil, aynı anda çalışması.
 - bellek darboğazı (memory bottleneck): bellek veriyi yeterince hızlı gönderemediği için GPU çekirdeklerinin beklemesi.
-- HBM: veri merkezi GPU'larında GPU çipine çok yakın duran, son derece hızlı bellek.
-- GDDR6: tüketici GPU'larında kullanılan hızlı bellek, ama HBM kadar hızlı değil.
+- RTX: Nvidia'nın oyun ve genel kullanım için tüketici GPU serisi, örneğin RTX 4090.
+- H100: Nvidia'nın 2022'den, 80 GB HBM3 bellekli, Hopper tabanlı veri merkezi GPU'su.
+- Blackwell: Nvidia'nın Hopper'dan sonra gelen, büyük ölçekli yapay zekâ için üretilmiş veri merkezi mimarisi.
+- yapay zekâ (AI): veriden öğrenen yazılım; eğitimi çok büyük miktarda veri taşır, bu yüzden bellek bant genişliği çok önemlidir.
+- HBM (High Bandwidth Memory): veri merkezi GPU'larında GPU çipine çok yakın duran, son derece hızlı bellek.
+- GDDR / GDDR6 / GDDR6X: tüketici GPU'larında kullanılan bellek ailesi; hızlıdır ama HBM kadar değil.
+- iş yükü / iş yükleri (workload): bir programın GPU'ya verdiği iş türü, örneğin bir model eğitmek ya da bir oyun çalıştırmak.
 - veri yolu genişliği (bus width): belleğin aynı anda ne kadar veri taşıyabildiği, bir yolun genişliği gibi.
+- bellek hızı (memory speed): her bellek pininin veriyi ne kadar hızlı gönderdiği; örneğin 384 bitlik bir yol 21 Gbps'de 384 × 21 / 8 = 1008 GB/s verir.
+- komut (instruction): bir çekirdeğin çalıştırdığı temel bir emir, örneğin bir toplama ya da bir çarpma.
 - saat hızı (clock speed): her çekirdeğin komutları ne kadar hızlı çalıştırdığı.
-- Tensor Core'lar: belirli hesaplamalar için, özellikle yapay zekâda, üretilmiş özel donanım.
+- verimlilik (efficiency): bir GPU'nun harcadığı her watt güç başına ne kadar iş çıkardığı.
+- denge (trade-off): bir şeyden daha fazla almak için başka bir şeyden vazgeçmek, örneğin daha az güç için hızdan.
+- Tensor Core: belirli hesaplamalar için, özellikle yapay zekâda, üretilmiş özel donanım.
+- TFLOPS: saniyede trilyonlarca kayan noktalı sayı işlemi, gerçek programların nadiren ulaştığı bir tepe değer.
 - throughput (iş hacmi): GPU'nun belirli bir sürede ne kadar iş bitirebildiği.
+- duyarlılık (precision): her sayının kaç bit kullandığı, örneğin FP32 ya da FP16; bit azaldıkça throughput artar ama hassasiyet düşer.
+- mimari (architecture): bir GPU'nun genel tasarımı, çekirdeklerin, belleğin ve özel birimlerin nasıl birlikte çalışacağını belirler.
+- CUDA: NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform.

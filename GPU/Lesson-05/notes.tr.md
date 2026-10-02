@@ -42,7 +42,7 @@ Tek çip, tek amaç demek değildir. Aynı çip farklı biçimlerde karşına ç
 
 - bazı çekirdekleri devre dışı bırakmak  
 - güç sınırlarını değiştirmek  
-- saat hızlarını ayarlamak  
+- saat hızını ayarlamak  
 
 Yani aynı çipe sahip iki GPU aynı şekilde davranmayabilir.
 
@@ -75,7 +75,19 @@ Bu, GPU adlarını okumayı kolaylaştırır. İki GPU'nun neden farklı davrand
 - mimari (architecture): bir çip ailesinin paylaştığı temel tasarım.
 - ön ek (prefix): çip adının ilk harfleri, örneğin AD, çipi mimarisine bağlar.
 - Ada Lovelace: çoğunlukla tüketici GPU'ları için olan, AD102 gibi çipleri olan bir Nvidia mimarisi.
+- AD102: Ada Lovelace'in en büyük çipi, GeForce RTX 4090 gibi üst seviye kartlarda kullanılır.
+- AD104: Ada Lovelace'in daha küçük bir çipi, RTX 4070 gibi kartlarda kullanılır.
 - Hopper: veri merkezleri, yapay zekâ eğitimi ve büyük ölçekli hesaplama için bir Nvidia mimarisi.
+- veri merkezi (data center): GPU'ların tüm sistemin hava akışıyla soğutulduğu, sunucularla dolu bina.
+- performans (performance): bir GPU'nun gerçek işi ne kadar hızlı bitirdiği; sadece mimariye değil, çipe, saat hızına, güce ve soğutmaya da bağlıdır.
+- soğutma (cooling): GPU'nun ürettiği ısıyı kartın kendi fanlarıyla ya da sunucunun hava akışıyla uzaklaştırmak.
+- hava akışı (airflow): sunucunun kendi fanlarının içinden geçirdiği hava, içerideki fansız GPU'ları soğutur.
+- kabin (rack): veri merkezinde çok sayıda sunucuyu üst üste tutan uzun bir çerçeve.
+- PC kasası (PC case): masaüstü bilgisayarın parçalarını tutan kutu; tüketici GPU'su içinde kendini soğutmak zorundadır.
+- çekirdek (core): çip üzerindeki bir hesaplama birimi; üretici bazılarını kapatabilir, örneğin birkaç çekirdeği arızalı çipleri de satabilmek için.
+- güç sınırları (power limits): bir GPU'nun en fazla kaç watt çekebileceği; sınır düştükçe ısı azalır ama hız da düşer.
 - saat hızı (clock speed): üreticinin ayarlayabildiği bir değer, bu yüzden aynı çipe sahip GPU'lar farklı davranabilir.
 - kart üreticisi ortak (board partner): Nvidia çipinden kendi GPU'sunu yapan ASUS, MSI ya da Gigabyte gibi bir şirket.
-- üreticiye özgü uygulama (vendor-specific implementation): bir üreticinin, bir çipin etrafına kurduğu kendi GPU sürümü.
+- boost (boost clock): güç ve sıcaklık izin verdiği sürece GPU'nun kendiliğinden çıktığı daha yüksek saat hızı.
+- üreticiye özgü (vendor-specific implementation): bir üreticinin, bir çipin etrafına kurduğu kendi GPU sürümü.
+- CUDA: NVIDIA'nın, GPU'larında çalışan programlar yazmak için sunduğu platform; aynı CUDA kodu yeni mimarilerin hepsinin çiplerinde çalışır.
