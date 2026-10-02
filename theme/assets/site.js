@@ -1060,14 +1060,13 @@ customElements.define("gpu-die", class extends HTMLElement {
     var gpcs = function(g0){
       var h = '<div class="gd-gpcs">';
       for (var g = g0; g < g0 + 6; g++) {
-        h += '<div class="gd-gpc">' + k("GPC " + g) + "<div>";
+        h += '<div class="gd-gpc"><div>';
         for (var t = 0; t < 12; t++) { h += FUSED.indexOf(g * 12 + t) < 0 ? "<i></i>" : '<i class="x" title="' + T("fused off") + '"></i>'; }
         h += "</div></div>";
       }
       return h + "</div>";
     };
-    var mc = '<div class="gd-mc">' + new Array(7).join("<span>GDDR6</span>") + "</div>";
-    var rd = [["b", T("blocks")], ["t", T("threads")], ["s", T("blocks / SM")], ["v", T("waves")], ["w", T("warps resident")], ["m", T("SMs busy")], ["o", T("occupancy")]];
+    var rd = [["b", T("blocks")], ["v", T("waves")], ["m", T("SMs busy")], ["o", T("occupancy")]];
     el.classList.add("dg", "gd");
     el.innerHTML =
       '<div class="gd-head"><code class="gd-call"></code><div class="gd-seg" role="group" aria-label="' + T("Launch configuration") + '">' +
@@ -1076,18 +1075,12 @@ customElements.define("gpu-die", class extends HTMLElement {
       '<div class="gd-host">' + k(T("host")) + "<b>CPU</b><span class=\"gd-q\"></span></div>" +
       '<div class="gd-link" aria-hidden="true">' + k("PCIe Gen4 x16") + "<div><i></i><i></i><i></i></div></div>" +
       '<div class="gd-die" role="img" aria-label="' + T("L40S die: 12 GPCs of 12 SMs each, 142 of 144 SMs enabled, the L2 cache across the middle, GDDR6 memory controllers on the top and bottom edges.") + '">' +
-      '<div class="gd-dim">' + k(T("AD102 · 12 GPC × 12 SM = 144 SM · 142 enabled on L40S")) + "</div>" + mc + gpcs(0) +
-      '<div class="gd-l2">' + k(T("L2 cache · 96 MB")) + "</div>" + gpcs(6) + mc +
-      '<div class="gd-dim">' + k(T("48 GB GDDR6 · ECC · 384-bit · 864 GB/s")) + "</div></div>" +
-      '<dl class="gd-spec"><dt>NVIDIA L40S</dt><dd>AD102 · Ada Lovelace<br>CC 8.9</dd><dt>' + T("per SM") + "</dt><dd>" +
-      T("128 CUDA cores") + "<br>" + T("4 warp schedulers") + "<br>" + T("≤ 48 warps = 1536 threads") + "<br>" + T("≤ 24 blocks") +
-      "</dd><dt>" + T("per GPU") + "</dt><dd>" + T("142 SMs × 128 = 18,176 CUDA cores") + "<br>" + T("≤ 1024 threads per block") +
-      '</dd><dt class="gd-lg">' + T("legend") + '</dt><dd class="gd-lg"><span><i class="on"></i>' + T("SM busy") + '</span><span><i class="f"></i>' +
-      T("resident warps, one band per block") + '</span><span><i class="x"></i>' + T("fused off (2 of 144)") + "</span></dd></dl></div>" +
+      gpcs(0) + '<div class="gd-l2">' + k(T("L2 cache · 96 MB")) + "</div>" + gpcs(6) + "</div></div>" +
       '<dl class="gd-read">' + rd.map(function(r){ return "<div><dt>" + r[1] + '</dt><dd data-r="' + r[0] + '"></dd></div>'; }).join("") + "</dl>" +
       '<p class="gd-verdict" role="status"></p>';
     var tiles = [].filter.call(el.querySelectorAll(".gd-gpc i"), function(i){ return !i.classList.contains("x"); });
     var btns = el.querySelectorAll(".gd-seg button"), R = {};
+    ["t", "s", "w"].forEach(function(r){ R[r] = document.createElement("dd"); });
     el.querySelectorAll("[data-r]").forEach(function(d){ R[d.dataset.r] = d; });
 
     function run(i, calm){

@@ -1095,7 +1095,7 @@ footer{padding:13px 0 16px}
 .gd-seg button:hover{color:var(--text)}
 .gd-seg button.on{color:var(--text);background:var(--block-wash);box-shadow:inset 0 -2px 0 var(--block)}
 .gd-seg button:focus-visible{outline:2px solid var(--block);outline-offset:-2px}
-.gd-board{display:grid;grid-template-columns:120px 76px minmax(0,1fr) 224px;align-items:center}
+.gd-board{display:grid;grid-template-columns:120px 76px minmax(0,1fr);align-items:center}
 .gd-host{border:1px solid var(--cool-line);background:var(--host-wash);border-radius:4px;padding:10px 12px;font-size:.72rem;color:var(--dim);line-height:1.6}
 .gd-host .gd-k{color:var(--host)}
 .gd-host>b{display:block;font-size:1.15rem;color:var(--text);margin:2px 0 8px}
@@ -1141,7 +1141,7 @@ footer{padding:13px 0 16px}
 .gd-spec dd.gd-lg i.on{border-color:var(--accent)}
 .gd-spec dd.gd-lg i.f{background:color-mix(in srgb,var(--warp) 80%,transparent);border-color:var(--warp)}
 .gd-spec dd.gd-lg i.x{border-style:dashed;background:repeating-linear-gradient(135deg,var(--rule) 0 1px,transparent 1px 4px)}
-.gd-read{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin:14px 0 0;border-block:1px solid var(--divider)}
+.gd-read{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:14px 0 0;border-block:1px solid var(--divider)}
 .gd-read div{padding:7px 10px;border-left:1px solid var(--divider)}
 .gd-read div:first-child{border-left:0;padding-left:0}
 .gd-read dt{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer);white-space:nowrap}
