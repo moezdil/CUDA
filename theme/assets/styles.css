@@ -854,6 +854,54 @@ html[data-mode="light"] .dg{--y:#9a6700;--v:#8250df}
 }
 @media (prefers-reduced-motion: reduce){.hd-link b::after{display:none}}
 
+/* grid-size: the last block lane by lane, and the SMs as squares that fill with the warps they hold. */
+.gs-lb,.gs-sl{margin-top:14px}
+.gs-cells{display:grid;grid-template-columns:repeat(var(--n,32),minmax(0,1fr));gap:1px}
+.gs-cells i{aspect-ratio:1;border-radius:1px}
+.gs-cells i.a{background:var(--accent)}
+.dg .gs-x{background:#f85149;opacity:.75}
+.dg .gs-idle{background:none;border:1px dashed var(--dimmer)}
+.gs-sms{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px}
+.gs-sms i{aspect-ratio:1;border-radius:2px;border:1px solid var(--border);background:var(--bg)}
+.dg .gs-on{border:1px solid var(--accent);background:linear-gradient(to top,var(--accent) calc(var(--f,1) * 100%),var(--accent-soft) 0)}
+.gs-sms i.gs-on{animation:pop .35s ease-out}
+.gs-use{min-height:0}
+
+/* event-timing: a CPU lane and a GPU lane on one relative time axis. */
+.et{display:grid;gap:6px;margin-bottom:6px}
+.et-lane{display:grid;grid-template-columns:2.8em minmax(0,1fr);gap:8px;align-items:center}
+.et-lane>span{font-size:.74rem;color:var(--dim)}
+.et-ax{justify-self:end}
+.et-tr{position:relative;height:30px;border-radius:6px;background:var(--bg);border:1px solid var(--border)}
+.et-tr.gpu{height:56px}
+.et-tr i{position:absolute;top:6px;bottom:6px;border-radius:3px;overflow:hidden;font-style:normal;opacity:.6;transition:opacity .25s ease}
+.et-tr i.cur{opacity:1;animation:et-in .4s ease-out}
+.et-tr i.later{visibility:hidden}
+@keyframes et-in{from{opacity:0}}
+.et-tr b{display:block;font-weight:400;font-size:.62rem;line-height:1;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.et-tr i.go{background:var(--cool);border-right:1px solid var(--bg)}
+.et-tr i.wait,.dg-legend i.et-w{background:repeating-linear-gradient(135deg,rgba(88,166,255,.25) 0 5px,transparent 5px 10px);border:1px solid var(--cool-line)}
+.et-tr i.wait b{line-height:16px;color:var(--text)}
+.et-tr i.rd{background:var(--accent)}
+.et-tr i.k{top:18px;bottom:16px;background:var(--accent);border-right:1px solid var(--bg);color:var(--on-accent)}
+.et-tr i.k b{line-height:20px;text-align:center}
+.et-tr i.k.slow{background:var(--y)}
+.et-tr i.mark{top:2px;bottom:14px;width:2px!important;margin-left:-1px;background:var(--text);overflow:visible;border-radius:1px}
+.et-tr i.mark b{position:absolute;top:0;left:5px;padding:0;color:var(--text)}
+.et-tr i.mark.r b{left:auto;right:5px}
+.et-tr i.span{top:auto;bottom:3px;height:9px;border:2px solid var(--accent);border-top:0;border-radius:0 0 4px 4px;overflow:visible;background:none}
+.et-tr i.span b{position:absolute;left:50%;top:-3px;transform:translateX(-50%);padding:0 4px;background:var(--bg);color:var(--accent);font-weight:700}
+.et-tr i.now{top:-4px;bottom:-4px;width:0!important;border-left:2px dashed var(--accent);border-radius:0;overflow:visible}
+.et-tr i.rd.bad{background:#f85149}
+.et-tr i.span.bad{border-color:#f85149;border-style:dashed;border-top:0}
+.et-tr i.span.bad b{color:#f85149}
+.et-tr i.now.bad{border-left-color:#f85149}
+.et-tg button.on{border-color:#f85149;background:rgba(248,81,73,.08)}
+.et-code span{display:block;margin:0 -8px;padding:0 8px;border-radius:4px;transition:opacity .2s ease}
+.et-code .dim{opacity:.45}
+.et-code .on{background:var(--accent-soft)}
+.et-code .off{opacity:.45;text-decoration:line-through;text-decoration-color:#f85149}
+
 /* Code walkthrough: a copy of the code above, stepped through in writing order. CPU steps are blue, GPU steps green. */
 .cw{--cw:var(--cool)}
 .cw .cw-hint{margin:-6px 0 12px}

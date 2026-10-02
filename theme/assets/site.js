@@ -701,6 +701,151 @@ cuda("host-device-flow", function(el){
   go(0);
 });
 
+// Pick threads per block and see the grid it gives on the L40S: the round-up formula, the extra threads in
+// the last block, and how many of the SMs get a block at all. Limits are those of CC 8.9.
+cuda("grid-size", function(el){
+  var TS = [32, 64, 128, 256, 512, 1024, 100, 1000], NS = [2048, 2000], S = +el.getAttribute("sms") || 142, t = 256;
+  var n0 = +el.getAttribute("n") || 2048, N = n0, lang = document.documentElement.lang || "en";
+  if (NS.indexOf(n0) < 0) { NS.unshift(n0); }
+  function fmt(x, d){ return x.toLocaleString(lang, { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+  el.setAttribute("aria-label", T("Grid size on the L40S"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Grid size on the L40S") + '</span><span class="dg-note">' + F("{0} SMs · 48 warps and 24 blocks per SM", S) + "</span></div>" +
+    '<span class="dg-lbl">' + T("threads per block") + "</span>" + segs(TS, TS.indexOf(t), T("threads per block")) +
+    '<span class="dg-lbl">' + T("elements N") + "</span>" + segs(NS, NS.indexOf(n0), T("elements N")) +
+    '<pre class="dg-code"></pre><div class="dg-stats"></div><div class="dg-read gs-txt"></div>' +
+    '<span class="dg-lbl gs-lb"></span><div class="gs-cells"></div>' +
+    '<div class="dg-legend"><span><i style="background:var(--accent)"></i>' + T("adds one element") + '</span><span><i class="gs-x"></i>' + T("fails <code>if (i &lt; n)</code>, does nothing") +
+    '</span><span><i class="gs-idle"></i>' + T("idle lane, no thread") + "</span></div>" +
+    '<span class="dg-lbl gs-sl">' + F("the {0} SMs of the L40S", S) + '</span><div class="gs-sms"></div>' +
+    '<div class="dg-legend"><span><i class="gs-on"></i>' + T("SM with a block") + "</span><span>" + T("fill = warps in use, of 48") + "</span><span>" + T("usually one block per SM first: the hardware scheduler decides") + "</span></div>" +
+    '<div class="dg-read gs-use"></div><div class="dg-info" aria-live="polite"></div>';
+  var tabs = el.querySelectorAll(".dg-tabs");
+  function draw(){
+    var B = Math.floor((N + t - 1) / t), W = Math.ceil(t / 32), extra = B * t - N, per = Math.min(24, Math.floor(48 / W));
+    var res = Math.min(B, S * per), wait = B - res, busy = Math.min(res, S), maxW = Math.ceil(res / S) * W, cap = S * 1536, on = res * t;
+    el.querySelector(".dg-code").innerHTML = "int blocks = (N + threads - 1) / threads;\n<span class='dg-note'>//         = (" + N + " + " + t + " - 1) / " + t + " = " + (N + t - 1) + " / " + t + " = " + B +
+      "</span>\n<span class='fn'>vectorAdd</span>&lt;&lt;&lt;" + B + ", " + t + "&gt;&gt;&gt;(d_a, d_b, d_c, N);";
+    el.querySelector(".dg-stats").innerHTML = "<span>" + T("blocks") + " <b>" + B + "</b></span><span>" + T("threads") + " <b>" + B * t + "</b></span><span>" +
+      T("extra threads") + " <b>" + extra + "</b></span><span>" + T("warps / block") + " <b>" + W + "</b></span>";
+    el.querySelector(".gs-txt").innerHTML = (extra
+      ? F("{0} × {1} = {2} threads for {3} elements: <em>{4}</em> extra threads fail <code>if (i &lt; n)</code> and do nothing.", B, t, B * t, N, extra)
+      : F("{0} × {1} = {2} threads for {3} elements: no extra threads.", B, t, B * t, N)) + "<br>" +
+      (t % 32 ? F("{0} threads per block is not a multiple of 32: {1} warps, and the last warp of every block has {2} idle lanes.", t, W, 32 - t % 32)
+        : F("{0} threads per block = {1} warps of 32, no idle lanes.", t, W));
+    el.querySelector(".gs-lb").textContent = F("last block (block {0}) · global IDs {1} to {2}", B - 1, (B - 1) * t, B * t - 1);
+    var c = "";
+    for (var k = 0; k < W * 32; k++) { c += k >= t ? '<i class="gs-idle"></i>' : (B - 1) * t + k < N ? '<i class="a"></i>' : '<i class="gs-x"></i>'; }
+    var cells = el.querySelector(".gs-cells");
+    cells.innerHTML = c;
+    cells.style.setProperty("--n", W > 1 ? 64 : 32);
+    var s = "";
+    for (var m = 0; m < S; m++) {
+      var nb = Math.floor(res / S) + (m < res % S ? 1 : 0);
+      s += "<i" + (nb ? ' class="gs-on" style="--f:' + nb * W / 48 + '"' : "") + "></i>";
+    }
+    el.querySelector(".gs-sms").innerHTML = s;
+    el.querySelector(".gs-use").innerHTML = F("SMs busy: <b>{0}</b> of {1} ({2}%)", busy, S, fmt(busy / S * 100, 1)) + "<br>" +
+      F("threads on the GPU: <b>{0}</b> of {1} it can hold at once ({2}%)", fmt(on), fmt(cap), fmt(on / cap * 100, 1)) +
+      (wait ? "<br>" + F("{0} more blocks wait until an SM is free.", wait) : "");
+    el.querySelector(".dg-info").innerHTML = "<b>" + (busy < 20 ? (busy === 1 ? F("Only 1 SM works, {0} wait.", S - 1) : F("Only {0} SMs work, {1} wait.", busy, S - busy))
+      : maxW < 48 ? (maxW === 1 ? F("{0} SMs work, but each holds just 1 warp of the 48 it could run.", busy) : F("{0} SMs work, but each holds just {1} warps of the 48 it could run.", busy, maxW))
+      : T("Every SM is full: 48 warps each.")) + "</b><br>" +
+      (on < cap / 10 ? F("{0} elements are far too little work to fill this GPU.", N) : on < cap ? T("Still not enough threads to fill every SM.") : "");
+  }
+  onSegs(tabs[0], function(i){ t = TS[i]; draw(); });
+  onSegs(tabs[1], function(i){ N = NS[i]; draw(); });
+  draw();
+});
+
+// Timing with CUDA events, step by step on two lanes: what the CPU does and what sits in the GPU queue.
+// Two toggles show the classic mistakes. Lengths are relative, not measured.
+cuda("event-timing", function(el){
+  var cur = 0, warm = true, sync = true, D = 24;
+  var CODE = [[0, "<span class='fn'>vectorAdd</span>&lt;&lt;&lt;blocks, threads&gt;&gt;&gt;(d_a, d_b, d_c, N);"], [0, "cudaDeviceSynchronize();"], [1, "cudaEventRecord(start);"],
+    [2, "<span class='k'>for</span> (int r = 0; r &lt; RUNS; r++) {"], [2, "    <span class='fn'>vectorAdd</span>&lt;&lt;&lt;blocks, threads&gt;&gt;&gt;(d_a, d_b, d_c, N);"], [2, "}"],
+    [3, "cudaEventRecord(stop);"], [4, "cudaEventSynchronize(stop);"], [5, "cudaEventElapsedTime(&amp;ms, start, stop);"], [5, "float per_launch = ms / RUNS;"]];
+  var NAMES = [T("warm-up"), T("record start"), T("queue kernels"), T("record stop"), T("wait for stop"), T("read time")];
+  // The CPU clock t and the time g at which the GPU is free. A launch or record costs the CPU 1 unit,
+  // a kernel takes 3 units on the GPU, the very first one 8 (one-time setup).
+  function plan(){
+    var P = [], t = 0, g = 0, first = true, mk = {};
+    function seg(l, a, b, s, c, lab){ P.push({ l: l, a: a, b: b, s: s, c: c, lab: lab || "" }); }
+    function launch(s){
+      seg("cpu", t, ++t, s, "go");
+      var a = Math.max(g, t), d = first ? 8 : 3;
+      seg("gpu", a, a + d, s, first ? "k slow" : "k", first ? T("1st launch") : "K");
+      g = a + d; first = false;
+    }
+    function record(s, name){ seg("cpu", t, ++t, s, "go"); g = Math.max(g, t); mk[name] = g; seg("gpu", g, g, s, "mark" + (g > D * .6 ? " r" : ""), name); }
+    function wait(s, until){ if (until > t) { seg("cpu", t, until, s, "wait", T("waits")); t = until; } }
+    if (warm) { launch(0); wait(0, g); }
+    record(1, "start");
+    for (var r = 0; r < 4; r++) { launch(2); }
+    record(3, "stop");
+    if (sync) { wait(4, mk.stop); }
+    seg("cpu", t, t + 1, 5, sync ? "rd" : "rd bad");
+    seg("gpu", mk.start, mk.stop, 5, sync ? "span" : "span bad", sync ? "ms" : "?");
+    P.push({ l: "both", a: t, b: t, s: 5, c: "now" + (sync ? "" : " bad") });
+    return P;
+  }
+  el.setAttribute("aria-label", T("Timing a kernel with CUDA events"));
+  el.innerHTML = '<div class="dg-head"><span class="dg-title">' + T("Timing a kernel with CUDA events") + '</span><div class="dg-tabs et-tg" role="group" aria-label="' + T("mistakes") + '">' +
+    '<button type="button" data-m="w" aria-pressed="false">' + T("skip warm-up") + '</button><button type="button" data-m="s" aria-pressed="false">' + T("skip cudaEventSynchronize") + "</button></div></div>" +
+    segs(NAMES.map(function(s, i){ return (i + 1) + " · " + s; }), 0, T("steps")) +
+    '<div class="et"><div class="et-lane"><span>CPU</span><div class="et-tr cpu"></div></div><div class="et-lane"><span>GPU</span><div class="et-tr gpu"></div></div>' +
+    '<span class="dg-note et-ax">' + T("time →") + "</span></div>" +
+    '<div class="dg-legend"><span><i style="background:var(--cool)"></i>' + T("CPU call returns at once") + '</span><span><i class="et-w"></i>' + T("CPU waits") +
+    '</span><span><i style="background:var(--accent)"></i>' + T("kernel") + '</span><span><i style="background:var(--y)"></i>' + T("first launch: one-time setup") + "</span></div>" +
+    '<pre class="dg-code et-code"></pre><div class="dg-info" aria-live="polite"></div>' +
+    '<div class="dg-head"><div class="dg-ctl"><button class="dg-btn alt prev" type="button" aria-label="' + T("previous step") + '">← ' + T("back") + "</button>" +
+    '<button class="dg-btn next" type="button" aria-label="' + T("next step") + '">' + T("next step") + ' →</button></div><span class="dg-note pos"></span></div>';
+  var tb = el.querySelectorAll(".dg-tabs")[1];
+  function go(i){
+    cur = Math.max(0, Math.min(5, i));
+    segOn(tb, cur);
+    var P = plan();
+    ["cpu", "gpu"].forEach(function(l){
+      el.querySelector(".et-tr." + l).innerHTML = P.filter(function(x){ return x.l === l || x.l === "both"; }).map(function(x){
+        return '<i class="' + x.c + (x.s > cur ? " later" : x.s === cur ? " cur" : "") + '" style="left:' + x.a / D * 100 + "%;width:" + (x.b - x.a) / D * 100 + '%"' +
+          (x.lab ? ' title="' + x.lab + '"' : "") + ">" + (x.lab ? "<b>" + x.lab + "</b>" : "") + "</i>";
+      }).join("");
+    });
+    el.querySelector(".et-code").innerHTML = CODE.map(function(c, k){
+      var off = (!warm && k < 2) || (!sync && k === 7);
+      return '<span class="' + (off ? "off" : c[0] === cur ? "on" : "dim") + '">' + c[1] + "</span>";
+    }).join("");
+    var txt = [
+      warm ? T("<b>Warm-up.</b> The first launch pays a one-time setup, so it is drawn long. <code>cudaDeviceSynchronize()</code> makes the CPU wait until it is done. None of it is timed.")
+        : T("<b>Warm-up skipped.</b> Nothing runs yet. The slow first launch now happens inside the timed loop."),
+      T("<b>Start marker.</b> <code>cudaEventRecord(start)</code> puts a marker into the GPU queue and returns at once. The CPU does not wait. The GPU notes the time when it reaches the marker."),
+      warm ? T("<b>The loop.</b> Each launch only queues a kernel and returns. The CPU is done with the loop early and runs ahead, while the GPU works through the kernels one after another.")
+        : T("<b>The loop.</b> Each launch only queues a kernel and returns. Without warm-up, the first of them is the slow one, and it sits inside the timed range."),
+      T("<b>Stop marker.</b> <code>cudaEventRecord(stop)</code> queues the stop marker behind the kernels. Again the CPU does not wait."),
+      sync ? T("<b>Wait for stop.</b> <code>cudaEventSynchronize(stop)</code> holds the CPU until the GPU has reached the stop marker. Now both times exist.")
+        : T("<b>Wait skipped.</b> Without <code>cudaEventSynchronize(stop)</code> the CPU goes straight on, while the GPU is still busy with the kernels."),
+      !sync ? T("<b>Too early.</b> The GPU has not reached stop yet, so there is no time to read. <code>cudaEventElapsedTime</code> returns <code>cudaErrorNotReady</code>, and <code>CHECK</code> stops the program.")
+        : warm ? T("<b>Read the time.</b> <code>ms</code> is the time between the two markers, so it covers only the timed launches. <code>ms / RUNS</code> is the time of one launch.")
+        : T("<b>Too large.</b> The time between the markers now includes the slow first launch, so <code>ms / RUNS</code> comes out larger than one normal launch.")
+    ];
+    el.querySelector(".dg-info").innerHTML = "<b>" + (cur + 1) + " · " + NAMES[cur] + "</b><br>" + txt[cur];
+    el.querySelector(".prev").disabled = cur === 0;
+    el.querySelector(".next").disabled = cur === 5;
+    el.querySelector(".pos").textContent = F("step {0} of {1}", cur + 1, 6);
+  }
+  el.querySelector(".et-tg").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-m]");
+    if (!b) { return; }
+    var v = b.getAttribute("aria-pressed") !== "true";
+    b.setAttribute("aria-pressed", v); b.classList.toggle("on", v);
+    if (b.dataset.m === "w") { warm = !v; } else { sync = !v; }
+    go(cur);
+  });
+  onSegs(tb, go);
+  el.querySelector(".prev").addEventListener("click", function(){ go(cur - 1); });
+  el.querySelector(".next").addEventListener("click", function(){ go(cur + 1); });
+  go(0);
+});
+
 // <div class="code-walk"> holds an ordered list whose items start with `1-3,7 cpu`. It walks
 // through a copy of the code block above it in writing order. The original block is left alone.
 (function(){

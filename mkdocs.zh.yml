@@ -35,3 +35,4 @@ nav:
       - "06 在 Linux 上编译 CUDA": cuda/Lesson-06/notes.md
       - "07 线程束 ID": cuda/Lesson-07/notes.md
       - "08 向量加法": cuda/Lesson-08/notes.md
+      - "09 多个线程块与计时": cuda/Lesson-09/notes.md

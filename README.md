@@ -16,7 +16,7 @@ This repo documents my own path of learning CUDA from scratch. It builds intuiti
 | Track | Folder | Lessons | What you learn |
 |---|---|---|---|
 | 01 GPU Fundamentals | [`GPU/`](GPU) | 16 | What a GPU is, architectures and chips, memory bandwidth, compute capability, white papers, and how to set up a machine for CUDA |
-| 02 CUDA Practice | [`cuda/`](cuda) | 9 | Your first kernels, blocks and threads, built-in variables, warps, compiling on Linux, and vector addition, with real output from an NVIDIA L40S |
+| 02 CUDA Practice | [`cuda/`](cuda) | 10 | Your first kernels, blocks and threads, built-in variables, warps, compiling on Linux, vector addition, grid sizing and timing, with real output from an NVIDIA L40S |
 
 Every lesson is one `notes.md` file. Each lesson has:
 
@@ -52,7 +52,7 @@ Then open http://127.0.0.1:8000/CUDA/. The build copies the lessons into `docs/`
 ### Add a lesson
 
 1. Create `GPU/Lesson-NN/notes.md` or `cuda/Lesson-NN/notes.md`.
-2. Add one line for it under `nav` in `mkdocs.yml`, for example `- "09 Shared Memory": cuda/Lesson-09/notes.md`. The two digits at the start become the lesson number on the site.
+2. Add one line for it under `nav` in `mkdocs.yml`, for example `- "10 Shared Memory": cuda/Lesson-10/notes.md`. The two digits at the start become the lesson number on the site.
 3. Push to `main`. The site updates by itself.
 
 Inside a lesson you can use:
