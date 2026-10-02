@@ -1,6 +1,6 @@
 # 09 > Çok Sayıda Block, Grid Boyutu ve Zaman Ölçümü
 
-[Ders 08](../Lesson-08/notes.md), 1024 elemanlı iki vektörü tek bir block ile topladı. Bu derste boyut iki katına, 2048 elemana çıkıyor ve bunu tek bir block karşılayamıyor. Neredeyse her CUDA kernel'ının kullandığı index formülünü, her vektör uzunluğu için grid boyutunu nasıl seçeceğini, başlattığın işin gerçekte kaç SM'yi (Streaming Multiprocessor, akış çoklu işlemcisi) meşgul ettiğini ve bir kernel'ın süresini kendini kandırmadan nasıl ölçeceğini öğreniyorsun.
+[Ders 08](../Lesson-08/notes.md), 1024 elemanlı iki vektörü tek bir block ile topladı. Bu derste boyut iki katına, 2048 elemana çıkıyor ve bunu tek bir block karşılayamıyor. Neredeyse her CUDA kernel'ının kullandığı indeks formülünü, her vektör uzunluğu için grid boyutunu nasıl seçeceğini, başlattığın işin gerçekte kaç SM'yi (Streaming Multiprocessor, akış çoklu işlemcisi) meşgul ettiğini ve bir kernel'ın süresini kendini kandırmadan nasıl ölçeceğini öğreniyorsun.
 
 > [!NOTE]
 > Kod, Ubuntu 24 üzerinde CUDA 13'ü ve bu derslerde kullanılan NVIDIA L40S'i (CC 8.9, 142 SM) hedefliyor. Süreler GPU'ya bağlı, bu yüzden programı kendi GPU'nda çalıştır ve ayarları kendin karşılaştır.
@@ -14,11 +14,11 @@ Vektörler artık 2048'er eleman tutuyor. Eleman başına bir thread demek 2048 
 - block 0, 0 ile 1023 arasındaki elemanları alır
 - block 1, 1024 ile 2047 arasındaki elemanları alır
 
-Ders 08'deki kernel `int i = threadIdx.x;` kullanıyordu. Bu artık işe yaramaz. block 1'de `threadIdx.x` yeniden 0'dan başlar, yani block 1, 0 ile 1023 arasındaki elemanları ikinci kez toplar ve 1024 ile 2047 arasındaki elemanlara hiç dokunulmaz.
+Ders 08'deki kernel `int i = threadIdx.x;` kullanıyordu. Bu artık işe yaramaz. Block 1'de `threadIdx.x` yeniden 0'dan başlar, yani block 1, 0 ile 1023 arasındaki elemanları ikinci kez toplar ve 1024 ile 2047 arasındaki elemanlara hiç dokunulmaz.
 
-## Global Index
+## Global İndeks
 
-Her thread'in yalnızca kendi block'u içinde değil, bütün vektörde kendine ait bir elemana ihtiyacı var. Bunun formülü global index'tir:
+Her thread'in yalnızca kendi block'u içinde değil, bütün vektörde kendine ait bir elemana ihtiyacı var. Bunun formülü global indekstir:
 
 ```c
 int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -65,7 +65,7 @@ int blocks = (N + threads - 1) / threads;
 
 - `(2000 + 256 - 1) / 256` = 2255 / 256 = 8 block, yani 8 * 256 = 2048 thread.
 
-Şimdi 48 thread fazla var (2048 - 2000). Bunların global index'i 2000 ile 2047 arası, yani vektörlerin sonunun ötesinde. Kernel'daki Ders 08'den gelen sınır kontrolü tam da bu yüzden var:
+Şimdi 48 thread fazla var (2048 - 2000). Bunların global indeksi 2000 ile 2047 arası, yani vektörlerin sonunun ötesinde. Kernel'daki Ders 08'den gelen sınır kontrolü tam da bu yüzden var:
 
 ```c
 if (i < n) {
@@ -76,10 +76,10 @@ if (i < n) {
 Fazladan 48 thread için `i < n` yanlış çıkar ve hiçbir şey yapmazlar.
 
 > [!WARNING]
-> `if (i < n)` olmadan bu 48 thread dizilerin sonunun ötesini okur ve oraya yazar. Program yine de doğru sonucu yazdırabilir, çünkü hatalı yazmalar kimsenin kontrol etmediği bir belleğe düşebilir. Bu da hatayı bulmayı zorlaştırır. Grid'i yukarı yuvarla ve index'i her zaman koru.
+> `if (i < n)` olmadan bu 48 thread dizilerin sonunun ötesini okur ve oraya yazar. Program yine de doğru sonucu yazdırabilir, çünkü hatalı yazmalar kimsenin kontrol etmediği bir belleğe düşebilir. Bu da hatayı bulmayı zorlaştırır. Grid'i yukarı yuvarla ve indeksi her zaman koru.
 
 > [!NOTE]
-> Block boyutunu warp boyutu olan 32'nin katı seç ([Ders 07](../Lesson-07/notes.md)). GPU thread'leri 32'lik warp'lar halinde çalıştırır. 100 thread'lik bir block 4 warp olur (128 lane) ve son warp'ın 32 lane'inden yalnızca 4'ü çalışır. Block başına 128 ya da 256 thread yaygın ve güvenli bir seçimdir.
+> Block boyutunu warp boyutu olan 32'nin katı seç ([Ders 07](../Lesson-07/notes.md)). GPU thread'leri 32'lik warp'lar hâlinde çalıştırır. 100 thread'lik bir block 4 warp olur (128 lane) ve son warp'un 32 lane'inden yalnızca 4'ü çalışır. Block başına 128 ya da 256 thread yaygın ve güvenli bir seçimdir.
 
 ## Başlatma Kaç SM Kullanıyor?
 
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 - `int main(int argc, char **argv)`: `argc` komut satırındaki kelimeleri sayar, `argv` onları tutar. `./vector_add_blocks 256` için `argc` = 2 ve `argv[1]` = `"256"` olur.
 - `atoi(argv[1])`: `"256"` metnini 256 sayısına çevirir. Argüman yoksa program 1024 kullanır.
 - `int blocks = (N + threads - 1) / threads;`: yukarıdaki yukarı yuvarlama formülü.
-- `int i = blockIdx.x * blockDim.x + threadIdx.x;`: global index. Kernel'ın geri kalanı Ders 08'dekiyle aynı.
+- `int i = blockIdx.x * blockDim.x + threadIdx.x;`: global indeks. Kernel'ın geri kalanı Ders 08'dekiyle aynı.
 - Isınma başlatması bir kez çalışır ve ölçülmez. `cudaDeviceSynchronize()`, ölçüm başlamadan önce bittiğinden emin olur.
 - `for` döngüsü kernel'ı iki event işareti arasında 100 kez başlatır. CPU başlatmaları yalnızca kuyruğa koyar. GPU onları birbiri ardına çalıştırır.
 - `ms * 1000.0f / RUNS`: toplam milisaniyeyi başlatma başına mikrosaniyeye çevirir.
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 
 ## Kod Gezintisi
 
-Programı yazacağın sırayla adım adım geç. Çoğu Ders 08'den geliyor. Yeni olan kısımlar global index, komut satırından gelen grid boyutu ve zaman ölçümü.
+Programı yazacağın sırayla adım adım geç. Çoğu Ders 08'den geliyor. Yeni olan kısımlar global indeks, komut satırından gelen grid boyutu ve zaman ölçümü.
 
 <div class="code-walk" markdown>
 
@@ -255,7 +255,7 @@ Programı yazacağın sırayla adım adım geç. Çoğu Ders 08'den geliyor. Yen
 2. `6-7 cpu` **Boyutlar.** `N` vektör uzunluğu, artık 2048. `RUNS` kaç başlatmayı ölçeceğin. İkisini en üstte tanımlamak, başka değerler denemek istediğinde tek yerde tek değişiklik demek.
 3. `9-18 cpu` **CHECK makrosu.** Ders 08'den olduğu gibi kopyala. Bu programdaki her CUDA çağrısı ondan geçer, böylece bir hata yanlış sayılar vermek yerine dosya ve satırla programı durdurur.
 4. `20-21,26 gpu` **Kernel'ın iskeleti.** Önce imzayı ve süslü parantezleri yaz. Parametreler Ders 08'dekiyle aynı: iki girdi, bir çıktı ve uzunluk `n`.
-5. `22 gpu` **Global index.** Değişen satır bu. `blockIdx.x * blockDim.x` önceki block'ların bütün thread'lerini atlar, `threadIdx.x` de bu block içindeki yeri ekler. 1024 thread'lik bir başlatmada block 1, thread 0 için: 1 * 1024 + 0 = 1024. Sık yapılan hata `threadIdx.x`'i tek başına bırakmaktır, o zaman her block aynı ilk elemanlar üzerinde çalışır.
+5. `22 gpu` **Global indeks.** Değişen satır bu. `blockIdx.x * blockDim.x` önceki block'ların bütün thread'lerini atlar, `threadIdx.x` de bu block içindeki yeri ekler. 1024 thread'lik bir başlatmada block 1, thread 0 için: 1 * 1024 + 0 = 1024. Sık yapılan hata `threadIdx.x`'i tek başına bırakmaktır, o zaman her block aynı ilk elemanlar üzerinde çalışır.
 6. `23-25 gpu` **Koru ve topla.** Sınır kontrolü artık gerçekten önemli: yukarı yuvarlanmış bir grid'de son block'un sonun ötesinde thread'leri olabilir. Yalnızca `i < n` olan thread'ler kendi çiftini toplar.
 7. `28-29,88-89 cpu` **main'in iskeleti.** Bu kez `main`, `argc` ve `argv` alıyor, böylece program block boyutunu komut satırından okuyabiliyor. `return 0;` satırını ve kapanan süslü parantezi hemen yaz.
 8. `30-31 cpu` **Block başına thread.** Bir argüman varsa `atoi` onu sayıya çevirir, yoksa program 1024 kullanır. `? :` operatörü kısa bir if/else'tir: önce koşul, sonra doğruysa değer, sonra yanlışsa değer.
@@ -312,7 +312,7 @@ Nasıl okunur:
 
 GPU'lar için klasik bir test olan SAXPY için bir kernel yaz: 5000 float için `y[i] = a * x[i] + y[i]`, block başına 256 thread ile. 5000, 256'nın katı değil, bu yüzden yukarı yuvarlamaya ve korumaya ihtiyacın var.
 
-1. Kernel'ı global index ve sınır kontrolüyle yaz.
+1. Kernel'ı global indeks ve sınır kontrolüyle yaz.
 2. Block sayısını yukarı yuvarlama formülüyle hesapla.
 3. Kernel'ı başlat ve `y`'yi geri kopyala.
 
@@ -367,7 +367,7 @@ int main()
 ```
 
 ??? tip "İpucu"
-    Index satırı bu dersteki kernel'dakiyle aynı. Grid için (5000 + 256 - 1) / 256 = 20 block, yani 5120 thread ve korumanın durdurması gereken 120 fazla thread. Her `y[i]` 3 * 1 + 2 = 5 olmalı.
+    İndeks satırı bu dersteki kernel'dakiyle aynı. Grid için (5000 + 256 - 1) / 256 = 20 block, yani 5120 thread ve korumanın durdurması gereken 120 fazla thread. Her `y[i]` 3 * 1 + 2 = 5 olmalı.
 
 ??? note "Çözüm"
     ```c
@@ -426,7 +426,7 @@ int main()
 
 ## Sözlük
 
-- global index: bir thread'in bütün grid'deki yeri, `blockIdx.x * blockDim.x + threadIdx.x`. Her thread'i bir elemana eşler.
+- global indeks: bir thread'in bütün grid'deki yeri, `blockIdx.x * blockDim.x + threadIdx.x`. Her thread'i bir elemana eşler.
 - grid boyutu: bir başlatmadaki block sayısı, `<<<blocks, threads>>>` içindeki ilk sayı.
 - yukarı yuvarlama formülü (round-up formula): `(N + threads - 1) / threads`, `blocks * threads` en az `N` olsun diye gereken block sayısı.
 - sınır kontrolü: `if (i < n)`, yukarı yuvarlanmış bir grid'in fazladan thread'lerinin sonun ötesindeki belleğe dokunmasını engeller.
